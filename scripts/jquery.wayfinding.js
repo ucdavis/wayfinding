@@ -175,7 +175,7 @@
 
             dataStore.paths[mapNum] = [];
 
-            $('#' + floor.id + ' #Paths line', el).each(function (index, line) {
+            $('#' + floor.id + ' #Paths line', el).each(function () { // index, line
 
                 path = {};
                 path.floor = floor.id; // floor_1
@@ -200,7 +200,7 @@
             //Doors and starting points
             //roomId or POI_Id
 
-            $('#' + floor.id + ' #Doors line', el).each(function (index, line) {
+            $('#' + floor.id + ' #Doors line', el).each(function () { // index, line
 
                 // make id match room id format
                 doorId = $(this).prop('id');
@@ -225,7 +225,7 @@
 
             //Portal Segments -- string theory says unmatched portal segment useless -- no wormhole
 
-            $('#' + floor.id + ' #Portals line', el).each(function (index, line) {
+            $('#' + floor.id + ' #Portals line', el).each(function () { // index, line
                 portal = {};
 
                 portalId = $(this).prop('id');
@@ -249,7 +249,7 @@
                 x2 = $(this).prop('x2').animVal.value;
                 y2 = $(this).prop('y2').animVal.value;
 
-                matches = $.grep(dataStore.paths[mapNum], function (n, i) {
+                matches = $.grep(dataStore.paths[mapNum], function (n) { // , i
                     return ((x1 === n.ax && y1 === n.ay) || (x1 === n.bx && y1 === n.by));
                 });
 
@@ -638,7 +638,7 @@
                 endPaths = [];
 
                 //hilight the destination room
-                $("#Rooms a[id='" + destination + "'] g", obj).addClass('wayfindingRoom');
+                $('#Rooms a[id="' + destination + '"] g', obj).addClass('wayfindingRoom');
 
                 //get a collection of starting paths
                 for (mapNum = 0; mapNum < maps.length; mapNum++) {

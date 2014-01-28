@@ -9,8 +9,8 @@
 		"maxerr": 50,
 	"maxparams": 5,
 	"maxdepth": 10,
-	"maxstatements":50,
-	"maxcomplexity": 10,
+	"maxstatements":175, // should reduce to 50 later
+	"maxcomplexity": 60, // should reduce to 10 later
 		"maxlen": false,
 
 		"bitwise": true,
