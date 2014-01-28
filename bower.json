@@ -1,0 +1,11 @@
+{
+  "name": "wayfinding",
+  "version": "0.1.5",
+  "description": "jQuery wayfinding plugin",
+  "dependencies": {
+    "jquery": "latest"
+  },
+  "devDependencies": {
+    "jasmine-jquery": "~1.5.93"
+  }
+}

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="600px"
+	 height="480px" viewBox="0 0 600 480" enable-background="new 0 0 600 480" xml:space="preserve">
+<g id="Base">
+	<polygon id="Circulation" fill="#F2F2F2" stroke="#000000" stroke-width="2" points="72,75 531,75 531,408 324,408 324,426 
+		279,426 279,408 72,408 	"/>
+	<rect id="Elevator" x="279" y="228" fill="#B3B3B3" stroke="#000000" width="45" height="36"/>
+	<g id="Stairs_1_">
+		<polygon id="Stairs" fill="#B3B3B3" stroke="#000000" points="279,318 297,318 297,282 306,282 306,318 324,318 324,264 279,264 
+					"/>
+		<line fill="none" stroke="#000000" x1="297" y1="309" x2="279" y2="309"/>
+		<line fill="none" stroke="#000000" x1="297" y1="300" x2="279" y2="300"/>
+		<line fill="none" stroke="#000000" x1="297" y1="291" x2="279" y2="291"/>
+		<line fill="none" stroke="#000000" x1="297" y1="282" x2="279" y2="282"/>
+		<polyline stroke="#000000" points="315,273 315,309 319.5,300 310.5,300 315,309 		"/>
+	</g>
+	<g id="Maze">
+		<line fill="none" stroke="#000000" x1="477" y1="75" x2="477" y2="129"/>
+		<line fill="none" stroke="#000000" x1="477" y1="129" x2="486" y2="129"/>
+		<line fill="none" stroke="#000000" x1="504" y1="129" x2="531" y2="129"/>
+		<line fill="none" stroke="#000000" x1="513" y1="156" x2="459" y2="156"/>
+		<line fill="none" stroke="#000000" x1="423" y1="75" x2="423" y2="237"/>
+		<line fill="none" stroke="#000000" x1="423" y1="237" x2="513" y2="237"/>
+		<line fill="none" stroke="#000000" x1="495" y1="219" x2="495" y2="183"/>
+		<line fill="none" stroke="#000000" x1="495" y1="183" x2="441" y2="183"/>
+		<line fill="none" stroke="#000000" x1="441" y1="183" x2="441" y2="93"/>
+		<line fill="none" stroke="#000000" x1="495" y1="183" x2="495" y2="174"/>
+		<line fill="none" stroke="#000000" x1="495" y1="174" x2="531" y2="174"/>
+		<line fill="none" stroke="#000000" x1="513" y1="219" x2="531" y2="219"/>
+		<line fill="none" stroke="#000000" x1="531" y1="255" x2="405" y2="255"/>
+		<line fill="none" stroke="#000000" x1="405" y1="255" x2="405" y2="93"/>
+		<line fill="none" stroke="#000000" x1="477" y1="237" x2="477" y2="201"/>
+		<line fill="none" stroke="#000000" x1="477" y1="201" x2="441" y2="201"/>
+		<line fill="none" stroke="#000000" x1="486" y1="129" x2="486" y2="156"/>
+	</g>
+</g>
+<g id="Rooms">
+	<a id="R201" xlink:href="#" >
+		<g>
+			<rect x="279.5" y="399.5" fill="#E6E6E6" width="44" height="26"/>
+			<path d="M323,400v25h-43v-25H323 M324,399h-45v27h45V399L324,399z"/>
+		</g>
+	</a>
+	<a id="R202" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M504.472,119.5c-0.17-1.959-1.346-9-9.472-9h-0.5v9h-8v-35h35v35H504.472z"/>
+			<path d="M521,85v34h-16.081c-0.322-2.533-1.929-9-9.919-9h-1v1v7.875V119h-7V85H521 M522,84h-36v36h9c0,0,0,0,0-9c9,0,9,9,9,9h18
+				V84L522,84z"/>
+		</g>
+	</a>
+</g>
+<g id="Portals">
+	<line id="Elev.1.floor1" fill="none" stroke="#FF00FF" x1="297" y1="237" x2="315" y2="255"/>
+	<line id="Stair.1.floor1" fill="none" stroke="#FF00FF" x1="315" y1="273" x2="306" y2="273"/>
+</g>
+<g id="Doors">
+	<line id="R201_1_" fill="none" stroke="#00FF00" x1="297" y1="408" x2="306" y2="417"/>
+	<line id="R202_1_" fill="none" stroke="#00FF00" x1="504" y1="111" x2="513" y2="102"/>
+</g>
+<g id="Paths">
+	<line fill="none" stroke="#00FFFF" x1="297" y1="408" x2="297" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="237" x2="297" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="219" x2="333" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="333" y1="219" x2="333" y2="327"/>
+	<line fill="none" stroke="#00FFFF" x1="288" y1="327" x2="288" y2="273"/>
+	<line fill="none" stroke="#00FFFF" x1="288" y1="273" x2="306" y2="273"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="219" x2="270" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="270" y1="219" x2="270" y2="327"/>
+	<line fill="none" stroke="#00FFFF" x1="270" y1="327" x2="288" y2="327"/>
+	<line fill="none" stroke="#00FFFF" x1="288" y1="327" x2="297" y2="327"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="327" x2="297" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="333" y1="327" x2="297" y2="327"/>
+	<line fill="none" stroke="#00FFFF" x1="495" y1="129" x2="495" y2="147"/>
+	<line fill="none" stroke="#00FFFF" x1="495" y1="129" x2="504" y2="111"/>
+	<line fill="none" stroke="#00FFFF" x1="495" y1="147" x2="522" y2="147"/>
+	<line fill="none" stroke="#00FFFF" x1="522" y1="147" x2="522" y2="165"/>
+	<line fill="none" stroke="#00FFFF" x1="522" y1="165" x2="450" y2="165"/>
+	<line fill="none" stroke="#00FFFF" x1="450" y1="165" x2="450" y2="84"/>
+	<line fill="none" stroke="#00FFFF" x1="450" y1="84" x2="432" y2="84"/>
+	<line fill="none" stroke="#00FFFF" x1="432" y1="84" x2="432" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="432" y1="192" x2="486" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="486" y1="192" x2="486" y2="228"/>
+	<line fill="none" stroke="#00FFFF" x1="486" y1="228" x2="522" y2="228"/>
+	<line fill="none" stroke="#00FFFF" x1="522" y1="228" x2="522" y2="246"/>
+	<line fill="none" stroke="#00FFFF" x1="522" y1="246" x2="414" y2="246"/>
+	<line fill="none" stroke="#00FFFF" x1="414" y1="246" x2="414" y2="84"/>
+	<line fill="none" stroke="#00FFFF" x1="414" y1="84" x2="297" y2="84"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="84" x2="297" y2="219"/>
+</g>
+</svg>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 43363)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="600px"
+	 height="480px" viewBox="0 0 600 480" enable-background="new 0 0 600 480" xml:space="preserve">
+<g id="Base">
+	<polygon id="Circulation" fill="#F2F2F2" stroke="#000000" stroke-width="2" points="72,75 531,75 531,408 324,408 324,426 
+		279,426 279,408 72,408 	"/>
+	<rect id="Elevator" x="279" y="228" fill="#B3B3B3" stroke="#000000" width="45" height="36"/>
+	<polygon id="Reception" fill="#C69C6D" stroke="#000000" points="288,345 291.857,345 291.857,349.5 311.143,349.5 311.143,345 
+		315,345 315,354 288,354 	"/>
+	<g id="Stairs_1_">
+		<polygon id="Stairs" fill="#B3B3B3" stroke="#000000" points="324,318 306,318 306,282 297,282 297,318 279,318 279,264 324,264 
+					"/>
+		<line fill="none" stroke="#000000" x1="306" y1="309" x2="324" y2="309"/>
+		<line fill="none" stroke="#000000" x1="306" y1="300" x2="324" y2="300"/>
+		<line fill="none" stroke="#000000" x1="306" y1="291" x2="324" y2="291"/>
+		<line fill="none" stroke="#000000" x1="306" y1="282" x2="324" y2="282"/>
+		<polyline stroke="#000000" points="288,273 288,309 283.5,300 292.5,300 288,309 		"/>
+	</g>
+</g>
+<g id="Rooms">
+	<a id="lobby_1_" xlink:href="#" >
+		<g>
+			<rect x="279.5" y="399.5" fill="#E6E6E6" width="44" height="26"/>
+			<path d="M323,400v25h-43v-25H323 M324,399h-45v27h45V399L324,399z"/>
+		</g>
+	</a>
+	<a id="R101" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M108.5,371.5v-26.028c1.959-0.17,9-1.346,9-9.472v-0.5h-9v-35h71v71H108.5z"/>
+			<path d="M179,301v70h-70v-25.081c2.533-0.322,9-1.929,9-9.919v-1h-1h-7.875H109v-34H179 M180,300h-72v36c0,0,0,0,9,0c0,9-9,9-9,9
+				v27h72V300L180,300z"/>
+		</g>
+	</a>
+	<a id="R102" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M108.5,299.5v-26.028c1.959-0.17,9-1.346,9-9.472v-0.5h-9v-35h71v71H108.5z"/>
+			<path d="M179,229v70h-70v-25.081c2.533-0.322,9-1.929,9-9.919v-1h-1h-7.875H109v-34H179 M180,228h-72v36c0,0,0,0,9,0c0,9-9,9-9,9
+				v27h72V228L180,228z"/>
+		</g>
+	</a>
+	<a id="R103" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M180.5,299.5v-71h71v26.028c-1.959,0.17-9,1.346-9,9.472v0.5h9v35H180.5z"/>
+			<path d="M251,229v25.081c-2.533,0.322-9,1.929-9,9.919v1h1h7.875H251v34h-70v-70H251 M252,228h-72v72h72v-36c0,0,0,0-9,0
+				c0-9,9-9,9-9V228L252,228z"/>
+		</g>
+	</a>
+	<a id="R104" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M180.5,371.5v-71h71v26.028c-1.959,0.17-9,1.346-9,9.472v0.5h9v35H180.5z"/>
+			<path d="M251,301v25.081c-2.533,0.322-9,1.929-9,9.919v1h1h7.875H251v34h-70v-70H251 M252,300h-72v72h72v-36c0,0,0,0-9,0
+				c0-9,9-9,9-9V300L252,300z"/>
+		</g>
+	</a>
+	<a id="R111" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M351.5,371.5v-26.028c1.959-0.17,9-1.346,9-9.472v-0.5h-9v-35h71v71H351.5z"/>
+			<path d="M422,301v70h-70v-25.081c2.533-0.322,9-1.929,9-9.919v-1h-1h-7.875H352v-34H422 M423,300h-72v36c0,0,0,0,9,0c0,9-9,9-9,9
+				v27h72V300L423,300z"/>
+		</g>
+	</a>
+	<a id="R112" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M351.5,299.5v-26.028c1.959-0.17,9-1.346,9-9.472v-0.5h-9v-35h71v71H351.5z"/>
+			<path d="M422,229v70h-70v-25.081c2.533-0.322,9-1.929,9-9.919v-1h-1h-7.875H352v-34H422 M423,228h-72v36c0,0,0,0,9,0c0,9-9,9-9,9
+				v27h72V228L423,228z"/>
+		</g>
+	</a>
+	<a id="R113" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M423.5,299.5v-71h71v26.028c-1.959,0.17-9,1.346-9,9.472v0.5h9v35H423.5z"/>
+			<path d="M494,229v25.081c-2.533,0.322-9,1.929-9,9.919v1h1h7.875H494v34h-70v-70H494 M495,228h-72v72h72v-36c0,0,0,0-9,0
+				c0-9,9-9,9-9V228L495,228z"/>
+		</g>
+	</a>
+	<a id="R114" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M423.5,371.5v-71h71v26.028c-1.959,0.17-9,1.346-9,9.472v0.5h9v35H423.5z"/>
+			<path d="M494,301v25.081c-2.533,0.322-9,1.929-9,9.919v1h1h7.875H494v34h-70v-70H494 M495,300h-72v72h72v-36c0,0,0,0-9,0
+				c0-9,9-9,9-9V300L495,300z"/>
+		</g>
+	</a>
+	<a id="R121" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M108.5,182.5v-26.028c1.959-0.169,9-1.346,9-9.472v-0.5h-9v-35h71v71H108.5z"/>
+			<path d="M179,112v70h-70v-25.081c2.533-0.323,9-1.93,9-9.919v-1h-1h-7.875H109v-34H179 M180,111h-72v36c0,0,0,0,9,0c0,9-9,9-9,9
+				v27h72V111L180,111z"/>
+		</g>
+	</a>
+	<a id="R122" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M180.5,182.5v-71h26.028c0.169,1.959,1.346,9,9.472,9h0.5v-9h35v71H180.5z"/>
+			<path d="M251,112v70h-70v-70h25.081c0.323,2.533,1.93,9,9.919,9h1v-1v-7.875V112H251 M252,111h-36c0,0,0,0,0,9c-9,0-9-9-9-9h-27
+				v72h72V111L252,111z"/>
+		</g>
+	</a>
+	<a id="R123" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M342.5,182.5v-9H342c-8.126,0-9.302,7.041-9.472,9h-62.057c-0.169-1.959-1.346-9-9.472-9h-0.5v9h-8v-71h8
+				v9h0.5c8.125,0,9.302-7.041,9.472-9h62.057c0.17,1.959,1.346,9,9.472,9h0.5v-9h8v71H342.5z"/>
+			<path d="M350,112v70h-7v-0.125V174v-1h-1c-7.99,0-9.597,6.467-9.919,9h-61.162c-0.323-2.533-1.93-9-9.919-9h-1v1v7.875V182h-7
+				v-70h7v0.125V120v1h1c7.99,0,9.597-6.467,9.919-9h61.162c0.322,2.533,1.929,9,9.919,9h1v-1v-7.875V112H350 M351,111h-9
+				c0,0,0,0,0,9c-9,0-9-9-9-9h-63c0,0,0,9-9,9c0-9,0-9,0-9h-9v72h9c0,0,0,0,0-9c9,0,9,9,9,9h63c0,0,0-9,9-9c0,9,0,9,0,9h9V111
+				L351,111z"/>
+		</g>
+	</a>
+	<a id="R124" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M351.5,182.5v-71h26.028c0.17,1.959,1.346,9,9.472,9h0.5v-9h35v71H351.5z"/>
+			<path d="M422,112v70h-70v-70h25.081c0.322,2.533,1.929,9,9.919,9h1v-1v-7.875V112H422 M423,111h-36c0,0,0,0,0,9c-9,0-9-9-9-9h-27
+				v72h72V111L423,111z"/>
+		</g>
+	</a>
+	<a id="R125" xlink:href="#" >
+		<g>
+			<path fill="#E6E6E6" d="M423.5,182.5v-71h71v26.028c-1.959,0.169-9,1.346-9,9.472v0.5h9v35H423.5z"/>
+			<path d="M494,112v25.081c-2.533,0.323-9,1.93-9,9.919v1h1h7.875H494v34h-70v-70H494 M495,111h-72v72h72v-36c0,0,0,0-9,0
+				c0-9,9-9,9-9V111L495,111z"/>
+		</g>
+	</a>
+</g>
+<g id="Portals">
+	<line id="Elev.1.floor2" fill="none" stroke="#FF00FF" x1="297" y1="237" x2="315" y2="255"/>
+	<line id="Stair.1.floor2" fill="none" stroke="#FF00FF" x1="297" y1="273" x2="288" y2="273"/>
+</g>
+<g id="Doors">
+	<line id="lobby" fill="none" stroke="#00FF00" x1="297" y1="408" x2="306" y2="417"/>
+	<line id="R121_1_" fill="none" stroke="#00FF00" x1="117" y1="156" x2="126" y2="165"/>
+	<line id="R122_1_" fill="none" stroke="#00FF00" x1="207" y1="120" x2="198" y2="129"/>
+	<line id="R123_4_" fill="none" stroke="#00FF00" x1="270" y1="120" x2="279" y2="129"/>
+	<line id="R123_3_" fill="none" stroke="#00FF00" x1="270" y1="174" x2="279" y2="165"/>
+	<line id="R123_2_" fill="none" stroke="#00FF00" x1="333" y1="120" x2="324" y2="129"/>
+	<line id="R123_1_" fill="none" stroke="#00FF00" x1="333" y1="174" x2="324" y2="165"/>
+	<line id="R104_1_" fill="none" stroke="#00FF00" x1="243" y1="327" x2="234" y2="318"/>
+	<line id="R103_1_" fill="none" stroke="#00FF00" x1="243" y1="255" x2="234" y2="246"/>
+	<line id="R112_1_" fill="none" stroke="#00FF00" x1="360" y1="273" x2="369" y2="282"/>
+	<line id="R111_1_" fill="none" stroke="#00FF00" x1="360" y1="345" x2="369" y2="354"/>
+	<line id="R102_1_" fill="none" stroke="#00FF00" x1="117" y1="273" x2="126" y2="282"/>
+	<line id="R101_1_" fill="none" stroke="#00FF00" x1="117" y1="345" x2="126" y2="354"/>
+	<line id="R113_1_" fill="none" stroke="#00FF00" x1="486" y1="255" x2="477" y2="246"/>
+	<line id="R114_1_" fill="none" stroke="#00FF00" x1="486" y1="327" x2="477" y2="318"/>
+	<line id="R125_1_" fill="none" stroke="#00FF00" x1="486" y1="138" x2="477" y2="129"/>
+	<line id="R124_1_" fill="none" stroke="#00FF00" x1="378" y1="120" x2="369" y2="129"/>
+	<line id="lcd.1" fill="none" stroke="#00FF00" x1="297" y1="354" x2="288" y2="363"/>
+</g>
+<g id="Paths">
+	<line fill="none" stroke="#00FFFF" x1="297" y1="273" x2="315" y2="273"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="264" x2="342" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="336" x2="261" y2="264"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="264" x2="243" y2="255"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="408" x2="297" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="381" x2="261" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="336" x2="99" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="381" x2="261" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="381" x2="261" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="354" x2="297" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="333" y1="174" x2="333" y2="120"/>
+	<line fill="none" stroke="#00FFFF" x1="333" y1="120" x2="342" y2="102"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="336" x2="243" y2="327"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="336" x2="360" y2="345"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="264" x2="360" y2="273"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="192" x2="261" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="192" x2="270" y2="174"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="192" x2="333" y2="174"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="237" x2="297" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="219" x2="261" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="219" x2="261" y2="264"/>
+	<line fill="none" stroke="#00FFFF" x1="297" y1="219" x2="342" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="219" x2="342" y2="264"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="336" x2="315" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="336" x2="315" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="315" y1="273" x2="315" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="192" x2="261" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="192" x2="342" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="264" x2="99" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="336" x2="117" y2="345"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="264" x2="117" y2="273"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="147" x2="99" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="147" x2="117" y2="156"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="192" x2="261" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="264" x2="99" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="219" x2="261" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="192" x2="99" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="102" x2="261" y2="102"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="102" x2="270" y2="120"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="102" x2="216" y2="102"/>
+	<line fill="none" stroke="#00FFFF" x1="216" y1="102" x2="207" y2="120"/>
+	<line fill="none" stroke="#00FFFF" x1="216" y1="102" x2="99" y2="102"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="102" x2="99" y2="147"/>
+	<line fill="none" stroke="#00FFFF" x1="261" y1="192" x2="99" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="99" y1="219" x2="261" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="102" x2="387" y2="102"/>
+	<line fill="none" stroke="#00FFFF" x1="387" y1="102" x2="378" y2="120"/>
+	<line fill="none" stroke="#00FFFF" x1="387" y1="102" x2="504" y2="102"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="102" x2="504" y2="147"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="147" x2="486" y2="138"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="147" x2="504" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="192" x2="342" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="219" x2="504" y2="219"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="219" x2="504" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="219" x2="342" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="219" x2="504" y2="192"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="219" x2="504" y2="264"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="264" x2="486" y2="255"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="264" x2="504" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="336" x2="486" y2="327"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="336" x2="504" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="504" y1="381" x2="342" y2="381"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="381" x2="342" y2="336"/>
+	<line fill="none" stroke="#00FFFF" x1="342" y1="381" x2="297" y2="381"/>
+</g>
+</svg>
