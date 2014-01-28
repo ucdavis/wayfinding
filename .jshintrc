@@ -7,10 +7,10 @@
 	"predef": [],
 
 		"maxerr": 50,
-	"maxparams": 5,
-	"maxdepth": 10,
-	"maxstatements":175, // should reduce to 50 later
-	"maxcomplexity": 60, // should reduce to 10 later
+		"maxparams": 5,
+		"maxdepth": 10,
+	"maxstatements":175,
+	"maxcomplexity": 60,
 		"maxlen": false,
 
 		"bitwise": true,

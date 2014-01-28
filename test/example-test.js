@@ -8,12 +8,12 @@ var fixtures  = jasmine.getFixtures();
 fixtures.fixturesPath = 'base/test/fixtures/';
 
 describe('<Unit Test>', function () {
-  describe('Example', function () {
-    it('should add `success` class', function () {
-      fixtures.load('example.html');
-      var $example = $('.example');
-      $example.defaultPluginName();
-      expect($example.hasClass('success')).toBe(true);
-    });
-  });
+	describe('Example', function () {
+		it('should add `success` class', function () {
+			fixtures.load('example.html');
+			var $example = $('.example');
+			$example.defaultPluginName();
+			expect($example.hasClass('success')).toBe(true);
+		});
+	});
 });
