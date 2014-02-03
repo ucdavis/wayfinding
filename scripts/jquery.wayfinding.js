@@ -953,7 +953,14 @@
 						newPath.style.stroke = options.path.color;
 						newPath.style.strokeWidth = options.path.width;
 						newPath.style.fill = 'none';
-						newPath.classList.add('directionPath');
+						if (newPath.classList) {
+							newPath.classList.add('directionPath');
+						} else {
+							newPath.setAttribute('class', 'directionPath');
+						}
+
+//						newPath.className += ' directionPath';
+//						newPath.addClass('directionPath');
 
 //                        console.dir(maps[level[0].floor].id);
 

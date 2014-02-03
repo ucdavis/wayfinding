@@ -7,7 +7,6 @@
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width">
 	<link rel="stylesheet" href="styles/example.css">
-	<link href="styles/example.css" media="all" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 	<div id="content">
@@ -63,7 +62,17 @@
 			<li>In addition to clicking on a room it is possible to trigger routing using the "Show Route to" dropdown or through JavaScript.</li>
 			<li>Route to room 201 and try it with the Accessible option on and off an you will see that the accessible route takes the elevator rather than the stairs even though the path is longer. Accessible routing will be extended to allow certain path segments to be considered accessible or not.</li>
 			<li>Change the "Begin Route at" selection and it will remember the last destination and reroute.</li>
-			<li>Click the second room from the left on the top row on the first floor and note that it routes through the right hand side of the room next to it. The left hand side is set not to pass traffic. You can choose which routes to enable.</li>
+			<li>Click the <a href="#" onClick="javascript:$('#myMaps').wayfinding('routeTo', 'R122');">second room from the left</a> on the top row on the first floor and note that it routes through the right hand side of the room next to it. The left hand side is set not to pass traffic. You can choose which routes to enable.</li>
+			<li>
+				<a href="#" onClick="javascript:$('#Paths line').attr('stroke-opacity', 1);">Show paths</a>.
+				<a href="#" onClick="javascript:$('#Paths line').attr('stroke-opacity', 0);">Hide paths</a>.
+				<a href="#" onClick="javascript:$('#Portals line').attr('stroke-opacity', 1);">Show portals</a>.
+				<a href="#" onClick="javascript:$('#Portals line').attr('stroke-opacity', 0);">Hide portals</a>.
+				<a href="#" onClick="javascript:$('#Doors line').attr('stroke-opacity', 1);">Show doors</a>.
+				<a href="#" onClick="javascript:$('#Doors line').attr('stroke-opacity', 0);">Hide doors</a>.
+			</li>
+			<li>one way paths - work in progress</li>
+			<li>portal lengths as route consideration - work in progress</li>
 		</ul>
 	</div>
 
