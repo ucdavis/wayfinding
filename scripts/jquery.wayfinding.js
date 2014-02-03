@@ -553,7 +553,7 @@
 				drawLength = drawing[i].routeLength,
 				delay = drawLength * options.path.speed;
 
-			console.log('animate', i, drawing.length, drawLength, delay, new Date());
+//			console.log('animate', i, drawing.length, drawLength, delay, new Date());
 
 			switchFloor(maps[drawing[i][0].floor].id, obj);
 //			console.log(drawLength, drawing[i].path);
@@ -581,13 +581,20 @@
 			path.getBoundingClientRect();
 			path.style.transition = path.style.WebkitTransition = 'stroke-dashoffset ' + delay + 'ms linear';
 			path.style.strokeDashoffset = '0';
-
+// http://jakearchibald.com/2013/animated-line-drawing-svg/
 			if (++i < drawing.length) {
-				console.log('reanimate', i, drawing.length, drawLength, delay, new Date());
+//				console.log('reanimate', i, drawing.length, drawLength, delay, new Date());
 				setTimeout(function() {
 					animatePath(drawing, i);
 				},
-				delay + 5000);
+				delay + 1000);
+			} else if (1 !== 1) {
+				// if repeat is set, then delay and rerun display from first.
+				// Don't implement, until we have click to cancel out of this
+				setTimeout(function() {
+						animatePath(drawing, 0);
+					},
+					5000);
 			}
 
 		}
