@@ -1,3 +1,45 @@
-.success {
-  background: green;
+body {
+	background-color: white;
+	border: 1px solid black;
+	font-family: Arial;
+	font-size: 24px;
+	height: 540px;
+	width: 960px;
+}
+
+a img {
+	border: none;
+}
+
+#controls {
+	background-color: lightGrey;
+	display: block;
+	height: 50px;
+	padding: 10px 0 0 10px;
+	width: 950px;
+	z-index:-1;
+}
+div#myMaps {
+	height: 480px;
+	padding-left: 175px;
+	width: 785px;
+}
+div#myMaps div {
+	display: inline-block;
+	height: 480px;
+	width: 600px;
+}
+div#mapLoading {
+	font-size: 10em;
+	left: 50px;
+	position: absolute;
+	top: 60px;
+	z-index: -1;
+}
+
+.wayfindingRoom {
+	fill: #ffc;
+	stroke: blue;
+	stroke-width: 2;
+	stroke-dasharray: 5 3;
 }
