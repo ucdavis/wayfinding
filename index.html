@@ -116,7 +116,7 @@ $(document).ready(function () {
 		$('#myMaps').wayfinding('routeTo', $('#controls #endSelect').val());
 	});
 
-	$('#Rooms a').live('click', function () {
+	$('#Rooms a').on('click', function () {
 		$('#controls #endSelect option[value="' + $(this).prop('id') + '"]').attr('selected', true);
 	});
 });
