@@ -2,19 +2,14 @@
 
 /**
  * @preserve
- * Wayfinding v0.1.4
- * http://code.google.com/p/wayfinding/
- *
- * requires Keith Wood's SVG plugin.
- * jquery.svg.js
- * jquery.svgdom.js
- * jquery.svganim.js -- modify to allow animation of strokeDashOffset
+ * Wayfinding v0.2.0
+ * https://github.com/ucdavis/wayfinding
  *
  * Copyright (c) 2010 University of California Regents
  * Licensed under GNU General Public License v2
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  *
- * Date: 2010-08-02
+ * Date: 2010-08-02, 2014-02-03
  *
  */
 
