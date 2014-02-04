@@ -1,4 +1,4 @@
-/*global jasmine, beforeEach, afterEach, describe, it, $, expect*/
+/*global jasmine, beforeEach, afterEach, describe, xit, it, $, expect*/
 
 // https://github.com/velesin/jasmine-jquery
 // https://github.com/velesin/jasmine-jquery/tree/support-jasmine-v2 -- we are using this version
@@ -16,7 +16,7 @@ describe('Wayfinding', function () {
 
 	beforeEach(function () {
 		fixtures.load('example.html');
-		$example = $('.example');
+		$example = $('#myMaps');
 		$example.wayfinding({
 			'maps': [
 				{'path': 'base/test/fixtures/demo_map_1.svg', 'id': 'floor1'},
@@ -33,6 +33,7 @@ describe('Wayfinding', function () {
 			},
 			'defaultMap': 'floor1'
 		});
+		waits(5000); // could implement a callback to speed this up rather than just waiting...
 	});
 
 	afterEach(function () {
@@ -52,8 +53,8 @@ describe('Wayfinding', function () {
 
 	it('routes to room 101', function () {
 		expect($example.find('.directionPath').length).toEqual(0);
-//		$example.wayfinding('routeTo', 'R101');
-//		expect($example).toContainElement('.directionPath');
+		$example.wayfinding('routeTo', 'R101');
+		expect($example).toContain('.directionPath');
 	});
 
 	xit('is destructible', function () {
