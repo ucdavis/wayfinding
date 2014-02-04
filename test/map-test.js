@@ -1,6 +1,7 @@
 /*global jasmine, beforeEach, afterEach, describe, it, $, expect*/
 
 // https://github.com/velesin/jasmine-jquery
+// https://github.com/velesin/jasmine-jquery/tree/support-jasmine-v2 -- we are using this version
 
 'use strict';
 
