@@ -55,6 +55,7 @@ describe('Wayfinding', function () {
 		expect($example.find('.directionPath').length).toEqual(0);
 		$example.wayfinding('routeTo', 'R101');
 		expect($example).toContain('.directionPath');
+		expect($example.find('.directionPath').attr('d')).toBe('M297,354L297,373Q297,381 289,381L107,381Q99,381 99,373L99,344Q99,336 106.15541752799933,339.5777087639997L117,345');
 	});
 
 	xit('is destructible', function () {

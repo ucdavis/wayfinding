@@ -640,7 +640,7 @@
 			$('path.directionPath', obj).remove();
 
 			//clear all rooms
-			$('#Rooms *.wayfindingRoom', obj).removeClass('wayfindingRoom');
+			$('#Rooms *.wayfindingRoom', obj).removeAttr('class');
 
 			// set route distance back to infinity and prior path to unvisited
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
@@ -670,7 +670,7 @@
 				endPaths = [];
 
 				//hilight the destination room
-				$('#Rooms a[id="' + destination + '"] g', obj).addClass('wayfindingRoom');
+				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 
 				//get a collection of starting paths
 				for (mapNum = 0; mapNum < maps.length; mapNum++) {
