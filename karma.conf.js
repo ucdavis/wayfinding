@@ -22,7 +22,7 @@ module.exports = function (config) {
 			'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
 
 			// include our JavaScript files
-			'scripts/example.js',
+			'scripts/jquery.wayfinding.js',
 
 			// simple patterns to load the needed testfiles
 			// equals to {pattern: 'test/*-test.js', watched: true, served: true, included: true}
@@ -31,7 +31,7 @@ module.exports = function (config) {
 			// fixtures should be served by the webserver but not included on
 			// the page with <script> tags
 			{
-				pattern: 'test/fixtures/example.html',
+				pattern: 'test/fixtures/*',
 				included: false,
 				served: true
 			}
