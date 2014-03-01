@@ -138,18 +138,9 @@
 			} */
 		} //function checkIds
 
-		// Extract data from the svg maps
-		function finishFloor(el, mapNum, floor) {
-
-			var path,
-				doorId,
-				x1,
-				y1,
-				x2,
-				y2,
-				matches,
-				portal,
-				portalId;
+		function cleanupSVG(el, floor) {
+			//hide maps until explicitly displayed
+			$('#' + floor.id, el).hide();
 
 			//hide route information
 			$('#' + floor.id + ' #Paths line', el).attr('stroke-opacity', 0);
@@ -164,12 +155,35 @@
 					var oldID = $(this).prop('id');
 					$(this).prop('id', oldID.slice(0, oldID.indexOf('_')));
 				}
+			}); //function cleanupSVG
+
+			//The following need to use the el variable to scope their calls: el is jquery element
+
+			// make clickable
+			// removed el scope from this next call.
+			$('#' + floor.id + ' #Rooms a').click(function (event) {
+				$(el).wayfinding('routeTo', $(this).prop('id'));
+				event.preventDefault();
 			});
+		}
+
+		// Extract data from the svg maps
+		function finishFloor(el, mapNum, floor) {
+
+			var path,
+				doorId,
+				x1,
+				y1,
+				x2,
+				y2,
+				matches,
+				portal,
+				portalId;
 
 			//Paths
 
 			dataStore.paths[mapNum] = [];
-
+			
 			$('#' + floor.id + ' #Paths line', el).each(function () { // index, line
 
 				path = {};
@@ -266,7 +280,7 @@
 
 
 		// after data extracted from all svg maps then build portals between them
-		function buildPortals(el) {
+		function buildPortals() {
 
 			var segmentOuterNum,
 				segmentInnerNum,
@@ -274,7 +288,6 @@
 				innerSegment,
 				portal,
 				mapNum,
-				displayNum,
 				pathOuterNum,
 				pathInnerNum,
 				portalNum,
@@ -371,19 +384,15 @@
 
 			portalSegments = [];
 
-			//The following need to use the el variable to scope their calls: el is jquery element
+		}   // end function buildportals
 
-			// make clickable
-			// removed el scope from this next call.
-			$('#Rooms a').click(function (event) {
-				$(el).wayfinding('routeTo', $(this).prop('id'));
-				event.preventDefault();
-			});
-
-//          $(el).prop('style', 'margin-left:0px');
+		function replaceLoadScreen(el) {
+			var displayNum,
+			mapNum;
 
 			$('#mapLoading').remove();
 
+			//loop ensures defaultMap is
 			displayNum = 0;
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
 				if (defaultMap === maps[mapNum].id) {
@@ -392,10 +401,8 @@
 			}
 
 			//hilight starting floor
-			$('div', el).hide();
 			$('#' + maps[displayNum].id, el).show(); // rework
-
-		}   // end function buildportals
+		} //function replaceLoadScreen
 
 		//initialize the jQuery target object
 		function initialize(target) {
@@ -417,11 +424,13 @@
 					function (svg) {
 						//get handle for that svg
 						maps[i].svgHandle = svg;
+						cleanupSVG(target, floor);
 						finishFloor(target, i, floor);
 						processed = processed + 1;
 						// rather than checking if we have processed the last map in order, this checks if we have processed the right number of maps
 						if (processed === maps.length) {
-							buildPortals(target);
+							buildPortals();
+							replaceLoadScreen(target);
 						}
 					}
 				);
