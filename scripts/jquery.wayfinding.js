@@ -1154,6 +1154,12 @@
 					//set result to text report listing non-reachable doors
 					result = checkMap();
 					break;
+				case 'getDataStore':
+					//shows JSON version of dataStore when called from console.
+					//To facilitate caching dataStore.
+					result = JSON.stringify(dataStore);
+					$('body').replaceWith(result);
+					break;
 				case 'destroy':
 					//remove all traces of wayfinding from the obj
 					$(obj).remove();
