@@ -38,7 +38,8 @@
 		//provides the identifier for the map that should be show at startup, if not given will default to showing first map in the array
 		'defaultMap': function () {
 			return 'map.1';
-		}
+		},
+		'dataStoreCache' : false
 	};
 
 	$.fn.wayfinding = function (action, options) {
@@ -155,7 +156,7 @@
 					var oldID = $(this).prop('id');
 					$(this).prop('id', oldID.slice(0, oldID.indexOf('_')));
 				}
-			}); //function cleanupSVG
+			});
 
 			//The following need to use the el variable to scope their calls: el is jquery element
 
@@ -165,7 +166,7 @@
 				$(el).wayfinding('routeTo', $(this).prop('id'));
 				event.preventDefault();
 			});
-		}
+		} //function cleanupSVG
 
 		// Extract data from the svg maps
 		function finishFloor(el, mapNum, floor) {
@@ -404,15 +405,8 @@
 			$('#' + maps[displayNum].id, el).show(); // rework
 		} //function replaceLoadScreen
 
-		//initialize the jQuery target object
-		function initialize(target) {
-
+		function loadMaps(target) {
 			var processed = 0;
-
-			dataStore.paths = [];
-			dataStore.portals = [];
-
-//          target.prop('style', 'margin-left:1920px'); // find a better way to allow the objects to be in the dom and visible, without using this trick?
 
 			$.each(maps, function (i, floor) {
 				//add div to maps div
@@ -423,18 +417,54 @@
 					floor.path,
 					function (svg) {
 						//get handle for that svg
+						processed = processed + 1;
 						maps[i].svgHandle = svg;
 						cleanupSVG(target, floor);
-						finishFloor(target, i, floor);
-						processed = processed + 1;
+						if (!options.dataStoreCache) {
+							finishFloor(target, i, floor);
 						// rather than checking if we have processed the last map in order, this checks if we have processed the right number of maps
+							if (processed === maps.length) {
+								buildPortals();
+							}
+						}
+
 						if (processed === maps.length) {
-							buildPortals();
-							replaceLoadScreen(target);
+							replaceLoadScreen();
+							setOptions(target);
 						}
 					}
 				);
 			});
+		} // function loadMaps
+
+		//initialize the jQuery target object
+		function initialize(target) {
+			//Pull dataStore from cache, if available.
+			if (options.dataStoreCache) {
+				try {
+					dataStore = $.parseJSON(options.dataStoreCache);
+					loadMaps(target);
+				} catch (err) {
+					//Not valid json, assume url instead
+					$.getJSON(options.dataStoreCache, function (result) {
+						dataStore = result;
+						loadMaps(target);
+					}).fail(function () {
+						console.log('Failed to get dataStore cache. Falling back to client-side dataStore generation.');
+
+						dataStore.paths = [];
+						dataStore.portals = [];
+						options.dataStoreCache = false;
+
+						loadMaps(target);
+					});
+				}
+			} else {
+				dataStore.paths = [];
+				dataStore.portals = [];
+
+				loadMaps(target);
+			}
 		} // function initialize
 
 		function switchFloor(floor, el) {
