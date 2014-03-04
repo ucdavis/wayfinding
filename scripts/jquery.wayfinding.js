@@ -38,7 +38,8 @@
 		//provides the identifier for the map that should be show at startup, if not given will default to showing first map in the array
 		'defaultMap': function () {
 			return 'map.1';
-		}
+		},
+		'dataStoreCache' : false
 	};
 
 	$.fn.wayfinding = function (action, options) {
@@ -138,6 +139,35 @@
 			} */
 		} //function checkIds
 
+		function cleanupSVG(target, el) {
+			//hide maps until explicitly displayed
+			$(el).hide();
+
+			//hide route information
+			$('#Paths line', el).attr('stroke-opacity', 0);
+			$('#Doors line', el).attr('stroke-opacity', 0);
+			$('#Portals line', el).attr('stroke-opacity', 0);
+
+			//Rooms
+
+			// clean up after illustrator -> svg issues
+			$('#Rooms a', el).each(function () {
+				if ($(this).prop('id') && $(this).prop('id').indexOf('_') > 0) {
+					var oldID = $(this).prop('id');
+					$(this).prop('id', oldID.slice(0, oldID.indexOf('_')));
+				}
+			});
+
+			//The following need to use the el variable to scope their calls: el is jquery element
+
+			// make clickable
+			// removed el scope from this next call.
+			$('#Rooms a', el).click(function (event) {
+				$(target).wayfinding('routeTo', $(this).prop('id'));
+				event.preventDefault();
+			});
+		} //function cleanupSVG
+
 		// Extract data from the svg maps
 		function finishFloor(el, mapNum, floor) {
 
@@ -151,25 +181,10 @@
 				portal,
 				portalId;
 
-			//hide route information
-			$('#' + floor.id + ' #Paths line', el).attr('stroke-opacity', 0);
-			$('#' + floor.id + ' #Doors line', el).attr('stroke-opacity', 0);
-			$('#' + floor.id + ' #Portals line', el).attr('stroke-opacity', 0);
-
-			//Rooms
-
-			// clean up after illustrator -> svg issues
-			$('#' + floor.id + ' #Rooms a', el).each(function () {
-				if ($(this).prop('id') && $(this).prop('id').indexOf('_') > 0) {
-					var oldID = $(this).prop('id');
-					$(this).prop('id', oldID.slice(0, oldID.indexOf('_')));
-				}
-			});
-
 			//Paths
 
 			dataStore.paths[mapNum] = [];
-
+			
 			$('#' + floor.id + ' #Paths line', el).each(function () { // index, line
 
 				path = {};
@@ -266,7 +281,7 @@
 
 
 		// after data extracted from all svg maps then build portals between them
-		function buildPortals(el) {
+		function buildPortals() {
 
 			var segmentOuterNum,
 				segmentInnerNum,
@@ -274,7 +289,6 @@
 				innerSegment,
 				portal,
 				mapNum,
-				displayNum,
 				pathOuterNum,
 				pathInnerNum,
 				portalNum,
@@ -371,19 +385,15 @@
 
 			portalSegments = [];
 
-			//The following need to use the el variable to scope their calls: el is jquery element
+		}   // end function buildportals
 
-			// make clickable
-			// removed el scope from this next call.
-			$('#Rooms a').click(function (event) {
-				$(el).wayfinding('routeTo', $(this).prop('id'));
-				event.preventDefault();
-			});
-
-//          $(el).prop('style', 'margin-left:0px');
+		function replaceLoadScreen(el) {
+			var displayNum,
+			mapNum;
 
 			$('#mapLoading').remove();
 
+			//loop ensures defaultMap is in fact one of the maps
 			displayNum = 0;
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
 				if (defaultMap === maps[mapNum].id) {
@@ -392,40 +402,73 @@
 			}
 
 			//hilight starting floor
-			$('div', el).hide();
 			$('#' + maps[displayNum].id, el).show(); // rework
+		} //function replaceLoadScreen
 
-		}   // end function buildportals
-
-		//initialize the jQuery target object
-		function initialize(target) {
-
+		function loadMaps(target) {
 			var processed = 0;
 
-			dataStore.paths = [];
-			dataStore.portals = [];
-
-//          target.prop('style', 'margin-left:1920px'); // find a better way to allow the objects to be in the dom and visible, without using this trick?
-
 			$.each(maps, function (i, floor) {
-				//add div to maps div
-				var targetFloor = target.append('<div id="' + floor.id + '"><\/div>').find('div:last');
+				//create div to put map in, disconnected from DOM for performance reasons
+				var targetFloor = $('<div id="' + floor.id + '"><\/div>');
 
 				//create svg in that div
 				targetFloor.load(
 					floor.path,
 					function (svg) {
 						//get handle for that svg
-						maps[i].svgHandle = svg;
-						finishFloor(target, i, floor);
 						processed = processed + 1;
+						maps[i].svgHandle = svg;
+						cleanupSVG(target, targetFloor);
+
+						//attach div
+						target.append(this);
+
+						if (!options.dataStoreCache) {
+							finishFloor(target, i, floor);
 						// rather than checking if we have processed the last map in order, this checks if we have processed the right number of maps
+							if (processed === maps.length) {
+								buildPortals();
+							}
+						}
+
 						if (processed === maps.length) {
-							buildPortals(target);
+							replaceLoadScreen(target);
+							setOptions(target);
 						}
 					}
 				);
 			});
+		} // function loadMaps
+
+		//initialize the jQuery target object
+		function initialize(target) {
+			//Pull dataStore from cache, if available.
+			if (options.dataStoreCache) {
+				try {
+					dataStore = $.parseJSON(options.dataStoreCache);
+					loadMaps(target);
+				} catch (err) {
+					//Not valid json, assume url instead
+					$.getJSON(options.dataStoreCache, function (result) {
+						dataStore = result;
+						loadMaps(target);
+					}).fail(function () {
+						console.log('Failed to get dataStore cache. Falling back to client-side dataStore generation.');
+
+						dataStore.paths = [];
+						dataStore.portals = [];
+						options.dataStoreCache = false;
+
+						loadMaps(target);
+					});
+				}
+			} else {
+				dataStore.paths = [];
+				dataStore.portals = [];
+
+				loadMaps(target);
+			}
 		} // function initialize
 
 		function switchFloor(floor, el) {
@@ -636,7 +679,7 @@
 				thisPath,
 				pick;
 
-				// remove any prior paths from the current map set
+			// remove any prior paths from the current map set
 			$('path.directionPath', obj).remove();
 
 			//clear all rooms
@@ -1144,6 +1187,12 @@
 					//handle exception report.
 					//set result to text report listing non-reachable doors
 					result = checkMap();
+					break;
+				case 'getDataStore':
+					//shows JSON version of dataStore when called from console.
+					//To facilitate caching dataStore.
+					result = JSON.stringify(dataStore);
+					$('body').replaceWith(result);
 					break;
 				case 'destroy':
 					//remove all traces of wayfinding from the obj
