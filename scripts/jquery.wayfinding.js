@@ -139,19 +139,19 @@
 			} */
 		} //function checkIds
 
-		function cleanupSVG(el, floor) {
+		function cleanupSVG(target, el) {
 			//hide maps until explicitly displayed
-			$('#' + floor.id, el).hide();
+			$(el).hide();
 
 			//hide route information
-			$('#' + floor.id + ' #Paths line', el).attr('stroke-opacity', 0);
-			$('#' + floor.id + ' #Doors line', el).attr('stroke-opacity', 0);
-			$('#' + floor.id + ' #Portals line', el).attr('stroke-opacity', 0);
+			$('#Paths line', el).attr('stroke-opacity', 0);
+			$('#Doors line', el).attr('stroke-opacity', 0);
+			$('#Portals line', el).attr('stroke-opacity', 0);
 
 			//Rooms
 
 			// clean up after illustrator -> svg issues
-			$('#' + floor.id + ' #Rooms a', el).each(function () {
+			$('#Rooms a', el).each(function () {
 				if ($(this).prop('id') && $(this).prop('id').indexOf('_') > 0) {
 					var oldID = $(this).prop('id');
 					$(this).prop('id', oldID.slice(0, oldID.indexOf('_')));
@@ -162,8 +162,8 @@
 
 			// make clickable
 			// removed el scope from this next call.
-			$('#' + floor.id + ' #Rooms a').click(function (event) {
-				$(el).wayfinding('routeTo', $(this).prop('id'));
+			$('#Rooms a', el).click(function (event) {
+				$(target).wayfinding('routeTo', $(this).prop('id'));
 				event.preventDefault();
 			});
 		} //function cleanupSVG
@@ -393,7 +393,7 @@
 
 			$('#mapLoading').remove();
 
-			//loop ensures defaultMap is
+			//loop ensures defaultMap is in fact one of the maps
 			displayNum = 0;
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
 				if (defaultMap === maps[mapNum].id) {
@@ -409,8 +409,8 @@
 			var processed = 0;
 
 			$.each(maps, function (i, floor) {
-				//add div to maps div
-				var targetFloor = target.append('<div id="' + floor.id + '"><\/div>').find('div:last');
+				//create div to put map in, disconnected from DOM for performance reasons
+				var targetFloor = $('<div id="' + floor.id + '"><\/div>');
 
 				//create svg in that div
 				targetFloor.load(
@@ -419,7 +419,11 @@
 						//get handle for that svg
 						processed = processed + 1;
 						maps[i].svgHandle = svg;
-						cleanupSVG(target, floor);
+						cleanupSVG(target, targetFloor);
+
+						//attach div
+						target.append(this);
+
 						if (!options.dataStoreCache) {
 							finishFloor(target, i, floor);
 						// rather than checking if we have processed the last map in order, this checks if we have processed the right number of maps
@@ -429,7 +433,7 @@
 						}
 
 						if (processed === maps.length) {
-							replaceLoadScreen();
+							replaceLoadScreen(target);
 							setOptions(target);
 						}
 					}
@@ -674,7 +678,7 @@
 				thisPath,
 				pick;
 
-				// remove any prior paths from the current map set
+			// remove any prior paths from the current map set
 			$('path.directionPath', obj).remove();
 
 			//clear all rooms
