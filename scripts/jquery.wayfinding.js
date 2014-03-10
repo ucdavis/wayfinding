@@ -593,25 +593,10 @@
 //			console.log('animate', i, drawing.length, drawLength, delay, new Date());
 
 			switchFloor(maps[drawing[i][0].floor].id, obj);
-//			console.log(drawLength, drawing[i].path);
-			/*
-			$(drawing[i].path).animate(
-					{svgStrokeDashOffset: drawLength}, {
-					duration: drawLength * options.path.speed,
-					easing: 'linear',
-					step: function (offset) {
-						this.setAttribute('svgStrokeDashOffset', offset);
-					},
-					complete: function () {
-						i++;
-						if (i < drawing.length) {
-							animatePath(drawing, i);
-						}
-					}
-				});
-			*/
-			path = $('#' + maps[drawing[i][0].floor].id + ' .directionPath')[0];
-//			drawLength = path.getTotalLength();
+
+			path = $('#' + maps[drawing[i][0].floor].id + ' .directionPath' + i)[0];
+			path.style.stroke = options.path.color;
+			path.style.strokeWidth = options.path.width;
 			path.style.transition = path.style.WebkitTransition = 'none';
 			path.style.strokeDasharray = drawLength + ' ' + drawLength;
 			path.style.strokeDashoffset = drawLength;
@@ -679,7 +664,7 @@
 				pick;
 
 			// remove any prior paths from the current map set
-			$('path.directionPath', obj).remove();
+			$('path[class^=directionPath]', obj).remove();
 
 			//clear all rooms
 			$('#Rooms *.wayfindingRoom', obj).removeAttr('class');
@@ -987,45 +972,20 @@
 
 						newPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 						newPath.setAttribute('d', path);
-						newPath.style.stroke = options.path.color;
-						newPath.style.strokeWidth = options.path.width;
 						newPath.style.fill = 'none';
 						if (newPath.classList) {
-							newPath.classList.add('directionPath');
+							newPath.classList.add('directionPath' + i);
 						} else {
-							newPath.setAttribute('class', 'directionPath');
+							newPath.setAttribute('class', 'directionPath' + i);
 						}
-
-//						newPath.className += ' directionPath';
-//						newPath.addClass('directionPath');
-
-//                        console.dir(maps[level[0].floor].id);
-
-//                        console.log(typeof maps[level[0].floor].svgHandle);
 
 						$('#' + maps[level[0].floor].id + ' svg').append(newPath);
 
-						thisPath = $('#' + maps[level[0].floor].id + ' svg .directionPath');
-
-						//thisPath = maps[level[0].floor].svgHandle;//.appendChild(newPath);//.append(newPath);//.path(path, {'stroke': options.path.color, 'strokeWidth': options.path.width, fill: 'none', 'class': 'directionPath'});
+						thisPath = $('#' + maps[level[0].floor].id + ' svg .directionPath' + i);
 
 						drawing[i].path = thisPath;
 
 						drawLength = drawing[i].routeLength;
-
-//						$(drawing[i].path).attr('stroke-dasharray', [drawLength, drawLength]);
-//						$(drawing[i].path).attr('stroke-dashoffset', drawLength);
-//						$(drawing[i].path).attr('pathLength', drawLength);
-
-//                        console.log('start', i, drawLength, new Date());
-						//console.log(drawing[i].path);
-
-						//animate path
-						/*
-						$(drawing[i].path).animate({svgStrokeDashOffset: 0}, drawLength * options.path.speed, 'linear', function () {
-							console.log("end", i, drawLength, new Date());
-						});
-						*/
 
 					});
 
