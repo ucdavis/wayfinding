@@ -39,7 +39,12 @@
 		'defaultMap': function () {
 			return 'map.1';
 		},
-		'dataStoreCache' : false
+		'dataStoreCache' : false,
+		'showLocation' : false,
+		'locationIndicator' : {
+			fill: 'red',
+			height: 40
+		}
 	};
 
 	$.fn.wayfinding = function (action, options) {
@@ -85,7 +90,7 @@
 
 			// set startpoint correctly
 			if (typeof (options.startpoint) === 'function') {
-				startpoint = options.startpoint();
+				setStartPoint(options.startpoint(), el);
 			} else {
 				startpoint = options.startpoint;
 			}
@@ -139,6 +144,67 @@
 			} */
 		} //function checkIds
 
+		function setStartPoint(passed, el) {
+			var indicator,
+			start,
+			x, y,
+			symbolPath,
+			height,
+			width;
+
+			// set startpoint correctly
+			if (typeof (passed) === 'function') {
+				startpoint = passed();
+			} else {
+				startpoint = passed;
+			}
+
+			if (options.showLocation) {
+				$('path.locationIndicator', el).remove();
+
+				indicator = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+				
+				$(indicator).attr('class', 'locationIndicator');
+
+				start = $('#Doors #' + startpoint, el);
+
+				x = (Number(start.attr('x1')) + Number(start.attr('x2'))) / 2;
+				y = (Number(start.attr('y1')) + Number(start.attr('y2'))) / 2;
+
+				height = options.locationIndicator.height;
+				width = height * 5 / 8;
+
+				//draws map pin
+				symbolPath = 'M ' + x + ' ' + y;
+				//1st diagonal line
+				symbolPath += ' l ' + width / 2 + ' ' + height * (-2) / 3;
+				//curve over top
+				//rx, ry
+				symbolPath += ' a ' + width / 2 + ' ' + height / 3;
+				//x-axis-rotation large-arc-flag sweep-flag
+				symbolPath += ' 0 0 0 ';
+				//dx, dy
+				symbolPath += width * (-1) + ' 0 ';
+				//close path
+				symbolPath += 'Z';
+				//finish with circle at center of pin
+				symbolPath += ' m ' + height / (-8) + ' ' + height * (-2) / 3;
+				symbolPath += ' a ' + height / 8 + ' ' + height / 8;
+				symbolPath += ' 0 1 0 ';
+				symbolPath += height / 4 + ' 0';
+				symbolPath += ' a ' + height / 8 + ' ' + height / 8;
+				symbolPath += ' 0 1 0 ';
+				symbolPath += height / (-4) + ' 0'; //drawing circle, right back where we started.
+
+				indicator.setAttribute('d', symbolPath);
+				indicator.setAttribute('fill', options.locationIndicator.fill);
+				indicator.setAttribute('fill-rule', 'evenodd');
+				indicator.setAttribute('stroke', 'black');
+
+				start.after(indicator);
+			}
+		}
+
 		function cleanupSVG(target, el) {
 			//hide maps until explicitly displayed
 			$(el).hide();
@@ -151,7 +217,7 @@
 			//Rooms
 
 			// clean up after illustrator -> svg issues
-			$('#Rooms a', el).each(function () {
+			$('#Rooms a, #Doors line', el).each(function () {
 				if ($(this).prop('id') && $(this).prop('id').indexOf('_') > 0) {
 					var oldID = $(this).prop('id');
 					$(this).prop('id', oldID.slice(0, oldID.indexOf('_')));
@@ -211,12 +277,6 @@
 			//roomId or POI_Id
 
 			$('#' + floor.id + ' #Doors line', el).each(function () { // index, line
-
-				// make id match room id format
-				doorId = $(this).prop('id');
-				if (doorId && doorId.indexOf('_') > -1) {
-					doorId = doorId.slice(0, doorId.indexOf('_'));
-				}
 
 				x1 = $(this).prop('x1').animVal.value;
 				y1 = $(this).prop('y1').animVal.value;
@@ -434,6 +494,7 @@
 
 						if (processed === maps.length) {
 							replaceLoadScreen(target);
+							setStartPoint(options.startpoint, target);
 							setOptions(target);
 						}
 					}
@@ -1115,7 +1176,7 @@
 					if (passed === undefined) {
 						result = startpoint;
 					} else {
-						options.startpoint = passed;
+						setStartPoint(passed);
 					}
 					break;
 				case 'currentMap':
