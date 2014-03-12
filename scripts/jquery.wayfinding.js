@@ -144,13 +144,62 @@
 			} */
 		} //function checkIds
 
+		//Takes x and y coordinates and makes a location indicating pin for those
+		//coordinates. Returns the pin element, not yet attached to the DOM.
+		function makePin(x, y) {
+			var indicator,
+			height,
+			width,
+			symbolPath;
+
+			indicator = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			
+			$(indicator).attr('class', 'locationIndicator');
+
+			height = options.locationIndicator.height;
+			width = height * 5 / 8;
+			
+			//draws map pin
+			symbolPath = 'M ' + x + ' ' + y;
+			//1st diagonal line
+			symbolPath += ' l ' + width / 2 + ' ' + height * (-2) / 3;
+			//curve over top
+			//rx, ry
+			symbolPath += ' a ' + width / 2 + ' ' + height / 3;
+			//x-axis-rotation large-arc-flag sweep-flag
+			symbolPath += ' 0 0 0 ';
+			//dx, dy
+			symbolPath += width * (-1) + ' 0 ';
+			//close path
+			symbolPath += 'Z';
+			//finish with circle at center of pin
+			symbolPath += ' m ' + height / (-8) + ' ' + height * (-2) / 3;
+			symbolPath += ' a ' + height / 8 + ' ' + height / 8;
+			symbolPath += ' 0 1 0 ';
+			symbolPath += height / 4 + ' 0';
+			symbolPath += ' a ' + height / 8 + ' ' + height / 8;
+			symbolPath += ' 0 1 0 ';
+			//drawing circle, right back where we started.
+			symbolPath += height / (-4) + ' 0';
+			
+			indicator.setAttribute('d', symbolPath);
+			indicator.setAttribute('fill', options.locationIndicator.fill);
+			indicator.setAttribute('fill-rule', 'evenodd');
+			indicator.setAttribute('stroke', 'black');
+
+			return indicator;
+		} //function makePin
+
+		//set the start point, and put a location indicator 
+		//in that spot, if feature is enabled.
 		function setStartPoint(passed, el) {
 			var indicator,
 			start,
 			x, y,
-			symbolPath,
-			height,
-			width;
+			pin;
+
+			//clears locationIndicators from the maps
+			$('path.locationIndicator', el).remove();
 
 			// set startpoint correctly
 			if (typeof (passed) === 'function') {
@@ -160,50 +209,16 @@
 			}
 
 			if (options.showLocation) {
-				$('path.locationIndicator', el).remove();
-
-				indicator = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-				
-				$(indicator).attr('class', 'locationIndicator');
-
 				start = $('#Doors #' + startpoint, el);
 
 				x = (Number(start.attr('x1')) + Number(start.attr('x2'))) / 2;
 				y = (Number(start.attr('y1')) + Number(start.attr('y2'))) / 2;
-
-				height = options.locationIndicator.height;
-				width = height * 5 / 8;
-
-				//draws map pin
-				symbolPath = 'M ' + x + ' ' + y;
-				//1st diagonal line
-				symbolPath += ' l ' + width / 2 + ' ' + height * (-2) / 3;
-				//curve over top
-				//rx, ry
-				symbolPath += ' a ' + width / 2 + ' ' + height / 3;
-				//x-axis-rotation large-arc-flag sweep-flag
-				symbolPath += ' 0 0 0 ';
-				//dx, dy
-				symbolPath += width * (-1) + ' 0 ';
-				//close path
-				symbolPath += 'Z';
-				//finish with circle at center of pin
-				symbolPath += ' m ' + height / (-8) + ' ' + height * (-2) / 3;
-				symbolPath += ' a ' + height / 8 + ' ' + height / 8;
-				symbolPath += ' 0 1 0 ';
-				symbolPath += height / 4 + ' 0';
-				symbolPath += ' a ' + height / 8 + ' ' + height / 8;
-				symbolPath += ' 0 1 0 ';
-				symbolPath += height / (-4) + ' 0'; //drawing circle, right back where we started.
-
-				indicator.setAttribute('d', symbolPath);
-				indicator.setAttribute('fill', options.locationIndicator.fill);
-				indicator.setAttribute('fill-rule', 'evenodd');
-				indicator.setAttribute('stroke', 'black');
-
-				start.after(indicator);
+				
+				pin = makePin(x, y);
+				
+				start.after(pin);
 			}
-		}
+		} //function setStartPoint
 
 		function cleanupSVG(target, el) {
 			//hide maps until explicitly displayed
