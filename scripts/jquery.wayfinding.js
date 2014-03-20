@@ -297,6 +297,7 @@
 				y1 = $(this).prop('y1').animVal.value;
 				x2 = $(this).prop('x2').animVal.value;
 				y2 = $(this).prop('y2').animVal.value;
+				doorId = $(this).prop('id');
 
 				$.each(dataStore.paths[mapNum], function (index, path) {
 					if (floor.id === path.floor && ((path.ax === x1 && path.ay === y1) || (path.ax === x2 && path.ay === y2))) {
