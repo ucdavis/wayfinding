@@ -69,6 +69,8 @@
 			var optionsPrior = el.data('wayfinding:options'), // attempt to load prior settings
 				dataStorePrior = el.data('wayfinding:data'); // load any stored data
 
+            drawing = el.data('wayfinding:drawing'); // load a drawn path, if it exists
+
 			if (optionsPrior !== undefined) {
 				options = optionsPrior;
 			} else {
@@ -103,6 +105,7 @@
 		//
 		function setOptions(el) {
 			el.data('wayfinding:options', options);
+            el.data('wayfinding:drawing', drawing);
 			el.data('wayfinding:data', dataStore);
 		}
 
@@ -153,12 +156,12 @@
 			symbolPath;
 
 			indicator = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-			
+
 			$(indicator).attr('class', 'locationIndicator');
 
 			height = options.locationIndicator.height;
 			width = height * 5 / 8;
-			
+
 			//draws map pin
 			symbolPath = 'M ' + x + ' ' + y;
 			//1st diagonal line
@@ -181,7 +184,7 @@
 			symbolPath += ' 0 1 0 ';
 			//drawing circle, right back where we started.
 			symbolPath += height / (-4) + ' 0';
-			
+
 			indicator.setAttribute('d', symbolPath);
 			indicator.setAttribute('fill', options.locationIndicator.fill);
 			indicator.setAttribute('fill-rule', 'evenodd');
@@ -190,11 +193,10 @@
 			return indicator;
 		} //function makePin
 
-		//set the start point, and put a location indicator 
+		//set the start point, and put a location indicator
 		//in that spot, if feature is enabled.
 		function setStartPoint(passed, el) {
-			var indicator,
-			start,
+			var start,
 			x, y,
 			pin;
 
@@ -213,9 +215,9 @@
 
 				x = (Number(start.attr('x1')) + Number(start.attr('x2'))) / 2;
 				y = (Number(start.attr('y1')) + Number(start.attr('y2'))) / 2;
-				
+
 				pin = makePin(x, y);
-				
+
 				start.after(pin);
 			}
 		} //function setStartPoint
@@ -265,7 +267,7 @@
 			//Paths
 
 			dataStore.paths[mapNum] = [];
-			
+
 			$('#' + floor.id + ' #Paths line', el).each(function () { // index, line
 
 				path = {};
@@ -662,6 +664,12 @@
 			}
 		}
 
+        function hidePath(obj) {
+            $('path[class^=directionPath]', obj).css({
+                'stroke': 'none'
+            });
+        }
+
 		function animatePath(drawing, i) {
 			var path,
 				drawLength = drawing[i].routeLength,
@@ -695,7 +703,6 @@
 					},
 					5000);
 			}
-
 		}
 
 		// The combined routing function
@@ -1187,6 +1194,10 @@
 					// call method
 					routeTo(passed);
 					break;
+                case 'animatePath':
+                    hidePath(obj);
+                    animatePath(drawing, 0);
+                    break;
 				case 'startpoint':
 					// change the startpoint or startpoint for the instruction path
 					if (passed === undefined) {
