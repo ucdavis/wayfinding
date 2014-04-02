@@ -44,7 +44,9 @@
 		'locationIndicator' : {
 			fill: 'red',
 			height: 40
-		}
+		},
+		'zoomToRoute' : false,
+		'zoomPadding' : 50
 	};
 
 	$.fn.wayfinding = function (action, options) {
@@ -68,6 +70,8 @@
 
 			var optionsPrior = el.data('wayfinding:options'), // attempt to load prior settings
 				dataStorePrior = el.data('wayfinding:data'); // load any stored data
+
+			drawing = el.data('wayfinding:drawing'); // load a drawn path, if it exists
 
 			if (optionsPrior !== undefined) {
 				options = optionsPrior;
@@ -103,6 +107,7 @@
 		//
 		function setOptions(el) {
 			el.data('wayfinding:options', options);
+			el.data('wayfinding:drawing', drawing);
 			el.data('wayfinding:data', dataStore);
 		}
 
@@ -153,12 +158,12 @@
 			symbolPath;
 
 			indicator = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-			
+
 			$(indicator).attr('class', 'locationIndicator');
 
 			height = options.locationIndicator.height;
 			width = height * 5 / 8;
-			
+
 			//draws map pin
 			symbolPath = 'M ' + x + ' ' + y;
 			//1st diagonal line
@@ -181,7 +186,7 @@
 			symbolPath += ' 0 1 0 ';
 			//drawing circle, right back where we started.
 			symbolPath += height / (-4) + ' 0';
-			
+
 			indicator.setAttribute('d', symbolPath);
 			indicator.setAttribute('fill', options.locationIndicator.fill);
 			indicator.setAttribute('fill-rule', 'evenodd');
@@ -190,11 +195,10 @@
 			return indicator;
 		} //function makePin
 
-		//set the start point, and put a location indicator 
+		//set the start point, and put a location indicator
 		//in that spot, if feature is enabled.
 		function setStartPoint(passed, el) {
-			var indicator,
-			start,
+			var start,
 			x, y,
 			pin;
 
@@ -213,9 +217,9 @@
 
 				x = (Number(start.attr('x1')) + Number(start.attr('x2'))) / 2;
 				y = (Number(start.attr('y1')) + Number(start.attr('y2'))) / 2;
-				
+
 				pin = makePin(x, y);
-				
+
 				start.after(pin);
 			}
 		} //function setStartPoint
@@ -265,7 +269,7 @@
 			//Paths
 
 			dataStore.paths[mapNum] = [];
-			
+
 			$('#' + floor.id + ' #Paths line', el).each(function () { // index, line
 
 				path = {};
@@ -662,10 +666,18 @@
 			}
 		}
 
+		function hidePath(obj) {
+			$('path[class^=directionPath]', obj).css({
+				'stroke': 'none'
+			});
+		}
+
 		function animatePath(drawing, i) {
 			var path,
-				drawLength = drawing[i].routeLength,
-				delay = drawLength * options.path.speed;
+			pathRect,
+			oldViewBox,
+			drawLength = drawing[i].routeLength,
+			delay = drawLength * options.path.speed;
 
 //			console.log('animate', i, drawing.length, drawLength, delay, new Date());
 
@@ -677,14 +689,29 @@
 			path.style.transition = path.style.WebkitTransition = 'none';
 			path.style.strokeDasharray = drawLength + ' ' + drawLength;
 			path.style.strokeDashoffset = drawLength;
-			path.getBoundingClientRect();
+			pathRect = path.getBBox();
 			path.style.transition = path.style.WebkitTransition = 'stroke-dashoffset ' + delay + 'ms linear';
 			path.style.strokeDashoffset = '0';
 // http://jakearchibald.com/2013/animated-line-drawing-svg/
+
+			if (options.zoomToRoute) {
+				$('#' + maps[drawing[i][0].floor].id + ' svg').each(function (i, svg) {
+					var pad = options.zoomPadding;
+
+					oldViewBox = svg.getAttribute('viewBox');
+
+					svg.setAttribute('viewBox', (pathRect.x - pad)  + ' ' + (pathRect.y - pad) +
+						' ' + (pathRect.width + pad * 2) + ' ' + (pathRect.height + pad * 2));
+				});
+			}
+
 			if (++i < drawing.length) {
 //				console.log('reanimate', i, drawing.length, drawLength, delay, new Date());
 				setTimeout(function () {
 					animatePath(drawing, i);
+					$('#' + maps[drawing[i - 1][0].floor].id + ' svg').each(function (i, svg) {
+						svg.setAttribute('viewBox', oldViewBox);
+					});
 				},
 				delay + 1000);
 			} else if (1 !== 1) {
@@ -695,7 +722,6 @@
 					},
 					5000);
 			}
-
 		}
 
 		// The combined routing function
@@ -1186,6 +1212,10 @@
 				case 'routeTo':
 					// call method
 					routeTo(passed);
+					break;
+				case 'animatePath':
+					hidePath(obj);
+					animatePath(drawing, 0);
 					break;
 				case 'startpoint':
 					// change the startpoint or startpoint for the instruction path
