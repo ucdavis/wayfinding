@@ -674,12 +674,27 @@
 
 		function animatePath(drawing, i) {
 			var path,
+			svg,
 			pathRect,
 			oldViewBox,
-			drawLength = drawing[i].routeLength,
-			delay = drawLength * options.path.speed;
+			drawLength,
+			delay,
+			pad = options.zoomPadding;
 
-//			console.log('animate', i, drawing.length, drawLength, delay, new Date());
+			if (1 !== 1 && i >= drawing.length) {
+				// if repeat is set, then delay and rerun display from first.
+				// Don't implement, until we have click to cancel out of this
+				setTimeout(function () {
+					animatePath(drawing, 0);
+				},
+				5000);
+			} else if (i >= drawing.length) {
+				//finished, stop recursion.
+				return;
+			}
+
+			drawLength = drawing[i].routeLength;
+			delay = drawLength * options.path.speed;
 
 			switchFloor(maps[drawing[i][0].floor].id, obj);
 
@@ -694,35 +709,22 @@
 			path.style.strokeDashoffset = '0';
 // http://jakearchibald.com/2013/animated-line-drawing-svg/
 
+			// Zooming logic...
+			svg = $('#' + maps[drawing[i][0].floor].id + ' svg')[0];
+			oldViewBox = svg.getAttribute('viewBox');
+
 			if (options.zoomToRoute) {
-				$('#' + maps[drawing[i][0].floor].id + ' svg').each(function (i, svg) {
-					var pad = options.zoomPadding;
-
-					oldViewBox = svg.getAttribute('viewBox');
-
-					svg.setAttribute('viewBox', (pathRect.x - pad)  + ' ' + (pathRect.y - pad) +
-						' ' + (pathRect.width + pad * 2) + ' ' + (pathRect.height + pad * 2));
+				svg.setAttribute('viewBox', (pathRect.x - pad)  + ' ' + (pathRect.y - pad) +
+					' ' + (pathRect.width + pad * 2) + ' ' + (pathRect.height + pad * 2));
 				});
 			}
 
-			if (++i < drawing.length) {
-//				console.log('reanimate', i, drawing.length, drawLength, delay, new Date());
-				setTimeout(function () {
-					animatePath(drawing, i);
-					$('#' + maps[drawing[i - 1][0].floor].id + ' svg').each(function (i, svg) {
-						svg.setAttribute('viewBox', oldViewBox);
-					});
-				},
-				delay + 1000);
-			} else if (1 !== 1) {
-				// if repeat is set, then delay and rerun display from first.
-				// Don't implement, until we have click to cancel out of this
-				setTimeout(function () {
-						animatePath(drawing, 0);
-					},
-					5000);
-			}
-		}
+			setTimeout(function () {
+				animatePath(drawing, ++i);
+				svg.setAttribute('viewBox', oldViewBox); //zoom back out
+			},
+			delay + 1000);
+		} //function animatePath
 
 		// The combined routing function
 		// revise to only interate if startpoint has changed since last time?
