@@ -716,7 +716,6 @@
 			if (options.zoomToRoute) {
 				svg.setAttribute('viewBox', (pathRect.x - pad)  + ' ' + (pathRect.y - pad) +
 					' ' + (pathRect.width + pad * 2) + ' ' + (pathRect.height + pad * 2));
-				});
 			}
 
 			setTimeout(function () {
