@@ -199,6 +199,7 @@
 		//in that spot, if feature is enabled.
 		function setStartPoint(passed, el) {
 			var start,
+			startpoint,
 			x, y,
 			pin;
 
@@ -207,20 +208,26 @@
 
 			// set startpoint correctly
 			if (typeof (passed) === 'function') {
-				startpoint = passed();
+				options.startpoint = passed();
 			} else {
-				startpoint = passed;
+				options.startpoint = passed;
 			}
+
+			startpoint = options.startpoint;
 
 			if (options.showLocation) {
 				start = $('#Doors #' + startpoint, el);
 
-				x = (Number(start.attr('x1')) + Number(start.attr('x2'))) / 2;
-				y = (Number(start.attr('y1')) + Number(start.attr('y2'))) / 2;
+				if (start.length) {
+					x = (Number(start.attr('x1')) + Number(start.attr('x2'))) / 2;
+					y = (Number(start.attr('y1')) + Number(start.attr('y2'))) / 2;
 
-				pin = makePin(x, y);
+					pin = makePin(x, y);
 
-				start.after(pin);
+					start.after(pin);
+				} else {
+					return; //startpoint does not exist
+				}
 			}
 		} //function setStartPoint
 
