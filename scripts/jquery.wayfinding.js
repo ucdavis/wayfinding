@@ -33,6 +33,10 @@
 		'startpoint': function () {
 			return 'startpoint';
 		},
+		// if specified in the wayfinding initialization
+		// route to this point as soon as the maps load. Can be initialized
+		// as a function or a string (for consistency with startpoint)
+		'endpoint': false,
 		//controls routing through stairs
 		'accessibleRoute': false,
 		//provides the identifier for the map that should be show at startup, if not given will default to showing first map in the array
@@ -199,7 +203,6 @@
 		//in that spot, if feature is enabled.
 		function setStartPoint(passed, el) {
 			var start,
-			startpoint,
 			x, y,
 			pin;
 
@@ -490,6 +493,12 @@
 
 			//hilight starting floor
 			$('#' + maps[displayNum].id, el).show(); // rework
+			//if endpoint was specified, route to there.
+			if (typeof(options.endpoint) === 'function') {
+				routeTo(options.endpoint());
+			} else if (typeof(options.endpoint) === 'string') {
+				routeTo(options.endpoint);
+			}
 		} //function replaceLoadScreen
 
 		function loadMaps(target) {
@@ -773,6 +782,8 @@
 				drawLength,
 				thisPath,
 				pick;
+
+			options.endpoint = destination;
 
 			// remove any prior paths from the current map set
 			$('path[class^=directionPath]', obj).remove();
@@ -1105,10 +1116,10 @@
 					//on switch which floor is displayed reset path svgStrokeDashOffset to minPath and the reanimate
 					//notify animation loop?
 
-				} /* else {
+				}  /*else {
 					// respond that path not found
-//                  console.log("path not found from " + startpoint + " to " + destination);
-				} */
+				console.log("path not found from " + startpoint + " to " + destination);
+			}*/
 			}
 		} //RouteTo
 
