@@ -49,6 +49,7 @@
 			fill: 'red',
 			height: 40
 		},
+		'wayFound' : false,
 		'zoomToRoute' : false,
 		'zoomPadding' : 50
 	};
@@ -501,6 +502,31 @@
 			}
 		} //function replaceLoadScreen
 
+		//deletes path metadata from datastore.
+		//otherwise old path data will be reused.
+		function prepareForSearch() {
+			var mapNum,
+			pathNum,
+			portalNum;
+
+			// set route distance back to infinity and prior path to unvisited
+			for (mapNum = 0; mapNum < maps.length; mapNum++) {
+				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
+					dataStore.paths[mapNum][pathNum].route = Infinity;
+					dataStore.paths[mapNum][pathNum].prior = -1;
+				}
+			} //function prepareForSearch
+
+			// reset portals
+			for (portalNum = 0; portalNum < dataStore.portals.length; portalNum++) {
+				//Set route distance to infinity
+				dataStore.portals[portalNum].route = Infinity;
+				//indicate which node was used to get to this node -1 = none
+				dataStore.portals[portalNum].prior = -1;
+				dataStore.portals[portalNum].priormapNum = -1;
+			}
+		}
+
 		function loadMaps(target) {
 			var processed = 0;
 
@@ -658,6 +684,8 @@
 					}
 				});
 			}
+
+			options.wayFound = true;
 		}
 
 		// from a given end point generate an array representing the reverse steps needed to reach destination along shortest path
@@ -748,7 +776,6 @@
 			var i,
 				mapNum,
 				pathNum,
-				portalNum,
 				startPaths,
 				endPaths,
 				sourceFloor,// = source.parents("div").prop("id");
@@ -791,22 +818,6 @@
 			//clear all rooms
 			$('#Rooms *.wayfindingRoom', obj).removeAttr('class');
 
-			// set route distance back to infinity and prior path to unvisited
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-					dataStore.paths[mapNum][pathNum].route = Infinity;
-					dataStore.paths[mapNum][pathNum].prior = -1;
-				}
-			}
-
-			//reset portals
-			for (portalNum = 0; portalNum < dataStore.portals.length; portalNum++) {
-				//Set route distance to infinity
-				dataStore.portals[portalNum].route = Infinity;
-				//indicate which node was used to get to this node -1 = none
-				dataStore.portals[portalNum].prior = -1;
-				dataStore.portals[portalNum].priormapNum = -1;
-			}
 
 			solution = [];
 
@@ -867,11 +878,16 @@
 				}
 
 				// set starting points information in the paths collection
-				$.each(startPaths, function (i, pathId) {
-					dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
-					dataStore.paths[sourcemapNum][pathId].prior = 'door';
-					recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
-				});
+				if (!options.wayFound) {
+					// set route distance back to infinity and prior path to unvisited
+					prepareForSearch();
+					$.each(startPaths, function (i, pathId) {
+						dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
+						dataStore.paths[sourcemapNum][pathId].prior = 'door';
+						recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
+					});
+					setOptions(obj);
+				}
 
 				minPath = Infinity;
 				reversePathStart = -1;
@@ -1241,6 +1257,7 @@
 					if (passed === undefined) {
 						result = startpoint;
 					} else {
+						options.wayFound = false;
 						setStartPoint(passed);
 					}
 					break;
@@ -1257,6 +1274,9 @@
 					if (passed === undefined) {
 						result = options.accessibleRoute;
 					} else {
+						if (options.accessibleRoute !== passed) {
+							options.wayFound = false;
+						}
 						options.accessibleRoute = passed;
 					}
 					break;
