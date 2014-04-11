@@ -37,6 +37,17 @@ div#mapLoading {
 	z-index: -1;
 }
 
+.debugPath {
+	stroke: orange;
+	stroke-width: 5;
+}
+
+.debugRoom {
+	fill: red;
+	stroke: red;
+	stroke-width: 4;
+}
+
 .wayfindingRoom {
 	fill: #ffc;
 	stroke: blue;
