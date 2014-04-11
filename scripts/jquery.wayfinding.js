@@ -769,22 +769,48 @@
 			delay + 1000);
 		} //function animatePath
 
+		//get the set of paths adjacent to a door or endpoint.
+		function getDoorPaths(door) {
+			var mapNum,
+			pathNum,
+			doorANum,
+			doorBNum,
+			result = {
+				'paths' : [],
+				'floor' : null
+			};
+
+			for (mapNum = 0; mapNum < maps.length; mapNum++) {
+				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
+					for (doorANum = 0; doorANum < dataStore.paths[mapNum][pathNum].doorA.length; doorANum++) {
+						if (dataStore.paths[mapNum][pathNum].doorA[doorANum] === door) {
+							result.paths.push(pathNum); // only pushing pathNum because starting on a single floor
+							result.floor = dataStore.paths[mapNum][pathNum].floor;
+						}
+					}
+					for (doorBNum = 0; doorBNum < dataStore.paths[mapNum][pathNum].doorB.length; doorBNum++) {
+						if (dataStore.paths[mapNum][pathNum].doorB[doorBNum] === door) {
+							result.paths.push(pathNum); // only pushing pathNum because starting on a single floor
+							result.floor = dataStore.paths[mapNum][pathNum].floor;
+						}
+					}
+				}
+			}
+
+			return result;
+		}
+
 		// The combined routing function
 		// revise to only interate if startpoint has changed since last time?
 		function routeTo(destination) {
 
 			var i,
 				mapNum,
-				pathNum,
-				startPaths,
-				endPaths,
-				sourceFloor,// = source.parents("div").prop("id");
-				destinationFloor,// = destination.parents("div").prop("id");
+				sourceInfo,
+				destInfo,
 				sourcemapNum,
 				destinationmapNum,
 				draw,
-				doorANum,
-				doorBNum,
 				stepNum,
 				level,
 				minPath,
@@ -826,53 +852,17 @@
 
 				// get accessibleRoute option -- options.accessibleRoute
 
-				startPaths = [];
-				endPaths = [];
-
 				//hilight the destination room
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 
-				//get a collection of starting paths
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-						for (doorANum = 0; doorANum < dataStore.paths[mapNum][pathNum].doorA.length; doorANum++) {
-							if (dataStore.paths[mapNum][pathNum].doorA[doorANum] === startpoint) {
-								startPaths.push(pathNum); // only pushing pathNum because starting on a single floor
-								sourceFloor = dataStore.paths[mapNum][pathNum].floor;
-							}
-						}
-						for (doorBNum = 0; doorBNum < dataStore.paths[mapNum][pathNum].doorB.length; doorBNum++) {
-							if (dataStore.paths[mapNum][pathNum].doorB[doorBNum] === startpoint) {
-								startPaths.push(pathNum); // only pushing pathNum because starting on a single floor
-								sourceFloor = dataStore.paths[mapNum][pathNum].floor;
-							}
-						}
-					}
-				}
-
-				//get a collection of ending paths
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-						for (doorANum = 0; doorANum < dataStore.paths[mapNum][pathNum].doorA.length; doorANum++) {
-							if (dataStore.paths[mapNum][pathNum].doorA[doorANum] === destination) {
-								endPaths.push(pathNum); // only pushing pathNum because starting on a single floor
-								destinationFloor = dataStore.paths[mapNum][pathNum].floor;
-							}
-						}
-						for (doorBNum = 0; doorBNum < dataStore.paths[mapNum][pathNum].doorB.length; doorBNum++) {
-							if (dataStore.paths[mapNum][pathNum].doorB[doorBNum] === destination) {
-								endPaths.push(pathNum); // only pushing pathNum because starting on a single floor
-								destinationFloor = dataStore.paths[mapNum][pathNum].floor;
-							}
-						}
-					}
-				}
+				sourceInfo = getDoorPaths(startpoint);
+				destInfo = getDoorPaths(destination);
 
 				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === sourceFloor) {
+					if (maps[mapNum].id === sourceInfo.floor) {
 						sourcemapNum = mapNum;
 					}
-					if (maps[mapNum].id === destinationFloor) {
+					if (maps[mapNum].id === destInfo.floor) {
 						destinationmapNum = mapNum;
 					}
 				}
@@ -881,7 +871,7 @@
 				if (!options.wayFound) {
 					// set route distance back to infinity and prior path to unvisited
 					prepareForSearch();
-					$.each(startPaths, function (i, pathId) {
+					$.each(sourceInfo.paths, function (i, pathId) {
 						dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
 						dataStore.paths[sourcemapNum][pathId].prior = 'door';
 						recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
@@ -892,10 +882,10 @@
 				minPath = Infinity;
 				reversePathStart = -1;
 
-				for (i = 0; i < endPaths.length; i++) {
-					if (dataStore.paths[destinationmapNum][endPaths[i]].route < minPath) {
-						minPath = dataStore.paths[destinationmapNum][endPaths[i]].route;
-						reversePathStart = endPaths[i];
+				for (i = 0; i < destInfo.paths.length; i++) {
+					if (dataStore.paths[destinationmapNum][destInfo.paths[i]].route < minPath) {
+						minPath = dataStore.paths[destinationmapNum][destInfo.paths[i]].route;
+						reversePathStart = destInfo.paths[i];
 					}
 				}
 
@@ -1143,62 +1133,23 @@
 
 			var mapNum,
 				pathNum,
-				portalNum,
-				doorANum,
-				doorBNum,
-				sourceFloor,
+				sourceInfo,
 				sourcemapNum,
-				startPaths,
 				report = [],
 				i = 0;
 
-			// refactor the following out into its own routine as it duplicates stuff from RouteTo()
+			prepareForSearch();
 
-			// set route distance back to infinity and prior path to unvisited
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-					dataStore.paths[mapNum][pathNum].route = Infinity;
-					dataStore.paths[mapNum][pathNum].prior = -1;
-				}
-			}
-
-			//reset portals
-			for (portalNum = 0; portalNum < dataStore.portals.length; portalNum++) {
-				//Set route distance to infinity
-				dataStore.portals[portalNum].route = Infinity;
-				//indicate which node was used to get to this node -1 = none
-				dataStore.portals[portalNum].prior = -1;
-				dataStore.portals[portalNum].priormapNum = -1;
-			}
-
-			startPaths = [];
-
-			//get a collection of starting paths
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-					for (doorANum = 0; doorANum < dataStore.paths[mapNum][pathNum].doorA.length; doorANum++) {
-						if (dataStore.paths[mapNum][pathNum].doorA[doorANum] === startpoint) {
-							startPaths.push(pathNum); // only pushing pathNum because starting on a single floor
-							sourceFloor = dataStore.paths[mapNum][pathNum].floor;
-						}
-					}
-					for (doorBNum = 0; doorBNum < dataStore.paths[mapNum][pathNum].doorB.length; doorBNum++) {
-						if (dataStore.paths[mapNum][pathNum].doorB[doorBNum] === startpoint) {
-							startPaths.push(pathNum); // only pushing pathNum because starting on a single floor
-							sourceFloor = dataStore.paths[mapNum][pathNum].floor;
-						}
-					}
-				}
-			}
+			sourceInfo = getDoorPaths();
 
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				if (maps[mapNum].id === sourceFloor) {
+				if (maps[mapNum].id === sourceInfo.floor) {
 					sourcemapNum = mapNum;
 				}
 			}
 
 			// set starting points information in the paths collection
-			$.each(startPaths, function (i, pathId) {
+			$.each(sourceInfo.paths, function (i, pathId) {
 				dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
 				dataStore.paths[sourcemapNum][pathId].prior = 'door';
 				recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
@@ -1214,7 +1165,7 @@
 				}
 			}
 
-			return report.join('');
+			return report.join(', ');
 		} // checkMap function
 
 
