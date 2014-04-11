@@ -800,6 +800,61 @@
 			return result;
 		}
 
+		function getShortestRoute(destinations) {
+			generateRoutes();
+
+			function _minLengthRoute(destination) {
+				var destInfo,
+				mapNum,
+				minPath,
+				reversePathStart,
+				destinationmapNum,
+				i;
+
+				destInfo = getDoorPaths(destination);
+
+				for (mapNum = 0; mapNum < maps.length; mapNum++) {
+					if (maps[mapNum].id === destInfo.floor) {
+						destinationmapNum = mapNum;
+					}
+				}
+
+				minPath = Infinity;
+				reversePathStart = -1;
+
+				for (i = 0; i < destInfo.paths.length; i++) {
+					if (dataStore.paths[destinationmapNum][destInfo.paths[i]].route < minPath) {
+						minPath = dataStore.paths[destinationmapNum][destInfo.paths[i]].route;
+						reversePathStart = destInfo.paths[i];
+					}
+				}
+
+				if (reversePathStart !== -1) {
+					solution = []; //can't be set in backtrack because it is recursive.
+					backTrack('pa', destinationmapNum, reversePathStart);
+					solution.reverse();
+
+					return {
+						'startpoint': startpoint,
+						'endpoint': destination,
+						'solution': solution,
+						'distance': minPath
+					};
+				}
+
+				return null;
+			}
+
+			if (Array.isArray(destinations)) {
+				return $.map(destinations, function (dest) {
+					return _minLengthRoute(dest);
+				});
+			} else {
+				return _minLengthRoute(destinations);
+			}
+
+		}
+
 		function generateRoutes() {
 			var sourceInfo,
 			mapNum,
@@ -829,13 +884,9 @@
 		function routeTo(destination) {
 
 			var i,
-				mapNum,
-				destInfo,
-				destinationmapNum,
 				draw,
 				stepNum,
 				level,
-				minPath,
 				reversePathStart,
 				portalsEntered,
 				lastStep,
@@ -877,30 +928,9 @@
 				//hilight the destination room
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 
-				generateRoutes();
-
-				destInfo = getDoorPaths(destination);
-
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === destInfo.floor) {
-						destinationmapNum = mapNum;
-					}
-				}
-
-				minPath = Infinity;
-				reversePathStart = -1;
-
-				for (i = 0; i < destInfo.paths.length; i++) {
-					if (dataStore.paths[destinationmapNum][destInfo.paths[i]].route < minPath) {
-						minPath = dataStore.paths[destinationmapNum][destInfo.paths[i]].route;
-						reversePathStart = destInfo.paths[i];
-					}
-				}
+				solution = getShortestRoute(destination).solution;
 
 				if (reversePathStart !== -1) {
-					backTrack('pa', destinationmapNum, reversePathStart);
-
-					solution.reverse();
 
 					portalsEntered = 0;
 					//count number of portal trips
@@ -1240,6 +1270,15 @@
 					//To facilitate caching dataStore.
 					result = JSON.stringify(dataStore);
 					$('body').replaceWith(result);
+					break;
+				case 'getRoutes':
+					//gets the length of the shortest route to one or more
+					//destinations.
+					if (passed === undefined) {
+						result = getShortestRoute(options.endpoint);
+					} else {
+						result = getShortestRoute(passed);
+					}
 					break;
 				case 'destroy':
 					//remove all traces of wayfinding from the obj
