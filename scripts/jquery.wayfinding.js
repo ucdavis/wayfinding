@@ -800,15 +800,37 @@
 			return result;
 		}
 
+		function generateRoutes() {
+			var sourceInfo,
+			mapNum,
+			sourcemapNum;
+
+			if (!options.wayFound) {
+				sourceInfo = getDoorPaths(startpoint);
+
+				for (mapNum = 0; mapNum < maps.length; mapNum++) {
+					if (maps[mapNum].id === sourceInfo.floor) {
+						sourcemapNum = mapNum;
+					}
+				}
+
+				prepareForSearch();
+				$.each(sourceInfo.paths, function (i, pathId) {
+					dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
+					dataStore.paths[sourcemapNum][pathId].prior = 'door';
+					recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
+				});
+				setOptions(obj);
+			}
+		}
+
 		// The combined routing function
 		// revise to only interate if startpoint has changed since last time?
 		function routeTo(destination) {
 
 			var i,
 				mapNum,
-				sourceInfo,
 				destInfo,
-				sourcemapNum,
 				destinationmapNum,
 				draw,
 				stepNum,
@@ -855,28 +877,14 @@
 				//hilight the destination room
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 
-				sourceInfo = getDoorPaths(startpoint);
+				generateRoutes();
+
 				destInfo = getDoorPaths(destination);
 
 				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === sourceInfo.floor) {
-						sourcemapNum = mapNum;
-					}
 					if (maps[mapNum].id === destInfo.floor) {
 						destinationmapNum = mapNum;
 					}
-				}
-
-				// set starting points information in the paths collection
-				if (!options.wayFound) {
-					// set route distance back to infinity and prior path to unvisited
-					prepareForSearch();
-					$.each(sourceInfo.paths, function (i, pathId) {
-						dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
-						dataStore.paths[sourcemapNum][pathId].prior = 'door';
-						recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
-					});
-					setOptions(obj);
 				}
 
 				minPath = Infinity;
@@ -1133,27 +1141,10 @@
 
 			var mapNum,
 				pathNum,
-				sourceInfo,
-				sourcemapNum,
 				report = [],
 				i = 0;
 
-			prepareForSearch();
-
-			sourceInfo = getDoorPaths();
-
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				if (maps[mapNum].id === sourceInfo.floor) {
-					sourcemapNum = mapNum;
-				}
-			}
-
-			// set starting points information in the paths collection
-			$.each(sourceInfo.paths, function (i, pathId) {
-				dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
-				dataStore.paths[sourcemapNum][pathId].prior = 'door';
-				recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
-			});
+			generateRoutes();
 
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
 				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
