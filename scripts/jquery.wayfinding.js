@@ -51,7 +51,8 @@
 		},
 		'wayFound' : false,
 		'zoomToRoute' : false,
-		'zoomPadding' : 50
+		'zoomPadding' : 50,
+		'mapEvents': false
 	};
 
 	$.fn.wayfinding = function (action, options) {
@@ -493,7 +494,9 @@
 			}
 
 			//hilight starting floor
-			$('#' + maps[displayNum].id, el).show(); // rework
+			$('#' + maps[displayNum].id, el).show(0, function() {
+				$(this).trigger('wfMapsVisible');
+			}); // rework
 			//if endpoint was specified, route to there.
 			if (typeof(options.endpoint) === 'function') {
 				routeTo(options.endpoint());
@@ -595,7 +598,11 @@
 
 		function switchFloor(floor, el) {
 			$('div', el).hide();
-			$('#' + floor, el).show();
+			$('#' + floor, el).show(0, function() {
+				if (options.mapEvents) {
+					$(el).trigger('wfFloorChange');
+				}
+			});
 
 			//turn floor into mapNum, look for that in drawing
 			// if there get drawing[level].routeLength and use that.
@@ -1118,8 +1125,6 @@
 							} // drawing segment
 						} // level
 					} // if we are doing curves at all
-
-					switchFloor(maps[drawing[0][0].floor].id, obj);
 
 					$.each(drawing, function (i, level) {
 						var path = '',
