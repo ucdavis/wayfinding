@@ -558,9 +558,9 @@
 						}
 
 						if (processed === maps.length) {
-							replaceLoadScreen(target);
 							setStartPoint(options.startpoint, target);
 							setOptions(target);
+							replaceLoadScreen(target);
 						}
 					}
 				);
