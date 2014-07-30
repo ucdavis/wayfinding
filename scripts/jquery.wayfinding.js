@@ -503,6 +503,8 @@
 			} else if (typeof(options.endpoint) === 'string') {
 				routeTo(options.endpoint);
 			}
+
+			$.event.trigger("wayfinding:ready");
 		} //function replaceLoadScreen
 
 		//deletes path metadata from datastore.
@@ -551,7 +553,7 @@
 
 						if (!options.dataStoreCache) {
 							finishFloor(target, i, floor);
-						// rather than checking if we have processed the last map in order, this checks if we have processed the right number of maps
+							// rather than checking if we have processed the last map in order, this checks if we have processed the right number of maps
 							if (processed === maps.length) {
 								buildPortals();
 							}
@@ -574,10 +576,12 @@
 				if (typeof(options.dataStoreCache) === 'object') {
 					dataStore = options.dataStoreCache;
 					loadMaps(target);
+					options.wayFound = true;
 				} else if (typeof(options.dataStoreCache) === 'string') {
 					$.getJSON(options.dataStoreCache, function (result) {
 						dataStore = result;
 						loadMaps(target);
+						options.wayFound = true;
 					}).fail(function () {
 						console.log('Failed to get dataStore cache. Falling back to client-side dataStore generation.');
 
@@ -894,7 +898,6 @@
 		// The combined routing function
 		// revise to only interate if startpoint has changed since last time?
 		function routeTo(destination) {
-
 			var i,
 				draw,
 				stepNum,
@@ -1172,7 +1175,7 @@
 
 				}  /*else {
 					// respond that path not found
-				console.log("path not found from " + startpoint + " to " + destination);
+					console.log("path not found from " + startpoint + " to " + destination);
 			}*/
 			}
 		} //RouteTo
@@ -1238,8 +1241,6 @@
 			obj = $(this);
 
 			getOptions(obj); // load the current options
-
-//          console.log("options loaded: ", action, passed, options);
 
 			//handle actions
 			if (action && typeof (action) === 'string') {
