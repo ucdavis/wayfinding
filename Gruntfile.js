@@ -2,14 +2,23 @@
 
 module.exports = function (grunt) {
 	// Load all grunt tasks
-	require('load-grunt-tasks')(grunt);
+	require('load-grunt-tasks')(grunt, {pattern: ['grunt-*', '!grunt-build-lifecycle']});
 	// Show elapsed time at the end
 	require('time-grunt')(grunt);
 
 	// Project configuration.
 	grunt.initConfig({
+		// Project settings
+		config: {
+			// Configurable paths
+			dev: 'src',
+			dist: 'dist',
+			temp: '.tmp'
+		},
 		// Metadata.
 		pkg: grunt.file.readJSON('package.json'),
+		lifecycle: { // need to build out
+		},
 		banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
 			'<%= grunt.template.today("yyyy-mm-dd") %>\n' +
 			'<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
@@ -94,6 +103,8 @@ module.exports = function (grunt) {
 
 	// Making grunt default to force so it won't die on jshint warnings
 	grunt.option('force', true);
+
+	grunt.loadNpmTasks('grunt-build-lifecycle');
 
 	// Default task.
 	grunt.registerTask('default', ['clean', 'jshint', 'karma:unit', 'server']);
