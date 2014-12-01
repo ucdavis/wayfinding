@@ -25,7 +25,7 @@ module.exports = function (grunt) {
 				stripBanners: true
 			},
 			dist: {
-				src: ['scripts/**/*.js'],
+				src: ['src/**/*.js'],
 				dest: 'dist/jquery.<%= pkg.name %>.js'
 			}
 		},
@@ -47,7 +47,7 @@ module.exports = function (grunt) {
 				src: 'Gruntfile.js'
 			},
 			scripts: {
-				src: ['scripts/**/*.js']
+				src: ['src/**/*.js']
 			},
 			test: {
 				src: ['test/**/*-test.js']
@@ -86,7 +86,7 @@ module.exports = function (grunt) {
 				files: ['styles/**/*.css']
 			},
 			karma: {
-				files: ['scripts/**/*.js', 'test/**/*-test.js'],
+				files: ['src/**/*.js', 'test/**/*-test.js'],
 				tasks: ['karma:unit:run']
 			}
 		}

@@ -22,7 +22,7 @@ module.exports = function (config) {
 			'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
 
 			// include our JavaScript files
-			'scripts/jquery.wayfinding.js',
+			'src/jquery.wayfinding.js',
 
 			// simple patterns to load the needed testfiles
 			// equals to {pattern: 'test/*-test.js', watched: true, served: true, included: true}
@@ -51,7 +51,7 @@ module.exports = function (config) {
 			// source files, that you wanna generate coverage for
 			// do not include tests or libraries
 			// (these files will be instrumented by Istanbul)
-			'scripts/**/*.js': ['coverage']
+			'src/**/*.js': ['coverage']
 		},
 
 
