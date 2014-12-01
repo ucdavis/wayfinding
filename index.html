@@ -13,6 +13,10 @@
     <![endif]-->
     <style>
 
+      section {
+        width: 600px;
+      }
+
       a img {
         border: none;
       }
@@ -20,7 +24,7 @@
       #controls {
         display: block;
         height: 50px;
-        width: 950px;
+        width: 600px;
         background-color: lightGrey;
         z-index:-1;
         padding: 10px 0 0 10px;
@@ -29,7 +33,6 @@
       #myMaps {
         height: 480px;
         width: 785px;
-        padding-left: 175px;
       }
 
       #myMaps div {
@@ -122,57 +125,54 @@
     <script src="javascripts/jquery.wayfinding.js"></script>
     <script type="text/javascript">
 
-  /*jslint white: true, onevar: true, nomen: true, eqeqeq: true, bitwise: true, regexp: true, newcap: true, immed: true, maxerr: 100 */
+    /*jslint white: true, onevar: true, nomen: true, eqeqeq: true, bitwise: true, regexp: true, newcap: true, immed: true, maxerr: 100 */
 
-  //  <![CDATA[
+      $(document).ready(function () {
+        'use strict';
+        $('#myMaps').wayfinding({
+          'maps': [
+            {'path': 'demo_map_1.svg', 'id': 'floor1'},
+            {'path': 'demo_map_2.svg', 'id': 'floor2'}
+          ],
+          'path': {
+            width: 3,
+            color: 'cyan',
+            radius: 8,
+            speed: 8
+          },
+          'startpoint': function() {
+            return 'lcd.1';
+          },
+          'defaultMap': 'floor1'
+        });
 
-    $(document).ready(function () {
-      'use strict';
-      $('#myMaps').wayfinding({
-        'maps': [
-          {'path': 'demo_map_1.svg', 'id': 'floor1'},
-          {'path': 'demo_map_2.svg', 'id': 'floor2'}
-        ],
-        'path': {
-          width: 3,
-          color: 'cyan',
-          radius: 8,
-          speed: 8
-        },
-        'startpoint': function() {
-          return 'lcd.1';
-        },
-        'defaultMap': 'floor1'
-      });
+        //make the three buttons clickable
+        $('#controls button').click(function () {
+          $('#myMaps').wayfinding('currentMap',$(this).attr('id'));
+        });
+        $('#controls #beginSelect').change(function () {
+          $("#myMaps").wayfinding('startpoint', $(this).val());
+          if ($('#controls .endSelect').val() !== '') {
+            $('#myMaps').wayfinding('routeTo', $('#controls #endSelect').val());
+          }
+        });
+        $('#controls #endSelect').change(function () {
+          $('#myMaps').wayfinding('routeTo', $(this).val());
+        });
+        $('#controls #accessible').change(function () {
+          if ($('#controls #accessible:checked').val() !== undefined) {
+            $('#myMaps').wayfinding('accessibleRoute', true);
+          } else {
+            $('#myMaps').wayfinding('accessibleRoute', false);
+          }
+          $('#myMaps').wayfinding('routeTo', $("#controls #endSelect").val());
+        });
 
-      //make the three buttons clickable
-      $('#controls button').click(function () {
-        $('#myMaps').wayfinding('currentMap',$(this).attr('id'));
-      });
-      $('#controls #beginSelect').change(function () {
-        $("#myMaps").wayfinding('startpoint', $(this).val());
-        if ($('#controls .endSelect').val() !== '') {
-          $('#myMaps').wayfinding('routeTo', $('#controls #endSelect').val());
-        }
-      });
-      $('#controls #endSelect').change(function () {
-        $('#myMaps').wayfinding('routeTo', $(this).val());
-      });
-      $('#controls #accessible').change(function () {
-        if ($('#controls #accessible:checked').val() !== undefined) {
-          $('#myMaps').wayfinding('accessibleRoute', true);
-        } else {
-          $('#myMaps').wayfinding('accessibleRoute', false);
-        }
-        $('#myMaps').wayfinding('routeTo', $("#controls #endSelect").val());
-      });
+        $('#Rooms a').on('click', function () {
+          $("#controls #endSelect option[value='" + $(this).attr('id') + "']").attr("selected", true);
+        });
 
-      $('#Rooms a').on('click', function () {
-        $("#controls #endSelect option[value='" + $(this).attr('id') + "']").attr("selected", true);
-      });
-
-    }); // close document ready
-  //  ]]>
-  </script>
+      }); // close document ready
+    </script>
   </body>
 </html>
