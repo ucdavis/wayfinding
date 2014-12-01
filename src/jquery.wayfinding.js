@@ -43,15 +43,15 @@
 		'defaultMap': function () {
 			return 'map.1';
 		},
-		'dataStoreCache' : false,
-		'showLocation' : false,
-		'locationIndicator' : {
+		'dataStoreCache': false,
+		'showLocation': false,
+		'locationIndicator': {
 			fill: 'red',
 			height: 40
 		},
-		'wayFound' : false,
-		'zoomToRoute' : false,
-		'zoomPadding' : 50,
+		'wayFound': false,
+		'zoomToRoute': false,
+		'zoomPadding': 50,
 		'mapEvents': false
 	};
 
@@ -765,7 +765,7 @@
 			oldViewBox = svg.getAttribute('viewBox');
 
 			if (options.zoomToRoute) {
-				svg.setAttribute('viewBox', (pathRect.x - pad)  + ' ' + (pathRect.y - pad) +
+				svg.setAttribute('viewBox', (pathRect.x - pad) + ' ' + (pathRect.y - pad) +
 					' ' + (pathRect.width + pad * 2) + ' ' + (pathRect.height + pad * 2));
 			}
 
@@ -783,8 +783,8 @@
 			doorANum,
 			doorBNum,
 			result = {
-				'paths' : [],
-				'floor' : null
+				'paths': [],
+				'floor': null
 			};
 
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
