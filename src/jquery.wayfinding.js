@@ -79,85 +79,6 @@
 			result, // used to return non jQuery results
 			drawing;
 
-		// Set options based on either provided options or defaults
-		function getOptions(el) {
-			var optionsPrior = el.data('wayfinding:options');
-
-			drawing = el.data('wayfinding:drawing'); // load a drawn path, if it exists
-
-			options = $.extend(true, {}, defaults, options);
-
-			// check for settings attached to the current object
-			if (optionsPrior !== undefined) {
-				options = optionsPrior;
-			} else {
-				options = $.extend(true, {}, defaults, options);
-			}
-
-			// check for settings attached to the current object
-			options = $.metadata ? $.extend(true, {}, options, el.metadata()) : options;
-
-			// Create references to the options
-			maps = options.maps;
-
-			// set defaultMap correctly, handle both function and value being passed
-			if (typeof(options.defaultMap) === 'function') {
-				defaultMap = options.defaultMap();
-			} else {
-				defaultMap = options.defaultMap;
-			}
-
-			// Set startpoint correctly
-			if (typeof(options.startpoint) === 'function') {
-				setStartPoint(options.startpoint(), el);
-			} else {
-				startpoint = options.startpoint;
-			}
-		} //function getOptions
-
-		function setOptions(el) {
-			el.data('wayfinding:options', options);
-			el.data('wayfinding:drawing', drawing);
-			el.data('wayfinding:data', WayfindingDataStore.dataStore);
-		}
-
-		// Ensure floor ids are unique.
-		function checkIds() {
-			var mapNum,
-				checkNum,
-				reassign = false,
-				defaultMapValid = false;
-
-			if (maps.length > 0) {
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					for (checkNum = mapNum; checkNum < maps.length; checkNum++) {
-						if (mapNum !== checkNum && maps[mapNum].id === maps[checkNum].id) {
-							reassign = true;
-						}
-					}
-				}
-
-				if (reassign === true) {
-					for (mapNum = 0; mapNum < maps.length; mapNum++) {
-						maps[mapNum].id = 'map_' + mapNum;
-					}
-				}
-				//check that defaultMap is valid as well
-
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === defaultMap) {
-						defaultMapValid = true;
-					}
-				}
-
-				if (defaultMapValid === false) {
-					defaultMap = maps[0].id;
-				}
-			} /* else {
-				// raise exception about no maps being found
-			} */
-		} //function checkIds
-
 		//Takes x and y coordinates and makes a location indicating pin for those
 		//coordinates. Returns the pin element, not yet attached to the DOM.
 		function makePin(x, y, type) {
@@ -240,6 +161,86 @@
 				}
 			}
 		} //function setStartPoint
+
+		// Set options based on either provided options or defaults
+		function getOptions(el) {
+			var optionsPrior = el.data('wayfinding:options');
+
+			drawing = el.data('wayfinding:drawing'); // load a drawn path, if it exists
+
+			options = $.extend(true, {}, defaults, options);
+
+			// check for settings attached to the current object
+			if (optionsPrior !== undefined) {
+				options = optionsPrior;
+			} else {
+				options = $.extend(true, {}, defaults, options);
+			}
+
+			// check for settings attached to the current object
+			options = $.metadata ? $.extend(true, {}, options, el.metadata()) : options;
+
+			// Create references to the options
+			maps = options.maps;
+
+			// set defaultMap correctly, handle both function and value being passed
+			if (typeof(options.defaultMap) === 'function') {
+				defaultMap = options.defaultMap();
+			} else {
+				defaultMap = options.defaultMap;
+			}
+
+			// Set startpoint correctly
+			if (typeof(options.startpoint) === 'function') {
+				setStartPoint(options.startpoint(), el);
+			} else {
+				startpoint = options.startpoint;
+			}
+		} //function getOptions
+
+		function setOptions(el) {
+			el.data('wayfinding:options', options);
+			el.data('wayfinding:drawing', drawing);
+			// need to handle cases where WayfindingDataStore isn't loaded if we are separating these out
+			el.data('wayfinding:data', WayfindingDataStore.dataStore);
+		}
+
+		// Ensure floor ids are unique.
+		function checkIds() {
+			var mapNum,
+				checkNum,
+				reassign = false,
+				defaultMapValid = false;
+
+			if (maps.length > 0) {
+				for (mapNum = 0; mapNum < maps.length; mapNum++) {
+					for (checkNum = mapNum; checkNum < maps.length; checkNum++) {
+						if (mapNum !== checkNum && maps[mapNum].id === maps[checkNum].id) {
+							reassign = true;
+						}
+					}
+				}
+
+				if (reassign === true) {
+					for (mapNum = 0; mapNum < maps.length; mapNum++) {
+						maps[mapNum].id = 'map_' + mapNum;
+					}
+				}
+				//check that defaultMap is valid as well
+
+				for (mapNum = 0; mapNum < maps.length; mapNum++) {
+					if (maps[mapNum].id === defaultMap) {
+						defaultMapValid = true;
+					}
+				}
+
+				if (defaultMapValid === false) {
+					defaultMap = maps[0].id;
+				}
+			} /* else {
+				// raise exception about no maps being found
+			} */
+		} //function checkIds
 
 		function setEndPoint(passed, el) {
 			var end, endpoint, attachPinLocation,
