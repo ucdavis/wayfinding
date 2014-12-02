@@ -113,7 +113,7 @@ module.exports = function (grunt) {
 	});
 
 	// Making grunt default to force so it won't die on jshint warnings
-	grunt.option('force', true);
+	// grunt.option('force', true);
 
 	grunt.loadNpmTasks('grunt-build-lifecycle');
 

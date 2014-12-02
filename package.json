@@ -25,9 +25,6 @@
   "directories": {
     "test": "test"
   },
-  "dependencies": {
-    "jquery": "latest"
-  },
   "devDependencies": {
     "grunt-build-lifecycle": "^0.1.1",
     "grunt-concurrent": "~1.0.0",
@@ -38,7 +35,9 @@
     "grunt-contrib-uglify": "~0.6.0",
     "grunt-contrib-watch": "~0.6.1",
     "grunt-karma": "~0.9.0",
+    "grunt-svgmin": "^2.0.0",
     "jshint-stylish": "~1.0.0",
+    "karma": "^0.12.28",
     "karma-chrome-launcher": "~0.1.5",
     "karma-coverage": "~0.2.7",
     "karma-firefox-launcher": "~0.1.3",
@@ -48,6 +47,7 @@
     "karma-safari-launcher": "~0.1.1",
     "karma-script-launcher": "~0.1.0",
     "load-grunt-tasks": "~1.0.0",
+    "plato": "^1.2.2",
     "time-grunt": "~1.0.0"
   },
   "peerDependencies": {

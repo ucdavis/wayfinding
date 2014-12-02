@@ -18,7 +18,7 @@ module.exports = function (config) {
 		// list of files / patterns to load in the browser
 		files: [
 			// include dependencies
-			'bower_components/jquery/jquery.js',
+			'bower_components/jquery/dist/jquery.js',
 			'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
 
 			// include our JavaScript files
@@ -57,7 +57,7 @@ module.exports = function (config) {
 
 		// test results reporter to use
 		// possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-		reporters: ['progress'],
+		reporters: ['progress', 'coverage'],
 
 		// configure the html reporter.
 		// this will output reports in the test/report dir which can be opened
@@ -95,7 +95,7 @@ module.exports = function (config) {
 		// - Safari (only Mac; has to be installed with `npm install karma-safari-launcher`)
 		// - PhantomJS
 		// - IE (only Windows; has to be installed with `npm install karma-ie-launcher`)
-		browsers: ['Chrome'],
+		browsers: [(process.env.TRAVIS ? 'Firefox' : 'Chrome'), 'PhantomJS'],
 
 
 		// If browser does not capture in given timeout [ms], kill it
@@ -104,6 +104,18 @@ module.exports = function (config) {
 
 		// Continuous Integration mode
 		// if true, it capture browsers, run tests and exit
-		singleRun: false
+		singleRun: false,
+
+		// report which specs are slower than 500ms
+		// CLI --report-slower-than 500
+		reportSlowerThan: 500,
+
+		plugins: [
+			'karma-jasmine',
+			'karma-chrome-launcher',
+			'karma-phantomjs-launcher',
+			'karma-firefox-launcher',
+			'karma-coverage'
+		]
 	});
 };
