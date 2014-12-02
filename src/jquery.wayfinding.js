@@ -1,3 +1,4 @@
+/*global document*/
 /*jslint devel: true, browser: true, windows: true, plusplus: true, maxerr: 50, indent: 4 */
 
 /**
@@ -57,13 +58,13 @@
 
 	$.fn.wayfinding = function (action, options, callback) {
 		var passed = options,
-			           obj, // the jQuery object being worked with;
-			           maps, // the array of maps populated from options each time
-			           defaultMap, // the floor to show at start propulated from options
-			           startpoint, // the result of either the options.startpoint value or the value of the function
-			           portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
-			           result, // used to return non jQuery results
-								 drawing;
+			obj, // the jQuery object being worked with;
+			maps, // the array of maps populated from options each time
+			defaultMap, // the floor to show at start propulated from options
+			startpoint, // the result of either the options.startpoint value or the value of the function
+			portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
+			result, // used to return non jQuery results
+			drawing;
 
 		// Set options based on either provided options or defaults
 		function getOptions(el) {
@@ -235,13 +236,13 @@
 			//clears locationIndicators from the maps
 			$('path.destinationPin', el).remove();
 
-      // Set endpoint
+			// Set endpoint
 			endpoint = passed;
 
 			if (options.showLocation) {
 				end = $('#Doors #' + endpoint, el);
 
-			  attachPinLocation = $('svg').has('#Rooms a[id="' + passed + '"]');
+			attachPinLocation = $('svg').has('#Rooms a[id="' + passed + '"]');
 				if (end.length) {
 					x = (Number(end.attr('x1')) + Number(end.attr('x2'))) / 2;
 					y = (Number(end.attr('y1')) + Number(end.attr('y2'))) / 2;
@@ -275,10 +276,10 @@
 			});
 
 			// Ensure text labels won't prevent room clicks
-			$('text', svgDiv).css("pointer-events", "none");
+			$('text', svgDiv).css('pointer-events', 'none');
 
 			// Ensure path lines won't prevent room clicks
-			$('line', svgDiv).css("pointer-events", "none");
+			$('line', svgDiv).css('pointer-events', 'none');
 
 			$(obj).append(svgDiv);
 		} //function activateSVG
@@ -303,9 +304,9 @@
 			$(this).trigger('wayfinding:mapsVisible');
 
 			// Ensure SVG w/h are divisble by 2 (to avoid webkit blurriness bug on pan/zoom)
-			var elem = $('#' + maps[displayNum].id + ">svg", el)[0];
-			elem.style.height = (Math.ceil(elem.offsetHeight / 2) * 2) + "px";
-			elem.style.width = (Math.ceil(elem.offsetWidth / 2) * 2) + "px";
+			var elem = $('#' + maps[displayNum].id + '>svg', el)[0];
+			elem.style.height = (Math.ceil(elem.offsetHeight / 2) * 2) + 'px';
+			elem.style.width = (Math.ceil(elem.offsetWidth / 2) * 2) + 'px';
 
 			// Enable pinch-to-zoom
 			if(options.pinchToZoom) {
@@ -319,7 +320,7 @@
 				routeTo(options.endpoint);
 			}
 
-			$.event.trigger("wayfinding:ready");
+			$.event.trigger('wayfinding:ready');
 		} //function replaceLoadScreen
 
 		// Initialize the jQuery target object
@@ -334,7 +335,7 @@
 				svgDiv.load(
 					map.path,
 					function (svg, status, xhr) {
-						if (status == "error") {
+						if (status === 'error') {
 							svgDiv.html("<p class='text-center text-danger'>Map " + i + " Was not found at "
 								+ map.path + "<br />Please upload it in the administration section</p>");
 							maps[i].el = svgDiv;
@@ -348,7 +349,7 @@
 
 						mapsProcessed = mapsProcessed + 1;
 
-						if(mapsProcessed == maps.length) {
+						if(mapsProcessed === maps.length) {
 							// All SVGs have finished loading
 							establishDataStore(options.accessibleRoute, function() {
 								// SVGs are loaded, dataStore is set, ready the DOM
@@ -373,7 +374,7 @@
 
 					WayfindingDataStore.dataStore = options.dataStoreCache;
 
-					if(typeof(onReadyCallback) == "function") onReadyCallback();
+					if(typeof(onReadyCallback) === 'function') onReadyCallback();
 				} else if (typeof(options.dataStoreCache) === 'string') {
 					console.debug("Attempting to load dataStoreCache from URL ...");
 					var cacheUrl = accessible ? options.accessibleDataStoreCache : options.dataStoreCache;
@@ -383,13 +384,13 @@
 
 						WayfindingDataStore.dataStore = result;
 
-						if(typeof(onReadyCallback) == "function") onReadyCallback();
+						if(typeof(onReadyCallback) === 'function') onReadyCallback();
 					}).fail(function () {
 						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
 
 						WayfindingDataStore.dataStore = WayfindingDataStore.build(options.startpoint, maps, accessible);
 
-						if(typeof(onReadyCallback) == "function") onReadyCallback();
+						if(typeof(onReadyCallback) === 'function') onReadyCallback();
 					});
 				}
 			} else {
@@ -411,7 +412,7 @@
 				if(options.pinchToZoom) {
 					// Destroy .panzoom() on all SVGs
 					for (i = 0; i < maps.length; i++) {
-						$('#floor' + i, el).panzoom("destroy");
+						$('#floor' + i, el).panzoom('destroy');
 					}
 
 					initializePanZoom($('#' + floor, el));
@@ -524,8 +525,8 @@
 			}
 
 			// Zooming logic...
-      var steps = 35;
-      var duration = 650; // Zoom animation in milliseconds
+			var steps = 35;
+			var duration = 650; // Zoom animation in milliseconds
 
 			// Store the original SVG viewBox in order to zoom out back to it after path animation
 			var oldViewBox = svg.getAttribute('viewBox');
@@ -534,19 +535,19 @@
 			var oldViewW = parseFloat(oldViewBox.split(/\s+|,/)[2]);
 			var oldViewH = parseFloat(oldViewBox.split(/\s+|,/)[3]);
 
-      // Calculate single step size from each direction
-      var newViewX = pathRect.x - pad;
+			// Calculate single step size from each direction
+			var newViewX = pathRect.x - pad;
 					newViewX = newViewX > 0 ? newViewX : 0;
-      var newViewW = pathRect.width + (2 * pad);
-      var newViewY = pathRect.y - pad;
+			var newViewW = pathRect.width + (2 * pad);
+			var newViewY = pathRect.y - pad;
 					newViewY = newViewY > 0 ? newViewY : 0;
-      var newViewH = pathRect.height + (2 * pad);
+			var newViewH = pathRect.height + (2 * pad);
 
 			if (options.zoomToRoute) {
-        // Loop the specified number of steps to create the zoom in animation
-        for (var i = 0; i <= steps; i++) {
-          (function(i) {
-            setTimeout(function() {
+				// Loop the specified number of steps to create the zoom in animation
+				for (var i = 0; i <= steps; i++) {
+					(function(i) {
+						setTimeout(function() {
 							var zoomInX = interpolateValue(oldViewX, newViewX, i, steps);
 							var zoomInY = interpolateValue(oldViewY, newViewY, i, steps);
 							var zoomInW = interpolateValue(oldViewW, newViewW, i, steps);
@@ -557,12 +558,11 @@
 								panzoomWithViewBoxCoords($(svg).parent()[0], svg, zoomInX, zoomInY, zoomInW, zoomInH);
 							} else {
 								// Use SVG viewBox-based zooming
-								svg.setAttribute('viewBox', zoomInX + ' ' + zoomInY +
-	                ' ' + zoomInW + ' ' + zoomInH);
+								svg.setAttribute('viewBox', zoomInX + ' ' + zoomInY + ' ' + zoomInW + ' ' + zoomInH);
 							}
-            }, i * (duration / steps));
-          }(i));
-        }
+						}, i * (duration / steps));
+					}(i));
+				}
 			}
 
 			// Call animatePath after 'animationDuration' milliseconds to animate the next segment of the path,
@@ -573,10 +573,10 @@
 				animatePath(drawing, ++drawingSegment);
 
 				if (options.zoomToRoute) {
-          // Loop the specified number of steps to create the zoom out animation
-          for (var i = 0; i <= steps; i++) {
-            (function(i) {
-              setTimeout(function() {
+					// Loop the specified number of steps to create the zoom out animation
+					for (var i = 0; i <= steps; i++) {
+						(function(i) {
+							setTimeout(function() {
 								var interpolateFactor = steps - i;
 								var zoomOutX = interpolateValue(newViewX, oldViewX, i, steps);
 								var zoomOutY = interpolateValue(newViewY, oldViewY, i, steps);
@@ -587,18 +587,17 @@
 									// Use CSS 3-based zooming
 									panzoomWithViewBoxCoords($(svg).parent()[0], svg, zoomOutX, zoomOutY, zoomOutW, zoomOutH);
 								} else {
-									svg.setAttribute('viewBox', zoomOutX + ' ' + zoomOutY +
-	                  ' ' + zoomOutW + ' ' + zoomOutH);
+									svg.setAttribute('viewBox', zoomOutX + ' ' + zoomOutY + ' ' + zoomOutW + ' ' + zoomOutH);
 								}
 
-								if(i == steps) {
-									if(drawingSegment == drawing.length) {
+								if(i === steps) {
+									if(drawingSegment === drawing.length) {
 										$(obj).trigger('wayfinding:animationComplete');
 									}
 								}
-              }, i * (duration / steps));
-            }(i));
-          }
+							}, i * (duration / steps));
+						}(i));
+					}
 				}
 			}, animationDuration + options.floorChangeAnimationDelay);
 		} //function animatePath
@@ -608,7 +607,7 @@
 			$el.panzoom({
 				minScale: 1.0,
 				contain: 'invert',
-				cursor: "pointer"
+				cursor: 'pointer'
 			});
 
 			// Allow clicking on links within the SVG despite $.panZoom()
@@ -636,7 +635,7 @@
 			// Step 1, determine the scale
 			var scale = Math.max(( viewW / w ), ( viewH / h ));
 
-			$(cssDiv).panzoom("zoom", parseFloat(scale));
+			$(cssDiv).panzoom('zoom', parseFloat(scale));
 
 			// Determine bounding box -> CSS coordinate conversion factor
 			var bcX = cssW / viewW;
@@ -650,7 +649,7 @@
 			var fy = (bcy - (y + (h / 2))) * bcY;
 
 			// Step 3, apply $.panzoom()
-			$(cssDiv).panzoom("pan", fx * scale, fy * scale);
+			$(cssDiv).panzoom('pan', fx * scale, fy * scale);
 		}
 
 		// The combined routing function
@@ -698,7 +697,7 @@
 
 				//highlight the destination room
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
-                setEndPoint(options.endpoint);
+				setEndPoint(options.endpoint);
 				solution = WayfindingDataStore.getShortestRoute(maps, destination, startpoint).solution;
 
 				if (reversePathStart !== -1) {
@@ -720,8 +719,8 @@
 
 					draw = {};
 
-					if(solution.length == 0) {
-						console.warn("Attempting to route with no solution. This should never happen. SVG likely has errors. Destination is: " + destination);
+					if(solution.length === 0) {
+						console.warn('Attempting to route with no solution. This should never happen. SVG likely has errors. Destination is: ' + destination);
 						return;
 					}
 
@@ -917,7 +916,7 @@
 						}
 
 
-                        // Attach the newpath to the startpin or endpin if they exist on this floor
+						// Attach the newpath to the startpin or endpin if they exist on this floor
 						var attachPointSvg = $('#' + maps[level[0].floor].id + ' svg');
 						var startPin = $('.startPin', attachPointSvg);
 						var destinationPin = $('.destinationPin', attachPointSvg);
@@ -925,12 +924,12 @@
 						if (startPin.length) {
 							startPin.before(newPath);
 						}
-                        else if (destinationPin.length) {
-                            destinationPin.before(newPath);
-                        }
-                        else {
-                            attachPointSvg.append(newPath);
-                        }
+						else if (destinationPin.length) {
+							destinationPin.before(newPath);
+						}
+						else {
+							attachPointSvg.append(newPath);
+						}
 
 						thisPath = $('#' + maps[level[0].floor].id + ' svg .directionPath' + i);
 
@@ -949,7 +948,7 @@
 		} //RouteTo
 
 		if (WayfindingDataStore == null) {
-			console.error("Please include wayfinding.datastore.js before jquery.wayfinding.js.");
+			console.error('Please include wayfinding.datastore.js before jquery.wayfinding.js.');
 		}
 
 		if (action && typeof (action) === 'object') {
