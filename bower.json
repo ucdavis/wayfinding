@@ -6,6 +6,9 @@
     "jquery": "latest"
   },
   "devDependencies": {
-    "jasmine-jquery": "~1.7.0"
+    "jasmine-jquery": "~2.0.5"
+  },
+  "resolutions": {
+    "jasmine-jquery": "~2.0.5"
   }
 }

@@ -2,20 +2,55 @@
 
 module.exports = function (grunt) {
 	// Load all grunt tasks
-	require('load-grunt-tasks')(grunt);
+	require('load-grunt-tasks')(grunt, {pattern: ['grunt-*', '!grunt-build-lifecycle']});
 	// Show elapsed time at the end
 	require('time-grunt')(grunt);
 
 	// Project configuration.
 	grunt.initConfig({
+		// Project settings
+		config: {
+			// Configurable paths
+			dev: 'src',
+			dist: 'dist',
+			temp: '.tmp'
+		},
 		// Metadata.
 		pkg: grunt.file.readJSON('package.json'),
 		banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
 			'<%= grunt.template.today("yyyy-mm-dd") %>\n' +
 			'<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
-			'* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
+			'* Copyright (c) <%= grunt.template.today("yyyy") %> Regents of the University of California' +
 			' Licensed MIT */\n',
 		// Task configuration.
+		lifecycle: { // need to build out
+			// Lint Step
+			// js hint all js
+			// lint the css?
+			// leaning toward the client and admin being separate files in dist as such concat not needed
+			// clean
+			// test
+			// uglify
+			// plato?
+			// open plato and coverage?
+			// separate from lifecycle build task for taking a group of maps and building caches
+			// separate from lifecycle support watch and serve
+		},
+		jshint: {
+			options: {
+				jshintrc: '.jshintrc',
+				reporter: require('jshint-stylish')
+			},
+			gruntfile: {
+				src: 'Gruntfile.js'
+			},
+			scripts: {
+				src: ['src/**/*.js']
+			},
+			test: {
+				src: ['test/**/*-test.js']
+			}
+		},
 		clean: {
 			files: ['dist', 'test/coverage', 'test/report']
 		},
@@ -34,23 +69,8 @@ module.exports = function (grunt) {
 				banner: '<%= banner %>'
 			},
 			dist: {
-				src: '<%= concat.dist.dest %>',
+				src: ['src/**/*.js'],
 				dest: 'dist/jquery.<%= pkg.name %>.min.js'
-			}
-		},
-		jshint: {
-			options: {
-				jshintrc: '.jshintrc',
-				reporter: require('jshint-stylish')
-			},
-			gruntfile: {
-				src: 'Gruntfile.js'
-			},
-			scripts: {
-				src: ['src/**/*.js']
-			},
-			test: {
-				src: ['test/**/*-test.js']
 			}
 		},
 		connect: {
@@ -93,7 +113,9 @@ module.exports = function (grunt) {
 	});
 
 	// Making grunt default to force so it won't die on jshint warnings
-	grunt.option('force', true);
+	// grunt.option('force', true);
+
+	grunt.loadNpmTasks('grunt-build-lifecycle');
 
 	// Default task.
 	grunt.registerTask('default', ['clean', 'jshint', 'karma:unit', 'server']);
