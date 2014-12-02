@@ -14,7 +14,8 @@ describe('Wayfinding', function () {
 
 	var $example;
 
-	beforeEach(function () {
+	beforeEach(function (done) {
+		jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
 		fixtures.load('example.html');
 		$example = $('#myMaps');
 		$example.wayfinding({
@@ -33,6 +34,9 @@ describe('Wayfinding', function () {
 			},
 			'defaultMap': 'floor1'
 		});
+		setTimeout(function() {
+			done();
+		}, 1000);
 		// waits(5000); // could implement a callback to speed this up rather than just waiting...
 	});
 
@@ -52,13 +56,14 @@ describe('Wayfinding', function () {
 	});
 
 	it('routes to room 101', function () {
+		jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 		expect($example.find('.directionPath').length).toEqual(0);
 		$example.wayfinding('routeTo', 'R101');
 		expect($example).toContain('.directionPath');
 		expect($example.find('.directionPath').attr('d')).toBe('M297,354L297,373Q297,381 289,381L107,381Q99,381 99,373L99,344Q99,336 106.15541752799933,339.5777087639997L117,345');
 	});
 
-	xit('is destructible', function () {
+	it('is destructible', function () {
 		$example.wayfinding('destroy');
 		expect($example).toBeEmpty();
 	});
