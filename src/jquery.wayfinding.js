@@ -38,14 +38,25 @@
 		// as a function or a string (for consistency with startpoint)
 		'endpoint': false,
 		// Controls routing through stairs
+		// if true return an accessible route
+		// if false return the shortest route possible
 		'accessibleRoute': false,
-		// Provides the identifier for the map that should be show at startup, if not given will default to showing first map in the array
+		// Provides the identifier for the map that should be show at startup,
+		// if not given will default to showing first map in the array
 		'defaultMap': function () {
 			return 'map.1';
 		},
+		// should dataStoreCache should be used
+		// null is cache should not be used
+		// string representing url if it should be used
+		// object if cache is being passed
 		'dataStoreCache': null,
+		// if dataStoreCache is string, this is string
+		// of url to accessible cache
 		'accessibleDataStoreCache': null,
+		// place marker for "you are here"
 		'showLocation': false,
+		//styling for the "you are here pin"
 		'locationIndicator': {
 			fill: 'red',
 			height: 40
@@ -53,7 +64,9 @@
 		'pinchToZoom': false, // requires jquery.panzoom
 		'zoomToRoute': true,
 		'zoomPadding': 85,
-		'floorChangeAnimationDelay': 1250 // milliseconds to wait during animation when a floor change occurs
+		// milliseconds to wait during animation when a floor change occurs
+		'floorChangeAnimationDelay': 1250
+		// load callback?
 	};
 
 	$.fn.wayfinding = function (action, options, callback) {
@@ -62,7 +75,7 @@
 			maps, // the array of maps populated from options each time
 			defaultMap, // the floor to show at start propulated from options
 			startpoint, // the result of either the options.startpoint value or the value of the function
-			portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
+			portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped. This got moved to datastore
 			result, // used to return non jQuery results
 			drawing;
 
@@ -366,7 +379,9 @@
 		// Ensure a dataStore exists and is set, whether from a cache
 		// or by building it.
 		function establishDataStore(accessible, onReadyCallback) {
-			if(accessible == undefined) accessible = false;
+			if(accessible === undefined) {
+				accessible = false;
+			}
 
 			if (options.dataStoreCache) {
 				if (typeof(options.dataStoreCache) === 'object') {
@@ -374,7 +389,9 @@
 
 					WayfindingDataStore.dataStore = options.dataStoreCache;
 
-					if(typeof(onReadyCallback) === 'function') onReadyCallback();
+					if(typeof(onReadyCallback) === 'function') {
+						onReadyCallback();
+					}
 				} else if (typeof(options.dataStoreCache) === 'string') {
 					console.debug("Attempting to load dataStoreCache from URL ...");
 					var cacheUrl = accessible ? options.accessibleDataStoreCache : options.dataStoreCache;
@@ -384,13 +401,17 @@
 
 						WayfindingDataStore.dataStore = result;
 
-						if(typeof(onReadyCallback) === 'function') onReadyCallback();
+						if(typeof(onReadyCallback) === 'function') {
+							onReadyCallback();
+						}
 					}).fail(function () {
 						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
 
 						WayfindingDataStore.dataStore = WayfindingDataStore.build(options.startpoint, maps, accessible);
 
-						if(typeof(onReadyCallback) === 'function') onReadyCallback();
+						if(typeof(onReadyCallback) === 'function') {
+							onReadyCallback();
+						}
 					});
 				}
 			} else {
@@ -398,7 +419,9 @@
 
 				WayfindingDataStore.dataStore = WayfindingDataStore.build(options.startpoint, maps, accessible);
 
-				if(typeof(onReadyCallback) == "function") onReadyCallback();
+				if(typeof(onReadyCallback) === 'function') {
+					onReadyCallback();
+				}
 			}
 		}
 
