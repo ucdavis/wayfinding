@@ -17,14 +17,40 @@ module.exports = function (grunt) {
 		},
 		// Metadata.
 		pkg: grunt.file.readJSON('package.json'),
-		lifecycle: { // need to build out
-		},
 		banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
 			'<%= grunt.template.today("yyyy-mm-dd") %>\n' +
 			'<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
-			'* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
+			'* Copyright (c) <%= grunt.template.today("yyyy") %> Regents of the University of California' +
 			' Licensed MIT */\n',
 		// Task configuration.
+		lifecycle: { // need to build out
+			// Lint Step
+			// js hint all js
+			// lint the css?
+			// leaning toward the client and admin being separate files in dist as such concat not needed
+			// clean
+			// test
+			// uglify
+			// plato?
+			// open plato and coverage?
+			// separate from lifecycle build task for taking a group of maps and building caches
+			// separate from lifecycle support watch and serve
+		},
+		jshint: {
+			options: {
+				jshintrc: '.jshintrc',
+				reporter: require('jshint-stylish')
+			},
+			gruntfile: {
+				src: 'Gruntfile.js'
+			},
+			scripts: {
+				src: ['src/**/*.js']
+			},
+			test: {
+				src: ['test/**/*-test.js']
+			}
+		},
 		clean: {
 			files: ['dist', 'test/coverage', 'test/report']
 		},
@@ -43,23 +69,8 @@ module.exports = function (grunt) {
 				banner: '<%= banner %>'
 			},
 			dist: {
-				src: '<%= concat.dist.dest %>',
+				src: ['src/**/*.js'],
 				dest: 'dist/jquery.<%= pkg.name %>.min.js'
-			}
-		},
-		jshint: {
-			options: {
-				jshintrc: '.jshintrc',
-				reporter: require('jshint-stylish')
-			},
-			gruntfile: {
-				src: 'Gruntfile.js'
-			},
-			scripts: {
-				src: ['src/**/*.js']
-			},
-			test: {
-				src: ['test/**/*-test.js']
 			}
 		},
 		connect: {
