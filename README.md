@@ -1,9 +1,12 @@
-wayfinding
+Wayfinding
 ==========
 
-jQuery plugin for interactive svg maps
+jQuery plugin for interactive SVG maps.
 
-Developed at the School of Law: https://law.ucdavis.edu/information-technology/projects/wayfinding.html
+Developed at the UCD School of Law: https://law.ucdavis.edu/information-technology/projects/wayfinding.html
+
+Additional contributions from UCD Division of Social Science IT:
+https://it.dss.ucdavis.edu/
 
 Initial code moved from https://code.google.com/p/wayfinding
 

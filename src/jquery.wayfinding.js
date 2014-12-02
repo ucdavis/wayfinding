@@ -2,83 +2,78 @@
 
 /**
  * @preserve
- * Wayfinding v0.2.0
+ * Wayfinding v0.4.0
  * https://github.com/ucdavis/wayfinding
  *
- * Copyright (c) 2010 University of California Regents
+ * Copyright (c) 2010-2014 University of California Regents
  * Licensed under GNU General Public License v2
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  *
- * Date: 2010-08-02, 2014-02-03
+ * Date: 2014-12-02
  *
  */
 
 //  <![CDATA[
 
 (function ($) {
-
 	'use strict';
 
 	var defaults = {
-		// will look for a local .svg file called floorplan.svg by default
+		// Defaults to a local file called floorplan.svg
 		'maps': [{'path': 'floorplan.svg', 'id': 'map.1'}],
-		// path formatting
+		// Path formatting
 		'path': {
 			color: 'red', // the color of the solution path that will be drawn
 			radius: 10, // the radius in pixels to apply to the solution path
 			speed: 8, // the speed at which the solution path with be drawn
 			width: 3 // the width of the solution path in pixels
 		},
-		// the door identifier for the default starting point
+		// The door identifier for the default starting point
 		'startpoint': function () {
 			return 'startpoint';
 		},
-		// if specified in the wayfinding initialization
+		// If specified in the wayfinding initialization
 		// route to this point as soon as the maps load. Can be initialized
 		// as a function or a string (for consistency with startpoint)
 		'endpoint': false,
-		//controls routing through stairs
+		// Controls routing through stairs
 		'accessibleRoute': false,
-		//provides the identifier for the map that should be show at startup, if not given will default to showing first map in the array
+		// Provides the identifier for the map that should be show at startup, if not given will default to showing first map in the array
 		'defaultMap': function () {
 			return 'map.1';
 		},
-		'dataStoreCache': false,
+		'dataStoreCache': null,
+		'accessibleDataStoreCache': null,
 		'showLocation': false,
 		'locationIndicator': {
 			fill: 'red',
 			height: 40
 		},
-		'wayFound': false,
-		'zoomToRoute': false,
-		'zoomPadding': 50,
-		'mapEvents': false
+		'pinchToZoom': false, // requires jquery.panzoom
+		'zoomToRoute': true,
+		'zoomPadding': 85,
+		'floorChangeAnimationDelay': 1250 // milliseconds to wait during animation when a floor change occurs
 	};
 
-	$.fn.wayfinding = function (action, options) {
-
+	$.fn.wayfinding = function (action, options, callback) {
 		var passed = options,
-			dataStore = {
-				'paths': [],
-				'portals': []
-			},
-			obj, // the jQuery object being worked with;
-			maps, // the array of maps populated from options each time
-			defaultMap, // the floor to show at start propulated from options
-			startpoint, // the result of either the options.startpoint value or the value of the function
-			portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
-			drawing,
-			solution,
-			result; // used to return non jQuery results
+			           obj, // the jQuery object being worked with;
+			           maps, // the array of maps populated from options each time
+			           defaultMap, // the floor to show at start propulated from options
+			           startpoint, // the result of either the options.startpoint value or the value of the function
+			           portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
+			           result, // used to return non jQuery results
+								 drawing;
 
-		// set options based on either provided options, prior settings, or defaults
+		// Set options based on either provided options or defaults
 		function getOptions(el) {
-
-			var optionsPrior = el.data('wayfinding:options'), // attempt to load prior settings
-				dataStorePrior = el.data('wayfinding:data'); // load any stored data
+			var optionsPrior = el.data('wayfinding:options');
 
 			drawing = el.data('wayfinding:drawing'); // load a drawn path, if it exists
 
+			options = $.extend(true, {}, defaults, options);
+
+			// check for settings attached to the current object
 			if (optionsPrior !== undefined) {
 				options = optionsPrior;
 			} else {
@@ -92,33 +87,27 @@
 			maps = options.maps;
 
 			// set defaultMap correctly, handle both function and value being passed
-			if (typeof (options.defaultMap) === 'function') {
+			if (typeof(options.defaultMap) === 'function') {
 				defaultMap = options.defaultMap();
 			} else {
 				defaultMap = options.defaultMap;
 			}
 
-			// set startpoint correctly
-			if (typeof (options.startpoint) === 'function') {
+			// Set startpoint correctly
+			if (typeof(options.startpoint) === 'function') {
 				setStartPoint(options.startpoint(), el);
 			} else {
 				startpoint = options.startpoint;
 			}
-
-			if (dataStorePrior !== undefined) {
-				dataStore = dataStorePrior;
-			}
 		} //function getOptions
 
-		//
 		function setOptions(el) {
 			el.data('wayfinding:options', options);
 			el.data('wayfinding:drawing', drawing);
-			el.data('wayfinding:data', dataStore);
+			el.data('wayfinding:data', WayfindingDataStore.dataStore);
 		}
 
-		//verify that all floor ids are unique. make them so if they are not
-
+		// Ensure floor ids are unique.
 		function checkIds() {
 			var mapNum,
 				checkNum,
@@ -157,7 +146,7 @@
 
 		//Takes x and y coordinates and makes a location indicating pin for those
 		//coordinates. Returns the pin element, not yet attached to the DOM.
-		function makePin(x, y) {
+		function makePin(x, y, type) {
 			var indicator,
 			height,
 			width,
@@ -165,7 +154,7 @@
 
 			indicator = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-			$(indicator).attr('class', 'locationIndicator');
+			$(indicator).attr('class', type);
 
 			height = options.locationIndicator.height;
 			width = height * 5 / 8;
@@ -201,18 +190,17 @@
 			return indicator;
 		} //function makePin
 
-		//set the start point, and put a location indicator
-		//in that spot, if feature is enabled.
+		// Set the start point, and put a location indicator
+		// in that spot, if feature is enabled.
 		function setStartPoint(passed, el) {
-			var start,
+			var start, attachPinLocation,
 			x, y,
 			pin;
-
 			//clears locationIndicators from the maps
 			$('path.locationIndicator', el).remove();
 
 			// set startpoint correctly
-			if (typeof (passed) === 'function') {
+			if (typeof(passed) === 'function') {
 				options.startpoint = passed();
 			} else {
 				options.startpoint = passed;
@@ -223,261 +211,77 @@
 			if (options.showLocation) {
 				start = $('#Doors #' + startpoint, el);
 
+				var startMap = el.children().has($('#' + startpoint));
+				attachPinLocation = $('svg', startMap).children().last();
+
 				if (start.length) {
 					x = (Number(start.attr('x1')) + Number(start.attr('x2'))) / 2;
 					y = (Number(start.attr('y1')) + Number(start.attr('y2'))) / 2;
 
-					pin = makePin(x, y);
+					pin = makePin(x, y, 'startPin');
 
-					start.after(pin);
+					attachPinLocation.after(pin);
 				} else {
 					return; //startpoint does not exist
 				}
 			}
 		} //function setStartPoint
 
-		function cleanupSVG(target, el) {
-			//hide maps until explicitly displayed
-			$(el).hide();
+		function setEndPoint(passed, el) {
+			var end, endpoint, attachPinLocation,
+			x, y,
+			pin;
 
-			//hide route information
-			$('#Paths line', el).attr('stroke-opacity', 0);
-			$('#Doors line', el).attr('stroke-opacity', 0);
-			$('#Portals line', el).attr('stroke-opacity', 0);
+			//clears locationIndicators from the maps
+			$('path.destinationPin', el).remove();
 
-			//Rooms
+      // Set endpoint
+			endpoint = passed;
 
-			// clean up after illustrator -> svg issues
-			$('#Rooms a, #Doors line', el).each(function () {
-				if ($(this).prop('id') && $(this).prop('id').indexOf('_') > 0) {
-					var oldID = $(this).prop('id');
-					$(this).prop('id', oldID.slice(0, oldID.indexOf('_')));
+			if (options.showLocation) {
+				end = $('#Doors #' + endpoint, el);
+
+			  attachPinLocation = $('svg').has('#Rooms a[id="' + passed + '"]');
+				if (end.length) {
+					x = (Number(end.attr('x1')) + Number(end.attr('x2'))) / 2;
+					y = (Number(end.attr('y1')) + Number(end.attr('y2'))) / 2;
+
+					pin = makePin(x, y, 'destinationPin');
+
+					attachPinLocation.append(pin);
+				} else {
+					return; //endpoint does not exist
 				}
-			});
+			}
+		} //function setEndPoint
 
-			//The following need to use the el variable to scope their calls: el is jquery element
+		// Hide SVG div, hide path lines (they're data, not visuals), make rooms clickable
+		function activateSVG(obj, svgDiv) {
+			// Hide maps until explicitly displayed
+			$(svgDiv).hide();
 
-			// make clickable
-			// removed el scope from this next call.
-			$('#Rooms a', el).click(function (event) {
-				$(target).wayfinding('routeTo', $(this).prop('id'));
+			// Hide route information
+			$('#Paths line', svgDiv).attr('stroke-opacity', 0);
+			$('#Doors line', svgDiv).attr('stroke-opacity', 0);
+			$('#Portals line', svgDiv).attr('stroke-opacity', 0);
+
+			// The following need to use the el variable to scope their calls: el is jquery element
+
+			// Make rooms clickable
+			$('#Rooms a', svgDiv).click(function (event) {
+				$(obj).trigger('wayfinding:roomClicked', [ { room_id : $(this).attr('id') } ] );
+				$(obj).wayfinding('routeTo', $(this).prop('id'));
 				event.preventDefault();
 			});
-		} //function cleanupSVG
 
-		// Extract data from the svg maps
-		function finishFloor(el, mapNum, floor) {
+			// Ensure text labels won't prevent room clicks
+			$('text', svgDiv).css("pointer-events", "none");
 
-			var path,
-				doorId,
-				x1,
-				y1,
-				x2,
-				y2,
-				matches,
-				portal,
-				portalId;
+			// Ensure path lines won't prevent room clicks
+			$('line', svgDiv).css("pointer-events", "none");
 
-			//Paths
-
-			dataStore.paths[mapNum] = [];
-
-			$('#' + floor.id + ' #Paths line', el).each(function () { // index, line
-
-				path = {};
-				path.floor = floor.id; // floor_1
-				path.mapNum = mapNum; // index of floor in array 1
-				path.route = Infinity; //Distance
-				path.prior = -1; //Prior node in path that yielded route distance
-				path.ax = $(this).prop('x1').animVal.value;
-				path.ay = $(this).prop('y1').animVal.value;
-				path.doorA = [];
-				path.bx = $(this).prop('x2').animVal.value;
-				path.by = $(this).prop('y2').animVal.value;
-				path.doorB = [];
-				path.length = Math.sqrt(Math.pow(path.ax - path.bx, 2) + Math.pow(path.ay - path.by, 2));
-
-				path.connections = []; //other paths
-				path.portals = []; // connected portals
-
-				dataStore.paths[mapNum].push(path);
-
-			});
-
-			//Doors and starting points
-			//roomId or POI_Id
-
-			$('#' + floor.id + ' #Doors line', el).each(function () { // index, line
-
-				x1 = $(this).prop('x1').animVal.value;
-				y1 = $(this).prop('y1').animVal.value;
-				x2 = $(this).prop('x2').animVal.value;
-				y2 = $(this).prop('y2').animVal.value;
-				doorId = $(this).prop('id');
-
-				$.each(dataStore.paths[mapNum], function (index, path) {
-					if (floor.id === path.floor && ((path.ax === x1 && path.ay === y1) || (path.ax === x2 && path.ay === y2))) {
-						path.doorA.push(doorId);
-					} else if (floor.id === path.floor && ((path.bx === x1 && path.by === y1) || (path.bx === x2 && path.by === y2))) {
-						path.doorB.push(doorId);
-					}
-				});
-
-			});
-
-			//Portal Segments -- string theory says unmatched portal segment useless -- no wormhole
-
-			$('#' + floor.id + ' #Portals line', el).each(function () { // index, line
-				portal = {};
-
-				portalId = $(this).prop('id');
-
-				if (portalId && portalId.indexOf('_') > -1) {
-					portalId = portalId.slice(0, portalId.indexOf('_'));
-				}
-
-				portal.id = portalId;
-				portal.type = portalId.split('.')[0];
-				portal.floor = floor.id;
-
-				portal.mate = portalId.split('.').slice(0, 2).join('.') + '.' + floor.id;
-
-				portal.mapNum = mapNum;
-
-				portal.matched = false;
-
-				x1 = $(this).prop('x1').animVal.value;
-				y1 = $(this).prop('y1').animVal.value;
-				x2 = $(this).prop('x2').animVal.value;
-				y2 = $(this).prop('y2').animVal.value;
-
-				matches = $.grep(dataStore.paths[mapNum], function (n) { // , i
-					return ((x1 === n.ax && y1 === n.ay) || (x1 === n.bx && y1 === n.by));
-				});
-
-				if (matches.length !== 0) {
-					portal.x = x1;
-					portal.y = y1;
-				} else {
-					portal.x = x2;
-					portal.y = y2;
-				}
-
-				//portal needs length -- long stairs versus elevator
-				portal.length = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-
-				portalSegments.push(portal);
-
-			});
-		} // function finishfloor
-
-
-		// after data extracted from all svg maps then build portals between them
-		function buildPortals() {
-
-			var segmentOuterNum,
-				segmentInnerNum,
-				outerSegment,
-				innerSegment,
-				portal,
-				mapNum,
-				pathOuterNum,
-				pathInnerNum,
-				portalNum,
-				pathNum;
-
-			for (segmentOuterNum = 0; segmentOuterNum < portalSegments.length; segmentOuterNum++) {
-
-				outerSegment = portalSegments[segmentOuterNum];
-
-				if (outerSegment.matched === false) {
-
-					for (segmentInnerNum = segmentOuterNum; segmentInnerNum < portalSegments.length; segmentInnerNum++) {
-						if (portalSegments[segmentInnerNum].id === outerSegment.mate && portalSegments[segmentInnerNum].mate === outerSegment.id) {
-							innerSegment = portalSegments[segmentInnerNum];
-
-							portal = {};
-
-							outerSegment.matched = true;
-							innerSegment.matched = true;
-
-							portal.type = outerSegment.type;
-							portal.accessible = (portal.type === 'Elev' || portal.type === 'Door') ? true : false; // consider changing to != Stair
-
-							portal.idA = outerSegment.id;
-							portal.floorA = outerSegment.floor;
-							portal.floorANum = outerSegment.mapNum;
-							portal.xA = outerSegment.x;
-							portal.yA = outerSegment.y;
-							portal.connectionsA = []; //only paths
-
-							portal.idB = innerSegment.id;
-							portal.floorB = innerSegment.floor;
-							portal.floorBNum = innerSegment.mapNum;
-							portal.xB = innerSegment.x;
-							portal.yB = innerSegment.y;
-							portal.connectionsB = []; // only paths
-
-							portal.length = outerSegment.length + innerSegment.length;
-
-							portal.route = Infinity;
-							portal.prior = -1;
-
-							dataStore.portals.push(portal);
-
-						}
-					}
-				}
-			}
-
-			//check each path for connections to other paths
-			//checks only possible matchs on same floor, and only for half-1 triangle of search area to speed up search
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathOuterNum = 0; pathOuterNum < dataStore.paths[mapNum].length - 1; pathOuterNum++) {
-					for (pathInnerNum = pathOuterNum + 1; pathInnerNum < dataStore.paths[mapNum].length; pathInnerNum++) {
-						if (
-							(dataStore.paths[mapNum][pathInnerNum].ax === dataStore.paths[mapNum][pathOuterNum].ax &&
-							dataStore.paths[mapNum][pathInnerNum].ay === dataStore.paths[mapNum][pathOuterNum].ay) ||
-								(dataStore.paths[mapNum][pathInnerNum].bx === dataStore.paths[mapNum][pathOuterNum].ax &&
-									dataStore.paths[mapNum][pathInnerNum].by === dataStore.paths[mapNum][pathOuterNum].ay) ||
-								(dataStore.paths[mapNum][pathInnerNum].ax === dataStore.paths[mapNum][pathOuterNum].bx &&
-									dataStore.paths[mapNum][pathInnerNum].ay === dataStore.paths[mapNum][pathOuterNum].by) ||
-								(dataStore.paths[mapNum][pathInnerNum].bx === dataStore.paths[mapNum][pathOuterNum].bx &&
-									dataStore.paths[mapNum][pathInnerNum].by === dataStore.paths[mapNum][pathOuterNum].by)
-						) {
-							dataStore.paths[mapNum][pathOuterNum].connections.push(pathInnerNum);
-							dataStore.paths[mapNum][pathInnerNum].connections.push(pathOuterNum);
-						}
-					}
-				}
-			}
-
-			//optimize portal searching of paths
-			for (portalNum = 0; portalNum < dataStore.portals.length; portalNum++) {
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-						if (dataStore.portals[portalNum].floorA === dataStore.paths[mapNum][pathNum].floor &&
-								((dataStore.portals[portalNum].xA === dataStore.paths[mapNum][pathNum].ax &&
-									dataStore.portals[portalNum].yA === dataStore.paths[mapNum][pathNum].ay) ||
-									(dataStore.portals[portalNum].xA === dataStore.paths[mapNum][pathNum].bx &&
-										dataStore.portals[portalNum].yA === dataStore.paths[mapNum][pathNum].by))) {
-							dataStore.portals[portalNum].connectionsA.push(pathNum);
-							dataStore.paths[mapNum][pathNum].portals.push(portalNum);
-						} else if (dataStore.portals[portalNum].floorB === dataStore.paths[mapNum][pathNum].floor &&
-								((dataStore.portals[portalNum].xB === dataStore.paths[mapNum][pathNum].ax &&
-									dataStore.portals[portalNum].yB === dataStore.paths[mapNum][pathNum].ay) ||
-								(dataStore.portals[portalNum].xB === dataStore.paths[mapNum][pathNum].bx &&
-									dataStore.portals[portalNum].yB === dataStore.paths[mapNum][pathNum].by))) {
-							dataStore.portals[portalNum].connectionsB.push(pathNum);
-							dataStore.paths[mapNum][pathNum].portals.push(portalNum);
-						}
-					}
-				}
-			}
-
-			portalSegments = [];
-
-		}   // end function buildportals
+			$(obj).append(svgDiv);
+		} //function activateSVG
 
 		function replaceLoadScreen(el) {
 			var displayNum,
@@ -485,7 +289,7 @@
 
 			$('#mapLoading').remove();
 
-			//loop ensures defaultMap is in fact one of the maps
+			// loop ensures defaultMap is in fact one of the maps
 			displayNum = 0;
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
 				if (defaultMap === maps[mapNum].id) {
@@ -493,114 +297,124 @@
 				}
 			}
 
-			//hilight starting floor
-			$('#' + maps[displayNum].id, el).show(0, function() {
-				$(this).trigger('wfMapsVisible');
-			}); // rework
-			//if endpoint was specified, route to there.
+			// highlight starting floor
+			$('#' + maps[displayNum].id, el).show();
+
+			$(this).trigger('wayfinding:mapsVisible');
+
+			// Ensure SVG w/h are divisble by 2 (to avoid webkit blurriness bug on pan/zoom)
+			var elem = $('#' + maps[displayNum].id + ">svg", el)[0];
+			elem.style.height = (Math.ceil(elem.offsetHeight / 2) * 2) + "px";
+			elem.style.width = (Math.ceil(elem.offsetWidth / 2) * 2) + "px";
+
+			// Enable pinch-to-zoom
+			if(options.pinchToZoom) {
+				initializePanZoom($('#' + maps[displayNum].id, el));
+			}
+
+			// if endpoint was specified, route to there.
 			if (typeof(options.endpoint) === 'function') {
 				routeTo(options.endpoint());
 			} else if (typeof(options.endpoint) === 'string') {
 				routeTo(options.endpoint);
 			}
+
+			$.event.trigger("wayfinding:ready");
 		} //function replaceLoadScreen
 
-		//deletes path metadata from datastore.
-		//otherwise old path data will be reused.
-		function prepareForSearch() {
-			var mapNum,
-			pathNum,
-			portalNum;
+		// Initialize the jQuery target object
+		function initialize(obj) {
+			var mapsProcessed = 0;
 
-			// set route distance back to infinity and prior path to unvisited
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-					dataStore.paths[mapNum][pathNum].route = Infinity;
-					dataStore.paths[mapNum][pathNum].prior = -1;
-				}
-			} //function prepareForSearch
-
-			// reset portals
-			for (portalNum = 0; portalNum < dataStore.portals.length; portalNum++) {
-				//Set route distance to infinity
-				dataStore.portals[portalNum].route = Infinity;
-				//indicate which node was used to get to this node -1 = none
-				dataStore.portals[portalNum].prior = -1;
-				dataStore.portals[portalNum].priormapNum = -1;
-			}
-		}
-
-		function loadMaps(target) {
-			var processed = 0;
-
-			$.each(maps, function (i, floor) {
-				//create div to put map in, disconnected from DOM for performance reasons
-				var targetFloor = $('<div id="' + floor.id + '"><\/div>');
+			// Load SVGs off the network
+			$.each(maps, function (i, map) {
+				var svgDiv = $('<div id="' + map.id + '"><\/div>');
 
 				//create svg in that div
-				targetFloor.load(
-					floor.path,
-					function (svg) {
-						//get handle for that svg
-						processed = processed + 1;
-						maps[i].svgHandle = svg;
-						cleanupSVG(target, targetFloor);
-
-						//attach div
-						target.append(this);
-
-						if (!options.dataStoreCache) {
-							finishFloor(target, i, floor);
-						// rather than checking if we have processed the last map in order, this checks if we have processed the right number of maps
-							if (processed === maps.length) {
-								buildPortals();
-							}
+				svgDiv.load(
+					map.path,
+					function (svg, status, xhr) {
+						if (status == "error") {
+							svgDiv.html("<p class='text-center text-danger'>Map " + i + " Was not found at "
+								+ map.path + "<br />Please upload it in the administration section</p>");
+							maps[i].el = svgDiv;
 						}
+						maps[i].svgHandle = svg;
+						maps[i].el = svgDiv;
 
-						if (processed === maps.length) {
-							setStartPoint(options.startpoint, target);
-							setOptions(target);
-							replaceLoadScreen(target);
+						WayfindingDataStore.cleanupSVG(maps[i].el);
+
+						activateSVG(obj, svgDiv);
+
+						mapsProcessed = mapsProcessed + 1;
+
+						if(mapsProcessed == maps.length) {
+							// All SVGs have finished loading
+							establishDataStore(options.accessibleRoute, function() {
+								// SVGs are loaded, dataStore is set, ready the DOM
+								setStartPoint(options.startpoint, obj);
+								setOptions(obj);
+								replaceLoadScreen(obj);
+							});
 						}
 					}
 				);
 			});
-		} // function loadMaps
+		} // function initialize
 
-		//initialize the jQuery target object
-		function initialize(target) {
-			//Pull dataStore from cache, if available.
+		// Ensure a dataStore exists and is set, whether from a cache
+		// or by building it.
+		function establishDataStore(accessible, onReadyCallback) {
+			if(accessible == undefined) accessible = false;
+
 			if (options.dataStoreCache) {
 				if (typeof(options.dataStoreCache) === 'object') {
-					dataStore = options.dataStoreCache;
-					loadMaps(target);
+					console.debug('Using passed dataStoreCache object.');
+
+					WayfindingDataStore.dataStore = options.dataStoreCache;
+
+					if(typeof(onReadyCallback) == "function") onReadyCallback();
 				} else if (typeof(options.dataStoreCache) === 'string') {
-					$.getJSON(options.dataStoreCache, function (result) {
-						dataStore = result;
-						loadMaps(target);
+					console.debug("Attempting to load dataStoreCache from URL ...");
+					var cacheUrl = accessible ? options.accessibleDataStoreCache : options.dataStoreCache;
+
+					$.getJSON(cacheUrl, function (result) {
+						console.debug('Using dataStoreCache from remote.');
+
+						WayfindingDataStore.dataStore = result;
+
+						if(typeof(onReadyCallback) == "function") onReadyCallback();
 					}).fail(function () {
-						console.log('Failed to get dataStore cache. Falling back to client-side dataStore generation.');
+						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
 
-						dataStore.paths = [];
-						dataStore.portals = [];
-						options.dataStoreCache = false;
+						WayfindingDataStore.dataStore = WayfindingDataStore.build(options.startpoint, maps, accessible);
 
-						loadMaps(target);
+						if(typeof(onReadyCallback) == "function") onReadyCallback();
 					});
 				}
 			} else {
-				dataStore.paths = [];
-				dataStore.portals = [];
+				console.debug("No dataStore cache set, building with startpoint '" + options.startpoint + "' ...");
 
-				loadMaps(target);
+				WayfindingDataStore.dataStore = WayfindingDataStore.build(options.startpoint, maps, accessible);
+
+				if(typeof(onReadyCallback) == "function") onReadyCallback();
 			}
-		} // function initialize
+		}
 
+		// Called when animatePath() is switching the floor and also when
 		function switchFloor(floor, el) {
 			$('div', el).hide();
+
 			$('#' + floor, el).show(0, function() {
-				if (options.mapEvents) {
-					$(el).trigger('wfFloorChange');
+				$(el).trigger('wayfinding:floorChanged', { map_id: floor });
+
+				if(options.pinchToZoom) {
+					// Destroy .panzoom() on all SVGs
+					for (i = 0; i < maps.length; i++) {
+						$('#floor' + i, el).panzoom("destroy");
+					}
+
+					initializePanZoom($('#' + floor, el));
 				}
 			});
 
@@ -609,113 +423,38 @@
 
 			var i, level, mapNum, pathLength;
 
-
-
-
-			// work here
-
-
-
-
 			if (drawing) {
 				mapNum = -1;
+
 				for (i = 0; i < maps.length; i++) {
 					if (maps[i] === floor) {
 						mapNum = i;
+						break;
 					}
 				}
+
 				level = -1;
+
 				for (i = 0; i < drawing.length; i++) {
 					if (drawing[i].floor === mapNum) {
 						level = i;
+						break;
 					}
 				}
 
 				if (level !== -1) {
 					pathLength =  drawing[level].routeLength;
 
-					//these next three are potentially redundant now
+					// these next three are potentially redundant now
 					$(drawing[level].path, el).attr('stroke-dasharray', [pathLength, pathLength]);
 					$(drawing[level].path, el).attr('stroke-dashoffset', pathLength);
 					$(drawing[level].path, el).attr('pathLength', pathLength);
-
 					$(drawing[level].path, el).attr('stroke-dashoffset', pathLength);
+
 					$(drawing[level].path, el).animate({svgStrokeDashOffset: 0}, pathLength * options.path.speed); //or move minPath to global variable?
 				}
 			}
 		} //function switchFloor
-
-		function recursiveSearch(segmentType, segmentFloor, segment, length) {
-			//SegmentType is PAth or POrtal, segment floor limits search, segment is id per type and floor, length is total length of current thread
-			// for each path on this floor look at all the paths we know connect to it
-			$.each(dataStore.paths[segmentFloor][segment].connections, function (i, tryPath) {
-				// check and see if the current path is a shorter path to the new path
-				if (length + dataStore.paths[segmentFloor][tryPath].length < dataStore.paths[segmentFloor][tryPath].route) {
-					dataStore.paths[segmentFloor][tryPath].route = length + dataStore.paths[segmentFloor][tryPath].length;
-					dataStore.paths[segmentFloor][tryPath].prior = segment;
-					dataStore.paths[segmentFloor][tryPath].priorType = segmentType;
-					recursiveSearch('pa', segmentFloor,  tryPath, dataStore.paths[segmentFloor][tryPath].route);
-				}
-			});
-			// if the current path is connected to any portals
-			if (dataStore.paths[segmentFloor][segment].portals.length > 0) {
-				// look at each portal, tryPortal is portal index in portals
-				$.each(dataStore.paths[segmentFloor][segment].portals, function (i, tryPortal) {
-					if (length + dataStore.portals[tryPortal].length < dataStore.portals[tryPortal].route && (options.accessibleRoute === false || (options.accessibleRoute === true && dataStore.portals[tryPortal].accessible))) {
-						dataStore.portals[tryPortal].route = length + dataStore.portals[tryPortal].length;
-						dataStore.portals[tryPortal].prior = segment;
-						dataStore.portals[tryPortal].priormapNum = dataStore.paths[segmentFloor][segment].mapNum;
-						dataStore.portals[tryPortal].priorType = segmentType;
-						// if the incoming segment to the portal is at one end of the portal try all the paths at the other end
-						if ($.inArray(segment, dataStore.portals[tryPortal].connectionsA) !== -1) {
-							$.each(dataStore.portals[tryPortal].connectionsB, function (i, tryPath) {
-								//if adding this path
-								if (length + dataStore.portals[tryPortal].length + dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].length < dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].route) {
-									dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].route = dataStore.portals[tryPortal].route + dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].length;
-									dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].prior = tryPortal;
-									dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].priorType = 'po';
-									recursiveSearch('pa', dataStore.portals[tryPortal].floorBNum, tryPath, dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].route);
-								}
-							});
-						} else {
-							$.each(dataStore.portals[tryPortal].connectionsA, function (i, tryPath) {
-								// if adding this path
-								if (length + dataStore.portals[tryPortal].length + dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].length < dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].route) {
-									dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].route = dataStore.portals[tryPortal].route + dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].length;
-									dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].prior = tryPortal;
-									dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].priorType = 'po';
-									recursiveSearch('pa', dataStore.portals[tryPortal].floorANum, tryPath, dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].route);
-								}
-							});
-						}
-					}
-				});
-			}
-
-			options.wayFound = true;
-		}
-
-		// from a given end point generate an array representing the reverse steps needed to reach destination along shortest path
-		function backTrack(segmentType, segmentFloor, segment) {
-			var step;
-
-			// if we aren't at the startpoint point
-			if (segment !== 'door') {
-				step = {};
-				step.type = segmentType;
-				step.floor = segmentFloor;
-				step.segment = segment;
-				solution.push(step);
-				switch (segmentType) {
-				case 'pa':
-					backTrack(dataStore.paths[segmentFloor][segment].priorType, segmentFloor, dataStore.paths[segmentFloor][segment].prior);
-					break;
-				case 'po':
-					backTrack(dataStore.portals[segment].priorType, dataStore.portals[segment].priormapNum, dataStore.portals[segment].prior);
-					break;
-				}
-			}
-		}
 
 		function hidePath(obj) {
 			$('path[class^=directionPath]', obj).css({
@@ -723,178 +462,200 @@
 			});
 		}
 
-		function animatePath(drawing, i) {
+		// Applies linear interpolation to find the correct value
+		// for traveling from value oldValue to newValue taking into account
+		// that you are (i / steps) of the way through the process
+		function interpolateValue(oldValue, newValue, i, steps) {
+			return (((steps - i) / steps) * oldValue) + ((i / steps) * newValue);
+		}
+
+		function animatePath(drawing, drawingSegment) {
 			var path,
 			svg,
 			pathRect,
-			oldViewBox,
 			drawLength,
-			delay,
+			oldViewBox,
+			animationDuration,
 			pad = options.zoomPadding;
 
-			if (1 !== 1 && i >= drawing.length) {
+			if (1 !== 1 && drawingSegment >= drawing.length) {
 				// if repeat is set, then delay and rerun display from first.
 				// Don't implement, until we have click to cancel out of this
 				setTimeout(function () {
 					animatePath(drawing, 0);
 				},
 				5000);
-			} else if (i >= drawing.length) {
+			} else if (drawingSegment >= drawing.length) {
 				//finished, stop recursion.
 				return;
 			}
 
-			drawLength = drawing[i].routeLength;
-			delay = drawLength * options.path.speed;
+			var mapIdx = drawing[drawingSegment][0].floor;
+			svg = $('#' + maps[mapIdx].id + ' svg')[0];
 
-			switchFloor(maps[drawing[i][0].floor].id, obj);
+			drawLength = drawing[drawingSegment].routeLength;
+			animationDuration = drawLength * options.path.speed;
 
-			path = $('#' + maps[drawing[i][0].floor].id + ' .directionPath' + i)[0];
+			switchFloor(maps[drawing[drawingSegment][0].floor].id, obj);
+
+			// Get the complete path for this particular floor-route
+			path = $('#' + maps[drawing[drawingSegment][0].floor].id + ' .directionPath' + drawingSegment)[0];
+
+			// Animate using CSS transitions
+			// SVG animation technique from http://jakearchibald.com/2013/animated-line-drawing-svg/
 			path.style.stroke = options.path.color;
 			path.style.strokeWidth = options.path.width;
 			path.style.transition = path.style.WebkitTransition = 'none';
 			path.style.strokeDasharray = drawLength + ' ' + drawLength;
 			path.style.strokeDashoffset = drawLength;
 			pathRect = path.getBBox();
-			path.style.transition = path.style.WebkitTransition = 'stroke-dashoffset ' + delay + 'ms linear';
+			path.style.transition = path.style.WebkitTransition = 'stroke-dashoffset ' + animationDuration + 'ms linear';
 			path.style.strokeDashoffset = '0';
-// http://jakearchibald.com/2013/animated-line-drawing-svg/
+
+			// If this is the last segment, trigger the 'wayfinding:animationComplete' event
+			// when it finishes drawing.
+			// If we're using zoomToRoute however, don't trigger here, trigger when zoomOut is complete (see below)
+			if(options.zoomToRoute == false) {
+				if(drawingSegment == (drawing.length - 1)) {
+					$(path).one("webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend", function(e) {
+						$(obj).trigger('wayfinding:animationComplete');
+					});
+				}
+			}
 
 			// Zooming logic...
-			svg = $('#' + maps[drawing[i][0].floor].id + ' svg')[0];
-			oldViewBox = svg.getAttribute('viewBox');
+      var steps = 35;
+      var duration = 650; // Zoom animation in milliseconds
+
+			// Store the original SVG viewBox in order to zoom out back to it after path animation
+			var oldViewBox = svg.getAttribute('viewBox');
+			var oldViewX = parseFloat(oldViewBox.split(/\s+|,/)[0]); // viewBox is [x, y, w, h], x == [0]
+			var oldViewY = parseFloat(oldViewBox.split(/\s+|,/)[1]);
+			var oldViewW = parseFloat(oldViewBox.split(/\s+|,/)[2]);
+			var oldViewH = parseFloat(oldViewBox.split(/\s+|,/)[3]);
+
+      // Calculate single step size from each direction
+      var newViewX = pathRect.x - pad;
+					newViewX = newViewX > 0 ? newViewX : 0;
+      var newViewW = pathRect.width + (2 * pad);
+      var newViewY = pathRect.y - pad;
+					newViewY = newViewY > 0 ? newViewY : 0;
+      var newViewH = pathRect.height + (2 * pad);
 
 			if (options.zoomToRoute) {
-				svg.setAttribute('viewBox', (pathRect.x - pad) + ' ' + (pathRect.y - pad) +
-					' ' + (pathRect.width + pad * 2) + ' ' + (pathRect.height + pad * 2));
+        // Loop the specified number of steps to create the zoom in animation
+        for (var i = 0; i <= steps; i++) {
+          (function(i) {
+            setTimeout(function() {
+							var zoomInX = interpolateValue(oldViewX, newViewX, i, steps);
+							var zoomInY = interpolateValue(oldViewY, newViewY, i, steps);
+							var zoomInW = interpolateValue(oldViewW, newViewW, i, steps);
+							var zoomInH = interpolateValue(oldViewH, newViewH, i, steps);
+
+							if(options.pinchToZoom) {
+								// Use CSS 3-based zooming
+								panzoomWithViewBoxCoords($(svg).parent()[0], svg, zoomInX, zoomInY, zoomInW, zoomInH);
+							} else {
+								// Use SVG viewBox-based zooming
+								svg.setAttribute('viewBox', zoomInX + ' ' + zoomInY +
+	                ' ' + zoomInW + ' ' + zoomInH);
+							}
+            }, i * (duration / steps));
+          }(i));
+        }
 			}
 
+			// Call animatePath after 'animationDuration' milliseconds to animate the next segment of the path,
+			// if any.
+			// Note: This is not tiny path 'segments' which form the lines curving around
+			//       hallways but rather the other 'paths' needed on other floors, if any.
 			setTimeout(function () {
-				animatePath(drawing, ++i);
-				svg.setAttribute('viewBox', oldViewBox); //zoom back out
-			},
-			delay + 1000);
+				animatePath(drawing, ++drawingSegment);
+
+				if (options.zoomToRoute) {
+          // Loop the specified number of steps to create the zoom out animation
+          for (var i = 0; i <= steps; i++) {
+            (function(i) {
+              setTimeout(function() {
+								var interpolateFactor = steps - i;
+								var zoomOutX = interpolateValue(newViewX, oldViewX, i, steps);
+								var zoomOutY = interpolateValue(newViewY, oldViewY, i, steps);
+								var zoomOutW = interpolateValue(newViewW, oldViewW, i, steps);
+								var zoomOutH = interpolateValue(newViewH, oldViewH, i, steps);
+
+								if(options.pinchToZoom) {
+									// Use CSS 3-based zooming
+									panzoomWithViewBoxCoords($(svg).parent()[0], svg, zoomOutX, zoomOutY, zoomOutW, zoomOutH);
+								} else {
+									svg.setAttribute('viewBox', zoomOutX + ' ' + zoomOutY +
+	                  ' ' + zoomOutW + ' ' + zoomOutH);
+								}
+
+								if(i == steps) {
+									if(drawingSegment == drawing.length) {
+										$(obj).trigger('wayfinding:animationComplete');
+									}
+								}
+              }, i * (duration / steps));
+            }(i));
+          }
+				}
+			}, animationDuration + options.floorChangeAnimationDelay);
 		} //function animatePath
 
-		//get the set of paths adjacent to a door or endpoint.
-		function getDoorPaths(door) {
-			var mapNum,
-			pathNum,
-			doorANum,
-			doorBNum,
-			result = {
-				'paths': [],
-				'floor': null
-			};
+		// Ensures '$el' has a valid jQuery.panzoom object
+		function initializePanZoom($el) {
+			$el.panzoom({
+				minScale: 1.0,
+				contain: 'invert',
+				cursor: "pointer"
+			});
 
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-					for (doorANum = 0; doorANum < dataStore.paths[mapNum][pathNum].doorA.length; doorANum++) {
-						if (dataStore.paths[mapNum][pathNum].doorA[doorANum] === door) {
-							result.paths.push(pathNum); // only pushing pathNum because starting on a single floor
-							result.floor = dataStore.paths[mapNum][pathNum].floor;
-						}
-					}
-					for (doorBNum = 0; doorBNum < dataStore.paths[mapNum][pathNum].doorB.length; doorBNum++) {
-						if (dataStore.paths[mapNum][pathNum].doorB[doorBNum] === door) {
-							result.paths.push(pathNum); // only pushing pathNum because starting on a single floor
-							result.floor = dataStore.paths[mapNum][pathNum].floor;
-						}
-					}
-				}
-			}
+			// Allow clicking on links within the SVG despite $.panZoom()
+			$el.find('a').on('mousedown touchstart', function( e ) {
+				e.stopImmediatePropagation();
+			});
+		} //function initializePanZoom
 
-			return result;
-		}
+		// Uses jQuery.panzoom to pan/zoom to the SVG viewbox coordinate equivalent of (x, y, w, h)
+		function panzoomWithViewBoxCoords(cssDiv, svg, x, y, w, h) {
+			x = parseFloat(x);
+			y = parseFloat(y);
+			w = parseFloat(w);
+			h = parseFloat(h);
 
-		function getShortestRoute(destinations) {
-			generateRoutes();
+			var viewBox = svg.getAttribute('viewBox');
+			var viewX = parseFloat(viewBox.split(/\s+|,/)[0]); // viewBox is [x, y, w, h], x == [0]
+			var viewY = parseFloat(viewBox.split(/\s+|,/)[1]);
+			var viewW = parseFloat(viewBox.split(/\s+|,/)[2]);
+			var viewH = parseFloat(viewBox.split(/\s+|,/)[3]);
 
-			function _minLengthRoute(destination) {
-				var destInfo,
-				mapNum,
-				minPath,
-				reversePathStart,
-				destinationmapNum,
-				i;
+			var cssW = $(cssDiv).width();
+			var cssH = $(cssDiv).height();
 
-				destInfo = getDoorPaths(destination);
+			// Step 1, determine the scale
+			var scale = Math.max(( viewW / w ), ( viewH / h ));
 
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === destInfo.floor) {
-						destinationmapNum = mapNum;
-					}
-				}
+			$(cssDiv).panzoom("zoom", parseFloat(scale));
 
-				minPath = Infinity;
-				reversePathStart = -1;
+			// Determine bounding box -> CSS coordinate conversion factor
+			var bcX = cssW / viewW;
+			var bcY = cssH / viewH;
 
-				for (i = 0; i < destInfo.paths.length; i++) {
-					if (dataStore.paths[destinationmapNum][destInfo.paths[i]].route < minPath) {
-						minPath = dataStore.paths[destinationmapNum][destInfo.paths[i]].route;
-						reversePathStart = destInfo.paths[i];
-					}
-				}
+			// Step 2, determine the focal
+			var bcx = viewX + (viewW / 2); // box center
+			var bcy = viewY + (viewH / 2);
 
-				if (reversePathStart !== -1) {
-					solution = []; //can't be set in backtrack because it is recursive.
-					backTrack('pa', destinationmapNum, reversePathStart);
-					solution.reverse();
+			var fx = (bcx - (x + (w / 2))) * bcX;
+			var fy = (bcy - (y + (h / 2))) * bcY;
 
-					return {
-						'startpoint': startpoint,
-						'endpoint': destination,
-						'solution': solution,
-						'distance': minPath
-					};
-				}
-
-				return {
-					'startpoint': startpoint,
-					'endpoint': destination,
-					'solution': [],
-					'distance': minPath
-				};
-			}
-
-			if (Array.isArray(destinations)) {
-				return $.map(destinations, function (dest) {
-					return _minLengthRoute(dest);
-				});
-			} else {
-				return _minLengthRoute(destinations);
-			}
-
-		}
-
-		function generateRoutes() {
-			var sourceInfo,
-			mapNum,
-			sourcemapNum;
-
-			if (!options.wayFound) {
-				sourceInfo = getDoorPaths(startpoint);
-
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === sourceInfo.floor) {
-						sourcemapNum = mapNum;
-					}
-				}
-
-				prepareForSearch();
-				$.each(sourceInfo.paths, function (i, pathId) {
-					dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
-					dataStore.paths[sourcemapNum][pathId].prior = 'door';
-					recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
-				});
-				setOptions(obj);
-			}
+			// Step 3, apply $.panzoom()
+			$(cssDiv).panzoom("pan", fx * scale, fy * scale);
 		}
 
 		// The combined routing function
 		// revise to only interate if startpoint has changed since last time?
 		function routeTo(destination) {
-
 			var i,
 				draw,
 				stepNum,
@@ -929,23 +690,21 @@
 			//clear all rooms
 			$('#Rooms *.wayfindingRoom', obj).removeAttr('class');
 
-
-			solution = [];
+			var solution = [];
 
 			//if startpoint != destination
 			if (startpoint !== destination) {
-
 				// get accessibleRoute option -- options.accessibleRoute
 
-				//hilight the destination room
+				//highlight the destination room
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
-
-				solution = getShortestRoute(destination).solution;
+                setEndPoint(options.endpoint);
+				solution = WayfindingDataStore.getShortestRoute(maps, destination, startpoint).solution;
 
 				if (reversePathStart !== -1) {
 
 					portalsEntered = 0;
-					//count number of portal trips
+					// Count number of portal trips
 					for (i = 0; i < solution.length; i++) {
 						if (solution[i].type === 'po') {
 							portalsEntered++;
@@ -953,7 +712,6 @@
 					}
 
 					//break this into a new function?
-
 					drawing = new Array(portalsEntered); // Problem at line 707 character 40: Use the array literal notation [].
 
 					drawing[0] = [];
@@ -962,37 +720,42 @@
 
 					draw = {};
 
+					if(solution.length == 0) {
+						console.warn("Attempting to route with no solution. This should never happen. SVG likely has errors. Destination is: " + destination);
+						return;
+					}
+
 					//if statement incorrectly assumes one door at the end of the path, works in that case, need to generalize
-					if (dataStore.paths[solution[0].floor][solution[0].segment].doorA[0] === startpoint) {
+					if (WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].doorA[0] === startpoint) {
 						draw = {};
-						draw.floor = [solution[0].floor];
+						draw.floor = solution[0].floor; //[solution[0].floor];
 						draw.type = 'M';
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].ax;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].ay;
+						draw.x = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].ax;
+						draw.y = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].ay;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
-						draw.floor = [solution[0].floor];
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].bx;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].by;
-						draw.length = dataStore.paths[solution[0].floor][solution[0].segment].length;
+						draw.floor = solution[0].floor; //[solution[0].floor];
+						draw.x = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].bx;
+						draw.y = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].by;
+						draw.length = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].length;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
-					} else if (dataStore.paths[solution[0].floor][solution[0].segment].doorB[0] === startpoint) {
+					} else if (WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].doorB[0] === startpoint) {
 						draw = {};
 						draw.type = 'M';
-						draw.floor = [solution[0].floor];
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].bx;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].by;
+						draw.floor = solution[0].floor; //[solution[0].floor];
+						draw.x = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].bx;
+						draw.y = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].by;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
-						draw.floor = [solution[0].floor];
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].ax;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].ay;
-						draw.length = dataStore.paths[solution[0].floor][solution[0].segment].length;
+						draw.floor = solution[0].floor; //[solution[0].floor];
+						draw.x = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].ax;
+						draw.y = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].ay;
+						draw.length = WayfindingDataStore.dataStore.paths[solution[0].floor][solution[0].segment].length;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
 					}
@@ -1003,10 +766,10 @@
 					for (i = 0; i < portalsEntered + 1; i++) {
 						for (stepNum = lastStep; stepNum < solution.length; stepNum++) {
 							if (solution[stepNum].type === 'pa') {
-								ax = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].ax;
-								ay = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].ay;
-								bx = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].bx;
-								by = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].by;
+								ax = WayfindingDataStore.dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].ax;
+								ay = WayfindingDataStore.dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].ay;
+								bx = WayfindingDataStore.dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].bx;
+								by = WayfindingDataStore.dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].by;
 
 								draw = {};
 								draw.floor = solution[stepNum].floor;
@@ -1017,7 +780,7 @@
 									draw.x = ax;
 									draw.y = ay;
 								}
-								draw.length = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].length;
+								draw.length = WayfindingDataStore.dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].length;
 								draw.type = 'L';
 								drawing[i].push(draw);
 								drawing[i].routeLength += draw.length;
@@ -1028,16 +791,16 @@
 								// push the first object on
 								// check for more than just floor number here....
 								pick = '';
-								if (dataStore.portals[solution[stepNum].segment].floorANum === dataStore.portals[solution[stepNum].segment].floorBNum) {
-									if (dataStore.portals[solution[stepNum].segment].xA === draw.x && dataStore.portals[solution[stepNum].segment].yA === draw.y) {
+								if (WayfindingDataStore.dataStore.portals[solution[stepNum].segment].floorANum === WayfindingDataStore.dataStore.portals[solution[stepNum].segment].floorBNum) {
+									if (WayfindingDataStore.dataStore.portals[solution[stepNum].segment].xA === draw.x && WayfindingDataStore.dataStore.portals[solution[stepNum].segment].yA === draw.y) {
 										pick = 'B';
 									} else {
 										pick = 'A';
 									}
 								} else {
-									if (dataStore.portals[solution[stepNum].segment].floorANum === solution[stepNum].floor) {
+									if (WayfindingDataStore.dataStore.portals[solution[stepNum].segment].floorANum === solution[stepNum].floor) {
 										pick = 'A';
-									} else if (dataStore.portals[solution[stepNum].segment].floorBNum === solution[stepNum].floor) {
+									} else if (WayfindingDataStore.dataStore.portals[solution[stepNum].segment].floorBNum === solution[stepNum].floor) {
 										pick = 'B';
 									}
 								}
@@ -1045,8 +808,8 @@
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = dataStore.portals[solution[stepNum].segment].xA;
-									draw.y = dataStore.portals[solution[stepNum].segment].yA;
+									draw.x = WayfindingDataStore.dataStore.portals[solution[stepNum].segment].xA;
+									draw.y = WayfindingDataStore.dataStore.portals[solution[stepNum].segment].yA;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
@@ -1054,8 +817,8 @@
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = dataStore.portals[solution[stepNum].segment].xB;
-									draw.y = dataStore.portals[solution[stepNum].segment].yB;
+									draw.x = WayfindingDataStore.dataStore.portals[solution[stepNum].segment].xB;
+									draw.y = WayfindingDataStore.dataStore.portals[solution[stepNum].segment].yB;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
@@ -1136,12 +899,9 @@
 								break;
 							case 'L':
 								path += 'L' + stroke.x + ',' + stroke.y;
-//                              maps[level[0].floor].svgHandle.circle(stroke.x,stroke.y,2);
 								break;
 							case 'Q':
 								path += 'Q' + stroke.cx + ',' + stroke.cy + ' ' + stroke.x + ',' + stroke.y;
-//                              maps[level[0].floor].svgHandle.circle(stroke.cx,stroke.cy,4);
-//                              maps[level[0].floor].svgHandle.circle(stroke.x,stroke.y,2);
 								break;
 							}
 						});
@@ -1149,13 +909,28 @@
 						newPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 						newPath.setAttribute('d', path);
 						newPath.style.fill = 'none';
+
 						if (newPath.classList) {
 							newPath.classList.add('directionPath' + i);
 						} else {
 							newPath.setAttribute('class', 'directionPath' + i);
 						}
 
-						$('#' + maps[level[0].floor].id + ' svg').append(newPath);
+
+                        // Attach the newpath to the startpin or endpin if they exist on this floor
+						var attachPointSvg = $('#' + maps[level[0].floor].id + ' svg');
+						var startPin = $('.startPin', attachPointSvg);
+						var destinationPin = $('.destinationPin', attachPointSvg);
+
+						if (startPin.length) {
+							startPin.before(newPath);
+						}
+                        else if (destinationPin.length) {
+                            destinationPin.before(newPath);
+                        }
+                        else {
+                            attachPointSvg.append(newPath);
+                        }
 
 						thisPath = $('#' + maps[level[0].floor].id + ' svg .directionPath' + i);
 
@@ -1169,61 +944,13 @@
 
 					//on switch which floor is displayed reset path svgStrokeDashOffset to minPath and the reanimate
 					//notify animation loop?
-
-				}  /*else {
-					// respond that path not found
-				console.log("path not found from " + startpoint + " to " + destination);
-			}*/
+				}
 			}
 		} //RouteTo
 
-		function checkMap(el) {
-
-			var mapNum,
-				pathNum,
-				debugLine,
-				report = [],
-				i = 0;
-
-			generateRoutes();
-
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				report[i++] = 'Checking map: ' + mapNum;
-				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-					if (dataStore.paths[mapNum][pathNum].route === Infinity || dataStore.paths[mapNum][pathNum].prior === -1) {
-						report[i++] = 'unreachable path: ' + pathNum;
-						//Show where paths that are unreachable from the given start point are.
-						debugLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-						debugLine.setAttribute('class', 'debugPath');
-						debugLine.setAttribute('x1', dataStore.paths[mapNum][pathNum].ax);
-						debugLine.setAttribute('y1', dataStore.paths[mapNum][pathNum].ay);
-						debugLine.setAttribute('x2', dataStore.paths[mapNum][pathNum].bx);
-						debugLine.setAttribute('y2', dataStore.paths[mapNum][pathNum].by);
-						$('#' + dataStore.paths[mapNum][pathNum].floor + ' #Paths', el).append(debugLine);
-					}
-				}
-				report[i++] = '\n';
-
-				/* jshint ignore:start */
-				$('#' + dataStore.paths[mapNum][0].floor + ' #Rooms a', el).each(function (_i, room) {
-					var doorPaths = getShortestRoute($(room).prop('id'));
-
-					if (doorPaths.solution.length === 0) {
-						report[i++] = 'unreachable room: ' + $(room).prop('id');
-						//highlight unreachable rooms
-						$(room).attr('class', 'debugRoom');
-					}
-				}); //
-				/* jshint ignore:end */
-				report[i++] = '\n';
-			}
-
-			return report.join('\n');
-		} // checkMap function
-
-
-
-
+		if (WayfindingDataStore == null) {
+			console.error("Please include wayfinding.datastore.js before jquery.wayfinding.js.");
+		}
 
 		if (action && typeof (action) === 'object') {
 			options = action;
@@ -1232,16 +959,12 @@
 
 		// for each jQuery target object
 		this.each(function () {
-
-
 			// store reference to the currently processing jQuery object
 			obj = $(this);
 
 			getOptions(obj); // load the current options
 
-//          console.log("options loaded: ", action, passed, options);
-
-			//handle actions
+			// Handle actions
 			if (action && typeof (action) === 'string') {
 				switch (action) {
 				case 'initialize':
@@ -1261,12 +984,11 @@
 					if (passed === undefined) {
 						result = startpoint;
 					} else {
-						options.wayFound = false;
 						setStartPoint(passed);
 					}
 					break;
 				case 'currentMap':
-					//return and set
+					// return and set
 					if (passed === undefined) {
 						result = $('div:visible', obj).prop('id');
 					} else {
@@ -1274,18 +996,17 @@
 					}
 					break;
 				case 'accessibleRoute':
-					//return and set
+					// return and set
 					if (passed === undefined) {
 						result = options.accessibleRoute;
 					} else {
-						if (options.accessibleRoute !== passed) {
-							options.wayFound = false;
-						}
 						options.accessibleRoute = passed;
+
+						establishDataStore(options.accessibleRoute, callback);
 					}
 					break;
 				case 'path':
-					//return and set
+					// return and set
 					if (passed === undefined) {
 						result = options.path;
 					} else {
@@ -1300,16 +1021,16 @@
 				case 'getDataStore':
 					//shows JSON version of dataStore when called from console.
 					//To facilitate caching dataStore.
-					result = JSON.stringify(dataStore);
+					result = JSON.stringify(WayfindingDataStore.dataStore);
 					$('body').replaceWith(result);
 					break;
 				case 'getRoutes':
 					//gets the length of the shortest route to one or more
 					//destinations.
 					if (passed === undefined) {
-						result = getShortestRoute(options.endpoint);
+						result = WayfindingDataStore.getShortestRoute(maps, options.endpoint, startpoint);
 					} else {
-						result = getShortestRoute(passed);
+						result = WayfindingDataStore.getShortestRoute(maps, passed, startpoint);
 					}
 					break;
 				case 'destroy':
@@ -1320,23 +1041,16 @@
 					break;
 				}
 			}
-			//
+
 			setOptions(obj);
+		});
 
-		}); //this each loop for wayfinding
-
-
-
-
-
-	//  }); //this each
 		if (result !== undefined) {
 			return result;
 		}
+
 		return this;
-
-	}; // wayfinding function
-
+	};
 }(jQuery));
 
 //  ]]>
