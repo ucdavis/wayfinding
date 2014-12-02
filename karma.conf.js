@@ -28,6 +28,8 @@ module.exports = function (config) {
 			// equals to {pattern: 'test/*-test.js', watched: true, served: true, included: true}
 			'test/*-test.js',
 
+			{pattern: 'test/**/*.html', included: false, served: true, watched: true},
+
 			// fixtures should be served by the webserver but not included on
 			// the page with <script> tags
 			{
@@ -47,7 +49,7 @@ module.exports = function (config) {
 			// disable html2js preprocessor so we can use
 			// jasmine-jquery fixture loader instead
 			// https://github.com/karma-runner/karma/issues/788
-			'**/*.html': [],
+			// '**/*.html': [],
 			// source files, that you wanna generate coverage for
 			// do not include tests or libraries
 			// (these files will be instrumented by Istanbul)
@@ -64,7 +66,7 @@ module.exports = function (config) {
 		// and viewed in your browser
 		htmlReporter: {
 			outputDir: 'test/report',
-			templatePath: './node_modules/karma-html-reporter/jasmine_template.html'
+			templatePath: './node_modules/karma-html-reporter/jasmine_template.html' // __dirname+'/jasmine_template.html'
 		},
 
 		// configure the code coverage reporter.
@@ -115,7 +117,8 @@ module.exports = function (config) {
 			'karma-chrome-launcher',
 			'karma-phantomjs-launcher',
 			'karma-firefox-launcher',
-			'karma-coverage'
+			'karma-coverage',
+			'karma-html-reporter'
 		]
 	});
 };

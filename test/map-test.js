@@ -5,7 +5,7 @@
 
 'use strict';
 
-var fixtures  = jasmine.getFixtures();
+var fixtures = jasmine.getFixtures();
 
 // given relative path test/fixtures/ to karma
 fixtures.fixturesPath = 'base/test/fixtures/';
@@ -33,7 +33,7 @@ describe('Wayfinding', function () {
 			},
 			'defaultMap': 'floor1'
 		});
-		waits(5000); // could implement a callback to speed this up rather than just waiting...
+		// waits(5000); // could implement a callback to speed this up rather than just waiting...
 	});
 
 	afterEach(function () {
