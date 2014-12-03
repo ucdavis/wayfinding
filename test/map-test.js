@@ -55,6 +55,14 @@ describe('Wayfinding', function () {
 		expect($example.wayfinding('startpoint')).toEqual('lobby');
 	});
 
+	it('changes shows pin at startpoint', function () {
+		expect($example.wayfinding('startpoint')).toEqual('lcd.1');
+		$example.wayfinding('startpoint', 'lobby');
+		$example.wayfinding({'showLocation': true});
+		expect($example.wayfinding('startpoint')).toEqual('lobby');
+		expect($example).toContain('.startPin');
+	});
+
 	it('routes to room 101', function () {
 		jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 		expect($example.find('.directionPath').length).toEqual(0);
