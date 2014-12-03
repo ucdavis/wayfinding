@@ -294,6 +294,9 @@
 			$('#Rooms a', svgDiv).find('*').css("pointer-events", "auto");
 
 			$(obj).append(svgDiv);
+
+			// jQuery.panzoom() only works after element is attached to DOM
+			if(options.pinchToZoom) initializePanZoom($(svgDiv));
 		} //function activateSVG
 
 		function replaceLoadScreen(el) {
@@ -319,11 +322,6 @@
 			var elem = $('#' + maps[displayNum].id + '>svg', el)[0];
 			elem.style.height = (Math.ceil(elem.offsetHeight / 2) * 2) + 'px';
 			elem.style.width = (Math.ceil(elem.offsetWidth / 2) * 2) + 'px';
-
-			// Enable pinch-to-zoom
-			if(options.pinchToZoom) {
-				initializePanZoom($('#' + maps[displayNum].id, el));
-			}
 
 			// if endpoint was specified, route to there.
 			if (typeof(options.endpoint) === 'function') {
@@ -430,15 +428,6 @@
 
 			$('#' + floor, el).show(0, function() {
 				$(el).trigger('wayfinding:floorChanged', { map_id: floor });
-
-				if(options.pinchToZoom) {
-					// Destroy .panzoom() on all SVGs
-					for (i = 0; i < maps.length; i++) {
-						$('#floor' + i, el).panzoom('destroy');
-					}
-
-					initializePanZoom($('#' + floor, el));
-				}
 			});
 
 			//turn floor into mapNum, look for that in drawing
@@ -596,10 +585,21 @@
 
 				if (options.zoomToRoute) {
 					// Loop the specified number of steps to create the zoom out animation
-					for (var i = 0; i <= steps; i++) {
+					// or set i = steps to force the zoom out immediately (used on floors
+					// no longer visible to the user due to floor changes)
+					var i;
+
+					// Animate zoom out if we're on the last drawing segment, else
+					// we can just reset the zoom out (improves performance, user will never notice)
+					if((drawing.length == 1) || ((drawing.length > 1) && (drawingSegment == drawing.length))) {
+						i = 0; // apply full animation
+					} else {
+						i = steps; // effectively removes animation and resets the zoom out (only triggered on floors where the user
+					}
+
+					for ( ; i <= steps; i++) {
 						(function(i) {
 							setTimeout(function() {
-								var interpolateFactor = steps - i;
 								var zoomOutX = interpolateValue(newViewX, oldViewX, i, steps);
 								var zoomOutY = interpolateValue(newViewY, oldViewY, i, steps);
 								var zoomOutW = interpolateValue(newViewW, oldViewW, i, steps);
