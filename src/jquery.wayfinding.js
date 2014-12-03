@@ -289,11 +289,9 @@
 				event.preventDefault();
 			});
 
-			// Ensure text labels won't prevent room clicks
-			$('text', svgDiv).css('pointer-events', 'none');
-
-			// Ensure path lines won't prevent room clicks
-			$('line', svgDiv).css('pointer-events', 'none');
+			// Disable clicking on every SVG element except rooms
+			$(svgDiv).find('*').css("pointer-events", "none");
+			$('#Rooms a', svgDiv).find('*').css("pointer-events", "auto");
 
 			$(obj).append(svgDiv);
 		} //function activateSVG
