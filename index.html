@@ -84,6 +84,7 @@
 	<script src="src/jquery.wayfinding.js"></script>
 
 	<script>
+var solution = [];
 $(document).ready(function () {
 	'use strict';
 	$('#myMaps').wayfinding({
@@ -101,6 +102,8 @@ $(document).ready(function () {
 			return 'lcd.1';
 		},
 		'defaultMap': 'floor1'
+	}, function(){
+		console.log('callback reached');
 	});
 
 	//make the floor buttons clickable

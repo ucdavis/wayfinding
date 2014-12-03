@@ -66,7 +66,6 @@
 		'zoomPadding': 85,
 		// milliseconds to wait during animation when a floor change occurs
 		'floorChangeAnimationDelay': 1250
-		// load callback?
 	};
 
 	$.fn.wayfinding = function (action, options, callback) {
@@ -338,7 +337,7 @@
 		} //function replaceLoadScreen
 
 		// Initialize the jQuery target object
-		function initialize(obj) {
+		function initialize(obj, callback) {
 			var mapsProcessed = 0;
 
 			// Load SVGs off the network
@@ -370,6 +369,9 @@
 								setStartPoint(options.startpoint, obj);
 								setOptions(obj);
 								replaceLoadScreen(obj);
+								if (typeof callback === 'function') {
+									callback();
+								}
 							});
 						}
 					}
@@ -976,6 +978,9 @@
 		}
 
 		if (action && typeof (action) === 'object') {
+			if (typeof options === 'function') {
+				callback = options;
+			}
 			options = action;
 			action = 'initialize';
 		}
@@ -992,7 +997,7 @@
 				switch (action) {
 				case 'initialize':
 					checkIds();
-					initialize(obj);
+					initialize(obj, callback);
 					break;
 				case 'routeTo':
 					// call method
@@ -1034,6 +1039,19 @@
 						result = options.path;
 					} else {
 						options.path = $.extend(true, {}, options.path, passed);
+					}
+					break;
+				case 'zoom':
+					if (passed === undefined) {
+						result = {x: 0, y: 0, z: 0};
+					} else {
+						if (passed === 'reset') {
+							// reset zoom
+							alert('reset zoom');
+						} else {
+							// accept object and set zoom
+							alert('zoom to');
+						}
 					}
 					break;
 				case 'checkMap':
