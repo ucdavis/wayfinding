@@ -318,8 +318,8 @@
 
 			// Ensure SVG w/h are divisble by 2 (to avoid webkit blurriness bug on pan/zoom)
 			var elem = $('#' + maps[displayNum].id + '>svg', el)[0];
-			$(elem).attr('height', (Math.ceil($(elem).attr('offsetHeight') / 2) * 2) + 'px');
-			$(elem).attr('width', (Math.ceil($(elem).attr('offsetWidth') / 2) * 2) + 'px');
+			$(elem).attr('height', (Math.ceil($(elem).height() / 2) * 2) + 'px');
+			$(elem).attr('width', (Math.ceil($(elem).width() / 2) * 2) + 'px');
 
 			// Enable pinch-to-zoom
 			if(options.pinchToZoom) {
