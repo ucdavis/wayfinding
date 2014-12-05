@@ -288,13 +288,14 @@
 				event.preventDefault();
 			});
 
-			// Ensure text labels won't prevent room clicks
-			$('text', svgDiv).css('pointer-events', 'none');
-
-			// Ensure path lines won't prevent room clicks
-			$('line', svgDiv).css('pointer-events', 'none');
+			// Disable clicking on every SVG element except rooms
+			$(svgDiv).find('*').css("pointer-events", "none");
+			$('#Rooms a', svgDiv).find('*').css("pointer-events", "auto");
 
 			$(obj).append(svgDiv);
+
+			// jQuery.panzoom() only works after element is attached to DOM
+			if(options.pinchToZoom) initializePanZoom($(svgDiv));
 		} //function activateSVG
 
 		function replaceLoadScreen(el) {
@@ -320,11 +321,6 @@
 			var elem = $('#' + maps[displayNum].id + '>svg', el)[0];
 			$(elem).attr('height', (Math.ceil($(elem).outerHeight() / 2) * 2) + 'px');
 			$(elem).attr('width', (Math.ceil($(elem).outerWidth() / 2) * 2) + 'px');
-
-			// Enable pinch-to-zoom
-			if(options.pinchToZoom) {
-				initializePanZoom($('#' + maps[displayNum].id, el));
-			}
 
 			// if endpoint was specified, route to there.
 			if (typeof(options.endpoint) === 'function') {
@@ -434,15 +430,6 @@
 
 			$('#' + floor, el).show(0, function() {
 				$(el).trigger('wayfinding:floorChanged', { map_id: floor });
-
-				if(options.pinchToZoom) {
-					// Destroy .panzoom() on all SVGs
-					for (i = 0; i < maps.length; i++) {
-						$('#floor' + i, el).panzoom('destroy');
-					}
-
-					initializePanZoom($('#' + floor, el));
-				}
 			});
 
 			//turn floor into mapNum, look for that in drawing
@@ -600,10 +587,21 @@
 
 				if (options.zoomToRoute) {
 					// Loop the specified number of steps to create the zoom out animation
-					for (var i = 0; i <= steps; i++) {
+					// or set i = steps to force the zoom out immediately (used on floors
+					// no longer visible to the user due to floor changes)
+					var i;
+
+					// Animate zoom out if we're on the last drawing segment, else
+					// we can just reset the zoom out (improves performance, user will never notice)
+					if((drawing.length == 1) || ((drawing.length > 1) && (drawingSegment == drawing.length))) {
+						i = 0; // apply full animation
+					} else {
+						i = steps; // effectively removes animation and resets the zoom out (only triggered on floors where the user
+					}
+
+					for ( ; i <= steps; i++) {
 						(function(i) {
 							setTimeout(function() {
-								var interpolateFactor = steps - i;
 								var zoomOutX = interpolateValue(newViewX, oldViewX, i, steps);
 								var zoomOutY = interpolateValue(newViewY, oldViewY, i, steps);
 								var zoomOutW = interpolateValue(newViewW, oldViewW, i, steps);
@@ -659,7 +657,7 @@
 			var cssH = $(cssDiv).height();
 
 			// Step 1, determine the scale
-			var scale = Math.max(( viewW / w ), ( viewH / h ));
+			var scale = Math.min(( viewW / w ), ( viewH / h ));
 
 			$(cssDiv).panzoom('zoom', parseFloat(scale));
 
