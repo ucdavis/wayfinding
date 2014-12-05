@@ -657,7 +657,7 @@
 			var cssH = $(cssDiv).height();
 
 			// Step 1, determine the scale
-			var scale = Math.max(( viewW / w ), ( viewH / h ));
+			var scale = Math.min(( viewW / w ), ( viewH / h ));
 
 			$(cssDiv).panzoom('zoom', parseFloat(scale));
 
