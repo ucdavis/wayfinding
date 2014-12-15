@@ -63,7 +63,7 @@
 		},
 		'pinchToZoom': false, // requires jquery.panzoom
 		'zoomToRoute': true,
-		'zoomPadding': 85,
+		'zoomPadding': 25,
 		// milliseconds to wait during animation when a floor change occurs
 		'floorChangeAnimationDelay': 1250
 	};
@@ -278,6 +278,15 @@
 			$('#Paths line', svgDiv).attr('stroke-opacity', 0);
 			$('#Doors line', svgDiv).attr('stroke-opacity', 0);
 			$('#Portals line', svgDiv).attr('stroke-opacity', 0);
+
+			// If #Paths, #Doors, etc. are in a group, ensure that group does _not_
+			// have display: none; (commonly set by Illustrator when hiding a layer)
+			// and instead add opacity: 0; (which allows for events, unlike display: none;)
+			// (A group tag 'g' is used by Illustrator for layers.)
+			var $dataGroup = $('#Paths', svgDiv).parent();
+			if($dataGroup.is("g")) {
+				$dataGroup.attr('opacity', 0).attr('display', 'inline');
+			}
 
 			// The following need to use the el variable to scope their calls: el is jquery element
 
