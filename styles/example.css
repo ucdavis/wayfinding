@@ -54,3 +54,11 @@ div#mapLoading {
 	stroke-width: 2;
 	stroke-dasharray: 5 3;
 }
+
+g.startPin path {
+	fill: cyan;
+}
+
+g.destinationPin path {
+	/*fill: green;*/
+}
