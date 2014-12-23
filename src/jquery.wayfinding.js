@@ -3,7 +3,7 @@
 
 /**
  * @preserve
- * Wayfinding v0.4.0
+ * Wayfinding v0.4.1
  * https://github.com/ucdavis/wayfinding
  *
  * Copyright (c) 2010-2014 University of California Regents
@@ -46,6 +46,7 @@
 		'defaultMap': function () {
 			return 'map.1';
 		},
+		'loadMessage': 'Loading',
 		// should dataStoreCache should be used
 		// null is cache should not be used
 		// string representing url if it should be used
@@ -81,6 +82,87 @@
 			solution,
 			result, // used to return non jQuery results
 			drawing;
+
+		// to handle jQuery selecting ids with periods and other special characters
+		function escapeSelector(sel) {
+			return sel.replace(/(:|\.|\[|\])/g, '\\$1');
+		}
+
+		// Applies linear interpolation to find the correct value
+		// for traveling from value oldValue to newValue taking into account
+		// that you are (i / steps) of the way through the process
+		function interpolateValue(oldValue, newValue, i, steps) {
+			return (((steps - i) / steps) * oldValue) + ((i / steps) * newValue);
+		}
+
+		function CheckMapEmpty(value) {
+			this.value = value;
+			this.message = ' no maps identified in collection to load';
+			this.toString = function() {
+				return this.value + this.message;
+			};
+		}
+
+		function CheckMapDuplicates(value) {
+			this.value = value;
+			this.message = ' has duplicate map ids';
+			this.toString = function() {
+				return this.value + this.message;
+			};
+		}
+
+		function CheckMapBadDefault(value) {
+			this.value = value;
+			this.message = ' wasn\'t in the list of maps';
+			this.toString = function() {
+				return this.value + this.message;
+			};
+		}
+
+		// Ensure floor ids are unique.
+		function checkIds(el) {
+			var mapNum,
+				checkNum,
+				reassign = false,
+				defaultMapValid = false,
+				status;
+
+console.log('checkIds');
+
+			status = $(el).find('div')
+				.hide()
+				.end()
+				.append('<div id="WayfindingStatus" style="">' + options.loadMessage + '</div>');
+
+			if (maps.length > 0) {
+				for (mapNum = 0; mapNum < maps.length; mapNum++) {
+					for (checkNum = mapNum; checkNum < maps.length; checkNum++) {
+						if (mapNum !== checkNum && maps[mapNum].id === maps[checkNum].id) {
+							reassign = true;
+						}
+					}
+				}
+				if (reassign === true) {
+					$(status).text(options.errorMessage);
+					throw new CheckMapDuplicates(JSON.stringify(maps));
+				}
+
+				//check that defaultMap is valid as well
+				for (mapNum = 0; mapNum < maps.length; mapNum++) {
+					if (maps[mapNum].id === defaultMap) {
+						defaultMapValid = true;
+					}
+				}
+				if (defaultMapValid === false) {
+					$(status).text(options.errorMessage);
+					throw new CheckMapBadDefault(defaultMap);
+				}
+			} else {
+				// raise exception about no maps being found
+				$(status).text(options.errorMessage);
+				throw new CheckMapEmpty(JSON.stringify(maps));
+			}
+		} //function checkIds
 
 		//Takes x and y coordinates and makes a location indicating pin for those
 		//coordinates. Returns the pin element, not yet attached to the DOM.
@@ -486,7 +568,7 @@ console.log(step);
 
 console.log('getShortestRoute', maps, destinations, startpoint);
 
-			function _minLengthRoute(maps, destination, startpoint) {
+			function minLengthRoute(maps, destination, startpoint) {
 				var destInfo,
 				mapNum,
 				minPath,
@@ -495,7 +577,6 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 				i;
 
 				destInfo = getDoorPaths(maps, destination);
-
 
 // console.log('shorty', maps, destination, startpoint, destInfo);
 
@@ -548,10 +629,10 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 
 			if (Array.isArray(destinations)) {
 				return $.map(destinations, function (dest) {
-					return _minLengthRoute(maps, dest, startpoint);
+					return minLengthRoute(maps, dest, startpoint);
 				});
 			} else {
-				return _minLengthRoute(maps, destinations, startpoint);
+				return minLengthRoute(maps, destinations, startpoint);
 			}
 		}
 
@@ -581,10 +662,9 @@ console.log('setStartPoint', startPoint, el);
 
 			if (options.showLocation) {
 
-				start = $('#Doors #' + pointName.replace(/\./g, '\\.'), el); // to handle jQuery selecting ids with periods
-				// or generalize with .replace( /(:|\.|\[|\])/g, "\\$1" ) which handles more characters? in escapeSelector() function
+				start = $('#Doors #' + escapeSelector(pointName), el);
 
-				var startMap = el.children().has($('#' + pointName.replace(/\./g, '\\.')));
+				var startMap = el.children().has($('#' + escapeSelector(pointName)));
 
 				attachPinLocation = $('svg', startMap).children().last();
 
@@ -614,9 +694,9 @@ console.log('setEndPoint', endPoint, el);
 			$('g.destinationPin', el).remove();
 
 			if (options.showLocation) {
-				end = $('#Doors #' + endPoint.replace(/\./g, '\\.'), el);
+				end = $('#Doors #' + escapeSelector(endPoint), el);
 
-				attachPinLocation = $('svg').has('#Rooms a[id="' + endPoint.replace(/\./g, '\\.') + '"]');
+				attachPinLocation = $('svg').has('#Rooms a[id="' + escapeSelector(endPoint) + '"]');
 				if (end.length) {
 					x = (Number(end.attr('x1')) + Number(end.attr('x2'))) / 2;
 					y = (Number(end.attr('y1')) + Number(end.attr('y2'))) / 2;
@@ -678,48 +758,30 @@ console.log('setOptions', el);
 			el.data('wayfinding:data', dataStore);
 		}
 
-		// Ensure floor ids are unique.
-		function checkIds() {
-			var mapNum,
-				checkNum,
-				reassign = false,
-				defaultMapValid = false;
+		function cleanupSVG(el) { // should only be called once instead of twice if initalize and build for non datastore
 
-console.log('checkIds');
+console.log('cleanupSVG', $(el));
 
-			if (maps.length > 0) {
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					for (checkNum = mapNum; checkNum < maps.length; checkNum++) {
-						if (mapNum !== checkNum && maps[mapNum].id === maps[checkNum].id) {
-							reassign = true;
-						}
-					}
-				}
+			var svg = $(el).find('svg'),
+				height = parseInt($(svg).attr('height').replace('px', '').split('.')[0], 10),
+				width = parseInt($(svg).attr('width').replace('px', '').split('.')[0], 10);
 
-				if (reassign === true) {
-					for (mapNum = 0; mapNum < maps.length; mapNum++) {
-						maps[mapNum].id = 'map_' + mapNum;
-					}
-				}
-				//check that defaultMap is valid as well
+console.log($(svg).attr('height'), $(svg).attr('width'));
 
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === defaultMap) {
-						defaultMapValid = true;
-					}
-				}
+			// Ensure SVG w/h are divisble by 2 (to avoid webkit blurriness bug on pan/zoom)
+			// might need to shift this change to the enclosing element for responsive svgs?
+			height = Math.ceil(height / 2) * 2;
+			width = Math.ceil(width / 2) * 2;
 
-				if (defaultMapValid === false) {
-					defaultMap = maps[0].id;
-				}
-			} /* else {
-				// raise exception about no maps being found
-			} */
-		} //function checkIds
+console.log(height, width);
 
-		function cleanupSVG(el) {
+			// if ($(el).css('padding-bottom') === '' || $(el).css('padding-bottom') === '0px') {
+				$(el).css('padding-bottom', (100 * (height / width)) + '%');
 
-console.log('cleanupSVG');
+				svg.attr('height', '100%')
+					.attr('width', '100%')
+					.attr('preserveAspectRatio', 'xMinYMin meet');
+			// }
 
 			// clean up after illustrator -> svg issues
 			$('#Rooms a, #Doors line', el).each(function () {
@@ -773,7 +835,7 @@ console.log('activateSVG', obj, svgDiv);
 
 			// Make rooms clickable
 			$('#Rooms a', svgDiv).click(function (event) {
-				$(obj).trigger('wayfinding:roomClicked', [ { room_id: $(this).attr('id') } ] );
+				$(obj).trigger('wayfinding:roomClicked', [ { roomId: $(this).attr('id') } ] );
 				$(obj).wayfinding('routeTo', $(this).prop('id'));
 				event.preventDefault();
 			});
@@ -790,153 +852,18 @@ console.log('activateSVG', obj, svgDiv);
 			}
 		} //function activateSVG
 
-		function replaceLoadScreen(el) {
-			var displayNum,
-				mapNum;
-
-console.log('replaceLoadScreen', el);
-
-			$('#mapLoading').remove();
-
-			// loop ensures defaultMap is in fact one of the maps
-			displayNum = 0;
-			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				if (defaultMap === maps[mapNum].id) {
-					displayNum = mapNum;
-				}
-			}
-
-			// highlight starting floor
-			$('#' + maps[displayNum].id, el).show();
-
-			$(this).trigger('wayfinding:mapsVisible');
-
-			// Ensure SVG w/h are divisble by 2 (to avoid webkit blurriness bug on pan/zoom)
-			var elem = $('#' + maps[displayNum].id + '>svg', el)[0];
-			$(elem).attr('height', (Math.ceil($(elem).outerHeight() / 2) * 2) + 'px');
-			$(elem).attr('width', (Math.ceil($(elem).outerWidth() / 2) * 2) + 'px');
-
-			// if endpoint was specified, route to there.
-			if (typeof(options.endpoint) === 'function') {
-				routeTo(options.endpoint(), el);
-			} else if (typeof(options.endpoint) === 'string') {
-				routeTo(options.endpoint, el);
-			}
-
-			$.event.trigger('wayfinding:ready');
-		} //function replaceLoadScreen
-
-		// Ensure a dataStore exists and is set, whether from a cache
-		// or by building it.
-		function establishDataStore(accessible, onReadyCallback) {
-
-console.log('establishDataStore', accessible, onReadyCallback);
-
-			if (accessible === undefined) {
-				accessible = false;
-			}
-
-			if (options.dataStoreCache) {
-				if (typeof(options.dataStoreCache) === 'object') {
-					console.debug('Using passed dataStoreCache object.');
-
-					dataStore = options.dataStoreCache;
-
-					if(typeof(onReadyCallback) === 'function') {
-						onReadyCallback();
-					}
-				} else if (typeof(options.dataStoreCache) === 'string') {
-					console.debug('Attempting to load dataStoreCache from URL ...');
-					var cacheUrl = accessible ? options.accessibleDataStoreCache : options.dataStoreCache;
-
-					$.getJSON(cacheUrl, function (result) {
-						console.debug('Using dataStoreCache from remote.');
-
-						dataStore = result;
-
-						if(typeof(onReadyCallback) === 'function') {
-							onReadyCallback();
-						}
-					}).fail(function () {
-						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
-
-						dataStore = build(options.startpoint, maps, accessible);
-
-						if(typeof(onReadyCallback) === 'function') {
-							onReadyCallback();
-						}
-					});
-				}
-			} else {
-				console.debug('No dataStore cache set, building with startpoint "' + options.startpoint + '" ...');
-
-				dataStore = build(options.startpoint, maps, accessible);
-
-				if(typeof(onReadyCallback) === 'function') {
-					onReadyCallback();
-				}
-			}
-		}
-
-		// Initialize the jQuery target object
-		function initialize(obj, callback) {
-			var mapsProcessed = 0;
-
-console.log('initialize', obj, callback);
-
-			// Load SVGs off the network
-			$.each(maps, function (i, map) {
-				var svgDiv = $('<div id="' + map.id + '"><\/div>');
-
-				//create svg in that div
-				svgDiv.load(
-					map.path,
-					function (svg, status) {
-						if (status === 'error') {
-							svgDiv.html('<p class="text-center text-danger">Map ' + i + ' Was not found at ' +
-								map.path + '<br />Please upload it in the administration section</p>');
-							maps[i].el = svgDiv;
-						} else {
-							maps[i].svgHandle = svg;
-							maps[i].el = svgDiv;
-
-							cleanupSVG(maps[i].el);
-
-							activateSVG(obj, svgDiv);
-
-							mapsProcessed = mapsProcessed + 1;
-						}
-
-						if(mapsProcessed === maps.length) {
-							// All SVGs have finished loading
-							establishDataStore(options.accessibleRoute, function() {
-								// SVGs are loaded, dataStore is set, ready the DOM
-								setStartPoint(options.startpoint, obj);
-								setOptions(obj);
-								replaceLoadScreen(obj);
-
-// console.log(dataStore);
-
-								if (typeof callback === 'function') {
-									callback();
-								}
-							});
-						}
-					}
-				);
-			});
-		} // function initialize
-
-
 		// Called when animatePath() is switching the floor and also when
 		function switchFloor(floor, el) {
+			var height = $(el).height();
 
 console.log('switchFloor', floor, el);
+
+			$(el).height(height); // preserve height as I'm not yet set switching
 
 			$('div', el).hide();
 
 			$('#' + floor, el).show(0, function() {
-				$(el).trigger('wayfinding:floorChanged', { map_id: floor });
+				$(el).trigger('wayfinding:floorChanged', { mapId: floor });
 			});
 
 			//turn floor into mapNum, look for that in drawing
@@ -986,11 +913,43 @@ console.log('hidepath', obj);
 			});
 		}
 
-		// Applies linear interpolation to find the correct value
-		// for traveling from value oldValue to newValue taking into account
-		// that you are (i / steps) of the way through the process
-		function interpolateValue(oldValue, newValue, i, steps) {
-			return (((steps - i) / steps) * oldValue) + ((i / steps) * newValue);
+		// Uses jQuery.panzoom to pan/zoom to the SVG viewbox coordinate equivalent of (x, y, w, h)
+		function panzoomWithViewBoxCoords(cssDiv, svg, x, y, w, h) {
+
+console.log('panzoomWithViewBoxCoords', cssDiv, svg, x, y, w, h);
+
+			x = parseFloat(x);
+			y = parseFloat(y);
+			w = parseFloat(w);
+			h = parseFloat(h);
+
+			var viewBox = svg.getAttribute('viewBox');
+			var viewX = parseFloat(viewBox.split(/\s+|,/)[0]); // viewBox is [x, y, w, h], x == [0]
+			var viewY = parseFloat(viewBox.split(/\s+|,/)[1]);
+			var viewW = parseFloat(viewBox.split(/\s+|,/)[2]);
+			var viewH = parseFloat(viewBox.split(/\s+|,/)[3]);
+
+			var cssW = $(cssDiv).width();
+			var cssH = $(cssDiv).height();
+
+			// Step 1, determine the scale
+			var scale = Math.min(( viewW / w ), ( viewH / h ));
+
+			$(cssDiv).panzoom('zoom', parseFloat(scale));
+
+			// Determine bounding box -> CSS coordinate conversion factor
+			var bcX = cssW / viewW;
+			var bcY = cssH / viewH;
+
+			// Step 2, determine the focal
+			var bcx = viewX + (viewW / 2); // box center
+			var bcy = viewY + (viewH / 2);
+
+			var fx = (bcx - (x + (w / 2))) * bcX;
+			var fy = (bcy - (y + (h / 2))) * bcY;
+
+			// Step 3, apply $.panzoom()
+			$(cssDiv).panzoom('pan', fx * scale, fy * scale);
 		}
 
 		function animatePath(drawing, drawingSegment) {
@@ -1043,7 +1002,7 @@ console.log('animatePath', drawing, drawingSegment);
 			// If we're using zoomToRoute however, don't trigger here, trigger when zoomOut is complete (see below)
 			if(options.zoomToRoute === false) {
 				if(drawingSegment === (drawing.length - 1)) {
-					$(path).one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function(e) {
+					$(path).one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function() {
 						$(obj).trigger('wayfinding:animationComplete');
 					});
 				}
@@ -1137,45 +1096,6 @@ console.log('animatePath', drawing, drawingSegment);
 				}
 			}, animationDuration + options.floorChangeAnimationDelay);
 		} //function animatePath
-
-		// Uses jQuery.panzoom to pan/zoom to the SVG viewbox coordinate equivalent of (x, y, w, h)
-		function panzoomWithViewBoxCoords(cssDiv, svg, x, y, w, h) {
-
-console.log('panzoomWithViewBoxCoords', cssDiv, svg, x, y, w, h);
-
-			x = parseFloat(x);
-			y = parseFloat(y);
-			w = parseFloat(w);
-			h = parseFloat(h);
-
-			var viewBox = svg.getAttribute('viewBox');
-			var viewX = parseFloat(viewBox.split(/\s+|,/)[0]); // viewBox is [x, y, w, h], x == [0]
-			var viewY = parseFloat(viewBox.split(/\s+|,/)[1]);
-			var viewW = parseFloat(viewBox.split(/\s+|,/)[2]);
-			var viewH = parseFloat(viewBox.split(/\s+|,/)[3]);
-
-			var cssW = $(cssDiv).width();
-			var cssH = $(cssDiv).height();
-
-			// Step 1, determine the scale
-			var scale = Math.min(( viewW / w ), ( viewH / h ));
-
-			$(cssDiv).panzoom('zoom', parseFloat(scale));
-
-			// Determine bounding box -> CSS coordinate conversion factor
-			var bcX = cssW / viewW;
-			var bcY = cssH / viewH;
-
-			// Step 2, determine the focal
-			var bcx = viewX + (viewW / 2); // box center
-			var bcy = viewY + (viewH / 2);
-
-			var fx = (bcx - (x + (w / 2))) * bcX;
-			var fy = (bcy - (y + (h / 2))) * bcY;
-
-			// Step 3, apply $.panzoom()
-			$(cssDiv).panzoom('pan', fx * scale, fy * scale);
-		}
 
 		// The combined routing function
 		// revise to only interate if startpoint has changed since last time?
@@ -1501,7 +1421,7 @@ console.log('build', startpoint, maps, accessible);
 
 			// Build the dataStore from each map given
 			$.each(maps, function(i, map) {
-				cleanupSVG(map.el);
+				// cleanupSVG(map.el); // commented out as already run by initialize
 				buildDataStore(i, map, map.el);
 			});
 
@@ -1513,6 +1433,138 @@ console.log('build', startpoint, maps, accessible);
 
 			return dataStore;
 		} // function build
+
+		function replaceLoadScreen(el) {
+			var displayNum,
+				mapNum;
+
+console.log('replaceLoadScreen', el);
+
+			$('#WayfindingStatus').remove();
+
+			// loop ensures defaultMap is in fact one of the maps
+			displayNum = 0;
+			for (mapNum = 0; mapNum < maps.length; mapNum++) {
+				if (defaultMap === maps[mapNum].id) {
+					displayNum = mapNum;
+				}
+			}
+
+			// highlight starting floor
+			$('#' + maps[displayNum].id, el).show();
+
+			$(el).trigger('wayfinding:mapsVisible');
+
+			// if endpoint was specified, route to there.
+			if (typeof(options.endpoint) === 'function') {
+				routeTo(options.endpoint(), el);
+			} else if (typeof(options.endpoint) === 'string') {
+				routeTo(options.endpoint, el);
+			}
+
+			$.event.trigger('wayfinding:ready');
+		} //function replaceLoadScreen
+
+		// Ensure a dataStore exists and is set, whether from a cache
+		// or by building it.
+		function establishDataStore(accessible, onReadyCallback) {
+
+console.log('establishDataStore', accessible, onReadyCallback);
+
+			if (accessible === undefined) {
+				accessible = false;
+			}
+
+			if (options.dataStoreCache) {
+				if (typeof(options.dataStoreCache) === 'object') {
+					console.debug('Using passed dataStoreCache object.');
+
+					dataStore = options.dataStoreCache;
+
+					if(typeof(onReadyCallback) === 'function') {
+						onReadyCallback();
+					}
+				} else if (typeof(options.dataStoreCache) === 'string') {
+					console.debug('Attempting to load dataStoreCache from URL ...');
+					var cacheUrl = accessible ? options.accessibleDataStoreCache : options.dataStoreCache;
+
+					$.getJSON(cacheUrl, function (result) {
+						console.debug('Using dataStoreCache from remote.');
+
+						dataStore = result;
+
+						if(typeof(onReadyCallback) === 'function') {
+							onReadyCallback();
+						}
+					}).fail(function () {
+						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
+
+						dataStore = build(options.startpoint, maps, accessible);
+
+						if(typeof(onReadyCallback) === 'function') {
+							onReadyCallback();
+						}
+					});
+				}
+			} else {
+				console.debug('No dataStore cache set, building with startpoint "' + options.startpoint + '" ...');
+
+				dataStore = build(options.startpoint, maps, accessible);
+
+				if(typeof(onReadyCallback) === 'function') {
+					onReadyCallback();
+				}
+			}
+		}
+
+		// Initialize the jQuery target object
+		function initialize(obj, callback) {
+			var mapsProcessed = 0;
+
+console.log('initialize', obj, callback);
+
+			// Load SVGs off the network
+			$.each(maps, function (i, map) {
+				var svgDiv = $('<div id="' + map.id + '"><\/div>');
+
+				//create svg in that div
+				svgDiv.load(
+					map.path,
+					function (svg, status) {
+						if (status === 'error') {
+							svgDiv.html('<p class="text-center text-danger">Map ' + i + ' Was not found at ' +
+								map.path + '<br />Please upload it in the administration section</p>');
+							maps[i].el = svgDiv;
+						} else {
+							maps[i].svgHandle = svg;
+							maps[i].el = svgDiv;
+
+							cleanupSVG(maps[i].el);
+
+							activateSVG(obj, svgDiv);
+
+							mapsProcessed = mapsProcessed + 1;
+						}
+
+						if(mapsProcessed === maps.length) {
+							// All SVGs have finished loading
+							establishDataStore(options.accessibleRoute, function() {
+								// SVGs are loaded, dataStore is set, ready the DOM
+								setStartPoint(options.startpoint, obj);
+								setOptions(obj);
+								replaceLoadScreen(obj);
+
+// console.log(dataStore);
+
+								if (typeof callback === 'function') {
+									callback();
+								}
+							});
+						}
+					}
+				);
+			});
+		} // function initialize
 
 		if (action && typeof (action) === 'object') {
 			if (typeof options === 'function') {
@@ -1535,7 +1587,7 @@ console.log('wayfinding', action, options, callback);
 			if (action && typeof (action) === 'string') {
 				switch (action) {
 				case 'initialize':
-					checkIds();
+					checkIds(obj);
 					initialize(obj, callback);
 					break;
 				case 'routeTo':

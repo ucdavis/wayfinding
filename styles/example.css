@@ -1,34 +1,30 @@
 body {
 	background-color: white;
-	border: 1px solid black;
 	font-family: Arial;
 	font-size: 24px;
-	height: 540px;
-	width: 960px;
 }
 
-a img {
-	border: none;
+#content {
+	border: 1px solid black;
+	width: 100%;
 }
 
-#controls {
-	background-color: lightGrey;
-	display: block;
-	height: 50px;
-	padding: 10px 0 0 10px;
-	width: 950px;
-	z-index:-1;
-}
-div#myMaps {
+#myMaps {
 	height: 480px;
-	padding-left: 175px;
-	width: 785px;
+	width: 100%px;
 }
-div#myMaps div {
-	display: inline-block;
+#myMaps div {
 	height: 480px;
+	margin: auto auto;
 	width: 600px;
 }
+#controls {
+	background-color: lightGrey;
+	height: 50px;
+	width: 100%;
+	z-index:-1;
+}
+/*
 div#mapLoading {
 	font-size: 10em;
 	left: 50px;
@@ -36,7 +32,7 @@ div#mapLoading {
 	top: 60px;
 	z-index: -1;
 }
-
+*/
 .debugPath {
 	stroke: orange;
 	stroke-width: 5;

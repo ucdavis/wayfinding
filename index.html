@@ -10,7 +10,6 @@
 	</head>
 	<body>
 		<div id="content">
-			<div id="mapLoading">Loading</div>
 			<div id="myMaps">
 			</div>
 			<div id="controls">
@@ -133,7 +132,7 @@
 				});
 
 				$('#myMaps').on('wayfinding:roomClicked', function(e, r) {
-					$('#endSelect option[value="' + r.room_id + '"]').attr('selected', true);
+					$('#endSelect option[value="' + r.roomId + '"]').attr('selected', true);
 				});
 
 			});
