@@ -107,6 +107,7 @@
 		<script src="src/jquery.wayfinding.js"></script>
 
 		<script>
+			/*global document, $*/
 			$(document).ready(function () {
 				'use strict';
 				$('#myMaps').wayfinding({
@@ -125,7 +126,7 @@
 					},
 					'defaultMap': 'floor1',
 					'showLocation': true,
-					'dataStoreCache': 'test/fixtures/cache.json',
+					'dataStoreCache': 'test/fixtures/'
 				}, function(){
 					console.log('callback reached');
 				});

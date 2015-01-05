@@ -49,12 +49,10 @@
 		'loadMessage': 'Loading',
 		// should dataStoreCache should be used
 		// null is cache should not be used
-		// string representing url if it should be used
 		// object if cache is being passed
+		// string representing url if it should be used
+		// string is URL path where filename to load will be in the form startpoint + '.json' or startpoint + '.acc.json'
 		'dataStoreCache': null,
-		// if dataStoreCache is string, this is string
-		// of url to accessible cache
-		'accessibleDataStoreCache': null,
 		// place marker for "you are here"
 		'showLocation': false,
 		//styling for the "you are here pin"
@@ -76,7 +74,7 @@
 			maps, // the array of maps populated from options each time
 			defaultMap, // the floor to show at start propulated from options
 			startpoint, // the result of either the options.startpoint value or the value of the function
-			accessible = false,
+			// accessible = false,
 			// dataStore = null,
 			portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped. This got moved to datastore
 			solution,
@@ -478,7 +476,7 @@ console.log('getDoorPaths', maps, door);
 
 // console.log('tryPortal', length, dataStore.portals[tryPortal].length, dataStore.portals[tryPortal].route, accessible);
 
-					if (length + dataStore.portals[tryPortal].length < dataStore.portals[tryPortal].route && (accessible === false || (accessible === true && dataStore.portals[tryPortal].accessible))) {
+					if (length + dataStore.portals[tryPortal].length < dataStore.portals[tryPortal].route && (options.accessibleRoute === false || (options.accessibleRoute === true && dataStore.portals[tryPortal].accessible))) {
 						dataStore.portals[tryPortal].route = length + dataStore.portals[tryPortal].length;
 						dataStore.portals[tryPortal].prior = segment;
 						dataStore.portals[tryPortal].priormapNum = dataStore.paths[segmentFloor][segment].mapNum;
@@ -512,7 +510,6 @@ console.log('getDoorPaths', maps, door);
 				});
 			}
 		}
-
 
 		function generateRoutes(startpoint, maps) {
 			var sourceInfo,
@@ -636,8 +633,83 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 			}
 		}
 
+		function build(startpoint, maps) {
+
+console.log('build', startpoint, maps);
+
+			dataStore = {
+				'paths': [],
+				'portals': []
+			};
+
+			portalSegments = [];
+
+			// Build the dataStore from each map given
+			$.each(maps, function(i, map) {
+				// cleanupSVG(map.el); // commented out as already run by initialize
+				buildDataStore(i, map, map.el);
+			});
+
+			buildPortals(maps);
+
+			generateRoutes(startpoint, maps);
+
+// console.log(dataStore);
+
+			return dataStore;
+		} // function build
+
+		// Ensure a dataStore exists and is set, whether from a cache
+		// or by building it.
+		function establishDataStore(onReadyCallback) {
+
+console.log('establishDataStore', onReadyCallback);
+
+			if (options.dataStoreCache) {
+				if (typeof options.dataStoreCache === 'object') {
+					console.debug('Using passed dataStoreCache object.');
+
+					dataStore = options.dataStoreCache;
+
+					if(typeof onReadyCallback === 'function') {
+						onReadyCallback();
+					}
+				} else if (typeof options.dataStoreCache === 'string') {
+					console.debug('Attempting to load dataStoreCache from URL ...');
+					var cacheUrl = options.dataStoreCache + options.startpoint + ((options.accessibleRoute) ? '.acc' : '') + '.json';
+
+					$.getJSON(cacheUrl, function (response) {
+						console.debug('Using dataStoreCache from remote.');
+
+						dataStore = response;
+
+						if(typeof onReadyCallback === 'function') {
+							onReadyCallback();
+						}
+					}).fail(function () {
+						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
+
+						dataStore = build(options.startpoint, maps);
+
+						if(typeof onReadyCallback === 'function') {
+							onReadyCallback();
+						}
+					});
+				}
+			} else {
+				console.debug('No dataStore cache set, building with startpoint "' + options.startpoint + '" ...');
+
+				dataStore = build(options.startpoint, maps);
+
+				if(typeof onReadyCallback === 'function') {
+					onReadyCallback();
+				}
+			}
+		}
+
 		// Set the start point, and put a location indicator
 		// in that spot, if feature is enabled.
+		// if using dataStores then trigger loading of new datastore.
 		function setStartPoint(startPoint, el) {
 			var start,
 				pointName,
@@ -652,7 +724,7 @@ console.log('setStartPoint', startPoint, el);
 			$('g.startPin', el).remove();
 
 			// set startpoint correctly
-			if (typeof(startPoint) === 'function') {
+			if (typeof startPoint === 'function') {
 				options.startpoint = startPoint();
 			} else {
 				options.startpoint = startPoint;
@@ -678,6 +750,9 @@ console.log('setStartPoint', startPoint, el);
 				} else {
 					return; //start point does not exist
 				}
+			}
+			if (options.dataStoreCache !== null) {
+				establishDataStore();
 			}
 		} //function setStartPoint
 
@@ -734,14 +809,14 @@ console.log('getOptions', el);
 			maps = options.maps;
 
 			// set defaultMap correctly, handle both function and value being passed
-			if (typeof(options.defaultMap) === 'function') {
+			if (typeof options.defaultMap === 'function') {
 				defaultMap = options.defaultMap();
 			} else {
 				defaultMap = options.defaultMap;
 			}
 
 			// Set startpoint correctly
-			if (typeof(options.startpoint) === 'function') {
+			if (typeof options.startpoint === 'function') {
 				setStartPoint(options.startpoint(), el);
 			} else {
 				startpoint = options.startpoint;
@@ -1400,40 +1475,6 @@ console.log('routeTo', destination);
 			}
 		} //RouteTo
 
-
-
-		function build(startpoint, maps, accessible) {
-
-console.log('build', startpoint, maps, accessible);
-
-			// Reset dataStore data
-			if(accessible === undefined) {
-				accessible = false;
-			}
-			accessible = accessible;
-
-			dataStore = {
-				'paths': [],
-				'portals': []
-			};
-
-			portalSegments = [];
-
-			// Build the dataStore from each map given
-			$.each(maps, function(i, map) {
-				// cleanupSVG(map.el); // commented out as already run by initialize
-				buildDataStore(i, map, map.el);
-			});
-
-			buildPortals(maps);
-
-			generateRoutes(startpoint, maps);
-
-// console.log(dataStore);
-
-			return dataStore;
-		} // function build
-
 		function replaceLoadScreen(el) {
 			var displayNum,
 				mapNum;
@@ -1464,58 +1505,6 @@ console.log('replaceLoadScreen', el);
 
 			$.event.trigger('wayfinding:ready');
 		} //function replaceLoadScreen
-
-		// Ensure a dataStore exists and is set, whether from a cache
-		// or by building it.
-		function establishDataStore(accessible, onReadyCallback) {
-
-console.log('establishDataStore', accessible, onReadyCallback);
-
-			if (accessible === undefined) {
-				accessible = false;
-			}
-
-			if (options.dataStoreCache) {
-				if (typeof(options.dataStoreCache) === 'object') {
-					console.debug('Using passed dataStoreCache object.');
-
-					dataStore = options.dataStoreCache;
-
-					if(typeof(onReadyCallback) === 'function') {
-						onReadyCallback();
-					}
-				} else if (typeof(options.dataStoreCache) === 'string') {
-					console.debug('Attempting to load dataStoreCache from URL ...');
-					var cacheUrl = accessible ? options.accessibleDataStoreCache : options.dataStoreCache;
-
-					$.getJSON(cacheUrl, function (result) {
-						console.debug('Using dataStoreCache from remote.');
-
-						dataStore = result;
-
-						if(typeof(onReadyCallback) === 'function') {
-							onReadyCallback();
-						}
-					}).fail(function () {
-						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
-
-						dataStore = build(options.startpoint, maps, accessible);
-
-						if(typeof(onReadyCallback) === 'function') {
-							onReadyCallback();
-						}
-					});
-				}
-			} else {
-				console.debug('No dataStore cache set, building with startpoint "' + options.startpoint + '" ...');
-
-				dataStore = build(options.startpoint, maps, accessible);
-
-				if(typeof(onReadyCallback) === 'function') {
-					onReadyCallback();
-				}
-			}
-		}
 
 		// Initialize the jQuery target object
 		function initialize(obj, callback) {
@@ -1548,7 +1537,7 @@ console.log('initialize', obj, callback);
 
 						if(mapsProcessed === maps.length) {
 							// All SVGs have finished loading
-							establishDataStore(options.accessibleRoute, function() {
+							establishDataStore(function() {
 								// SVGs are loaded, dataStore is set, ready the DOM
 								setStartPoint(options.startpoint, obj);
 								setOptions(obj);
@@ -1622,7 +1611,7 @@ console.log('wayfinding', action, options, callback);
 					} else {
 						options.accessibleRoute = passed;
 
-						establishDataStore(options.accessibleRoute, callback);
+						establishDataStore(callback);
 					}
 					break;
 				case 'path':
