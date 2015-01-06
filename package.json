@@ -60,5 +60,8 @@
   },
   "scripts": {
     "test": "grunt test"
+  },
+  "dependencies": {
+    "prompt": "^0.2.14"
   }
 }

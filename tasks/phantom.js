@@ -138,7 +138,14 @@ function getDataStore(door, acc) {
 					},
 					function(result) {
 						//write resulting JSON to appropriate file
-						next(report, 'Door ' + door + ' returned ' + result.substring(0, 71));
+						// next(report, 'Door ' + door + ' returned ' + result.substring(0, 71));
+						fs.writeFile(destination + door + ((acc) ? '.acc' : '') + '.JSON', result, function(err) {
+							if (err) {
+								next(report, 'ERROR creating ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
+							} else {
+								next(report, 'successfully wrote ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
+							}
+						});
 						ph.exit();
 					}, door, acc
 				);
@@ -153,11 +160,11 @@ function processDoors() {
 		actions.push([getDataStore, door, true]);
 		actions.push([getDataStore, door, false]);
 	});
-	for (var item in actions) {
-		if (actions.hasOwnProperty(item)) {
-			next(report, actions[item]);
-		}
-	}
+	// for (var item in actions) {
+	// 	if (actions.hasOwnProperty(item)) {
+	// 		next(report, actions[item]);
+	// 	}
+	// }
 	next(actions);
 }
 
