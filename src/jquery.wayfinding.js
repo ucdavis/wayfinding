@@ -548,7 +548,7 @@ console.log('backTrack', segmentType, segmentFloor, segment);
 				step.segment = segment;
 				solution.push(step);
 
-console.log(step);
+console.log('step', step);
 
 				switch (segmentType) {
 				case 'pa':
@@ -675,13 +675,17 @@ console.log('establishDataStore', onReadyCallback);
 						onReadyCallback();
 					}
 				} else if (typeof options.dataStoreCache === 'string') {
-					console.debug('Attempting to load dataStoreCache from URL ...');
-					var cacheUrl = options.dataStoreCache + options.startpoint + ((options.accessibleRoute) ? '.acc' : '') + '.json';
+					var cacheUrl = options.dataStoreCache + startpoint + ((options.accessibleRoute) ? '.acc' : '') + '.json';
+					console.debug('Attempting to load dataStoreCache from URL ...', cacheUrl);
+
+console.log('start load');
 
 					$.getJSON(cacheUrl, function (response) {
 						console.debug('Using dataStoreCache from remote.');
 
 						dataStore = response;
+
+console.log('loaded');
 
 						if(typeof onReadyCallback === 'function') {
 							onReadyCallback();
@@ -689,7 +693,7 @@ console.log('establishDataStore', onReadyCallback);
 					}).fail(function () {
 						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
 
-						dataStore = build(options.startpoint, maps);
+						dataStore = build(startpoint, maps);
 
 						if(typeof onReadyCallback === 'function') {
 							onReadyCallback();
@@ -697,9 +701,9 @@ console.log('establishDataStore', onReadyCallback);
 					});
 				}
 			} else {
-				console.debug('No dataStore cache set, building with startpoint "' + options.startpoint + '" ...');
+				console.debug('No dataStore cache set, building with startpoint "' + startpoint + '" ...');
 
-				dataStore = build(options.startpoint, maps);
+				dataStore = build(startpoint, maps);
 
 				if(typeof onReadyCallback === 'function') {
 					onReadyCallback();
@@ -710,33 +714,32 @@ console.log('establishDataStore', onReadyCallback);
 		// Set the start point, and put a location indicator
 		// in that spot, if feature is enabled.
 		// if using dataStores then trigger loading of new datastore.
-		function setStartPoint(startPoint, el) {
+		function setStartPoint(point, el) {
 			var start,
-				pointName,
 				attachPinLocation,
 				x,
 				y,
 				pin;
 
-console.log('setStartPoint', startPoint, el);
+console.log('setStartPoint', point, el);
 
 			//clears locationIndicators from the maps
 			$('g.startPin', el).remove();
 
-			// set startpoint correctly
-			if (typeof startPoint === 'function') {
-				options.startpoint = startPoint();
-			} else {
-				options.startpoint = startPoint;
-			}
+			options.startpoint = point;
 
-			pointName = options.startpoint;
+			// set startpoint correctly
+			if (typeof options.startpoint === 'function') {
+				startpoint = options.startpoint();
+			} else {
+				startpoint = options.startpoint;
+			}
 
 			if (options.showLocation) {
 
-				start = $('#Doors #' + escapeSelector(pointName), el);
+				start = $('#Doors #' + escapeSelector(startpoint), el);
 
-				var startMap = el.children().has($('#' + escapeSelector(pointName)));
+				var startMap = el.children().has($('#' + escapeSelector(startpoint)));
 
 				attachPinLocation = $('svg', startMap).children().last();
 
@@ -751,9 +754,9 @@ console.log('setStartPoint', startPoint, el);
 					return; //start point does not exist
 				}
 			}
-			if (options.dataStoreCache !== null) {
-				establishDataStore();
-			}
+			// if (options.dataStoreCache !== null) {
+			// 	establishDataStore();
+			// }
 		} //function setStartPoint
 
 		function setEndPoint(endPoint, el) {
@@ -817,7 +820,7 @@ console.log('getOptions', el);
 
 			// Set startpoint correctly
 			if (typeof options.startpoint === 'function') {
-				setStartPoint(options.startpoint(), el);
+				startpoint = options.startpoint();
 			} else {
 				startpoint = options.startpoint;
 			}
@@ -1248,7 +1251,7 @@ console.log('routeTo', destination);
 						return;
 					}
 
-// console.log('solution', solution.length, solution, portalsEntered);
+console.log('solution', solution.length, solution, portalsEntered, startpoint);
 // console.log('startpoint', startpoint, dataStore.paths[solution[0].floor][solution[0].segment]);
 
 					//if statement incorrectly assumes one door at the end of the path, works in that case, need to generalize
@@ -1539,7 +1542,7 @@ console.log('initialize', obj, callback);
 							// All SVGs have finished loading
 							establishDataStore(function() {
 								// SVGs are loaded, dataStore is set, ready the DOM
-								setStartPoint(options.startpoint, obj);
+								setStartPoint(startpoint, obj);
 								setOptions(obj);
 								replaceLoadScreen(obj);
 
@@ -1593,7 +1596,7 @@ console.log('wayfinding', action, options, callback);
 						result = startpoint;
 					} else {
 						setStartPoint(passed, obj);
-						establishDataStore(options.accessibleRoute);
+						establishDataStore(callback);
 					}
 					break;
 				case 'currentMap':
@@ -1610,7 +1613,6 @@ console.log('wayfinding', action, options, callback);
 						result = options.accessibleRoute;
 					} else {
 						options.accessibleRoute = passed;
-
 						establishDataStore(callback);
 					}
 					break;

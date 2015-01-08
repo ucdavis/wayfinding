@@ -6,5 +6,6 @@ dist
 bower_components
 test/coverage
 test/report
+test/fixtures/datastores
 *~
 \#*#
