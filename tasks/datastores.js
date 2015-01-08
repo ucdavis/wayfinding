@@ -177,6 +177,9 @@ prompt.get(selectionPrompt, function(err, result) {
 	if (!err) {
 		serverURL = result.serverURL;
 		destination = result.destination;
+		if (destination.slice(-1) !== '\\') {
+			destination += '\\';
+		}
 		if (result.doorSelection === 'all') {
 			next([
 				[report, 'start'],
@@ -195,37 +198,3 @@ prompt.get(selectionPrompt, function(err, result) {
 		return 'canceled by user';
 	}
 });
-
-// prompt
-//
-// if all then load page and iterate maps and doors
-// get unique into targets
-//
-// if filename load file into targets
-//
-// for each target save a .json file for accessible and non-accessible
-
-/*
-phantom.create(function (ph) {
-	ph.createPage(function(page) {
-		page.onConsoleMessage = function (msg, lineNum, sourceId) {
-			console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
-		};
-		page.open('http://localhost:9000/', function(status) {
-			console.log('Opened ', status);
-			page.evaluate(
-				function() {
-					// trigger mapping with certain startpoint
-					// return JSON
-					return $('#myMaps').wayfinding('getDataStore');
-				},
-				function(result) {
-					//write resulting JSON to appropriate file
-					console.log('Page title is ' + result);
-					ph.exit();
-				}
-			);
-		});
-	});
-});
-*/
