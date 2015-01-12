@@ -75,38 +75,38 @@
 	// p holds paths array (floor) of arrays of objects (paths)
 	// - f floor identifier
 	// - g map number in array
-	// - r current shortest combined lengths to reach here
-	// - p prior path segment to follow back for shortest path
-	// - x on the first end of the path the x coord
-	// - y on the first end of the path the y coord
-	// - d an array of doors that connect to the first end of the path
-	// - m on the second end of the path the x coord
-	// - n on the second end of the path the y coord
-	// - e an array of doors that connect to the second end of the path
-	// - l length of this segment
-	// - c array of connections to other paths
-	// - q array of connections to portals
-	// - o prior path type "pa" or "po"
+	// * r current shortest combined lengths to reach here
+	// * p prior path segment to follow back for shortest path
+	// * x on the first end of the path the x coord
+	// * y on the first end of the path the y coord
+	// * d an array of doors that connect to the first end of the path
+	// * m on the second end of the path the x coord
+	// * n on the second end of the path the y coord
+	// * e an array of doors that connect to the second end of the path
+	// * l length of this segment
+	// * c array of connections to other paths
+	// * q array of connections to portals
+	// * o prior path type "pa" or "po"
 	// q holds portals array of objects
-	// - t portal type as string
-	// - a accessible boolean
+	// * t portal type as string
+	// * a accessible boolean
 	// - e string id of first end
 	// - f floor of first end as string
 	// - g floor of first end as number
 	// - x x coord of first end
 	// - y y coord of first end
-	// - c connections to paths of first end
+	// * c connections to paths of first end
 	// - i string id of second end
 	// - j floor of second end as string
 	// - k floor of second end as number
 	// - m x coord of second end
 	// - n y coord of second end
-	// - d connections to paths of second end
-	// - l length of this segment
-	// - r current shortest combined lengths to reach here
-	// - p prior path segment to follow back for shortest path
-	// - q prior map number
-	// - o prior path type "pa" or "po"
+	// * d connections to paths of second end
+	// * l length of this segment
+	// * r current shortest combined lengths to reach here
+	// * p prior path segment to follow back for shortest path
+	// * q prior map number
+	// * o prior path type "pa" or "po"
 
 	$.fn.wayfinding = function (action, options, callback) {
 		var passed = options,
@@ -259,27 +259,27 @@ console.log('makePin', x, y, type);
 console.log('buildDataStore', mapNum, map, el);
 
 			//Paths
-			dataStore.paths[mapNum] = [];
+			dataStore.p[mapNum] = [];
 
 			$('#Paths line', el).each(function () {
 				path = {};
 				path.floor = map.id; // floor_1
 				path.mapNum = mapNum; // index of floor in array 1
-				path.route = Infinity; //Distance
-				path.prior = -1; //Prior node in path that yielded route distance
+				path.r = Infinity; //Distance
+				path.p = -1; //Prior node in path that yielded route distance
 
-				path.ax = $(this).attr('x1');
-				path.ay = $(this).attr('y1');
-				path.doorA = [];
-				path.bx = $(this).attr('x2');
-				path.by = $(this).attr('y2');
-				path.doorB = [];
-				path.length = Math.sqrt(Math.pow(path.ax - path.bx, 2) + Math.pow(path.ay - path.by, 2));
+				path.x = $(this).attr('x1');
+				path.y = $(this).attr('y1');
+				path.d = [];
+				path.m = $(this).attr('x2');
+				path.n = $(this).attr('y2');
+				path.e = [];
+				path.l = Math.sqrt(Math.pow(path.x - path.m, 2) + Math.pow(path.y - path.n, 2));
 
-				path.connections = []; //other paths
-				path.portals = []; // connected portals
+				path.c = []; //other paths
+				path.q = []; // connected portals
 
-				dataStore.paths[mapNum].push(path);
+				dataStore.p[mapNum].push(path);
 			});
 
 			//Doors and starting points
@@ -292,11 +292,11 @@ console.log('buildDataStore', mapNum, map, el);
 				y2 = $(this).attr('y2');
 				doorId = $(this).attr('id');
 
-				$.each(dataStore.paths[mapNum], function (index, segment) {
-					if (map.id === segment.floor && ((segment.ax === x1 && segment.ay === y1) || (segment.ax === x2 && segment.ay === y2))) {
-						segment.doorA.push(doorId);
-					} else if (map.id === segment.floor && ((segment.bx === x1 && segment.by === y1) || (segment.bx === x2 && segment.by === y2))) {
-						segment.doorB.push(doorId);
+				$.each(dataStore.p[mapNum], function (index, segment) {
+					if (map.id === segment.floor && ((segment.x === x1 && segment.y === y1) || (segment.x === x2 && segment.y === y2))) {
+						segment.d.push(doorId);
+					} else if (map.id === segment.floor && ((segment.m === x1 && segment.n === y1) || (segment.m === x2 && segment.n === y2))) {
+						segment.e.push(doorId);
 					}
 				});
 
@@ -328,8 +328,8 @@ console.log('buildDataStore', mapNum, map, el);
 				x2 = $(this).attr('x2');
 				y2 = $(this).attr('y2');
 
-				matches = $.grep(dataStore.paths[mapNum], function (n) { // , i
-					return ((x1 === n.ax && y1 === n.ay) || (x1 === n.bx && y1 === n.by));
+				matches = $.grep(dataStore.p[mapNum], function (n) { // , i
+					return ((x1 === n.x && y1 === n.y) || (x1 === n.m && y1 === n.n));
 				});
 
 				if (matches.length !== 0) {
@@ -341,7 +341,7 @@ console.log('buildDataStore', mapNum, map, el);
 				}
 
 				//portal needs length -- long stairs versus elevator
-				portal.length = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+				portal.l = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 
 				portalSegments.push(portal);
 			});
@@ -378,29 +378,29 @@ console.log('buildPortals');
 							outerSegment.matched = true;
 							innerSegment.matched = true;
 
-							portal.type = outerSegment.type;
-							portal.accessible = (portal.type === 'Elev' || portal.type === 'Door') ? true : false; // consider changing to != Stair
+							portal.t = outerSegment.type;
+							portal.a = (portal.t === 'Elev' || portal.t === 'Door') ? true : false; // consider changing to != Stair
 
 							portal.idA = outerSegment.id;
 							portal.floorA = outerSegment.floor;
 							portal.floorANum = outerSegment.mapNum;
-							portal.xA = outerSegment.x;
-							portal.yA = outerSegment.y;
-							portal.connectionsA = []; //only paths
+							portal.x = outerSegment.x;
+							portal.y = outerSegment.y;
+							portal.c = []; //only paths
 
 							portal.idB = innerSegment.id;
 							portal.floorB = innerSegment.floor;
 							portal.floorBNum = innerSegment.mapNum;
-							portal.xB = innerSegment.x;
-							portal.yB = innerSegment.y;
-							portal.connectionsB = []; // only paths
+							portal.m = innerSegment.x;
+							portal.n = innerSegment.y;
+							portal.d = []; // only paths
 
-							portal.length = outerSegment.length + innerSegment.length;
+							portal.l = outerSegment.l + innerSegment.l; // length is combined lengths
 
-							portal.route = Infinity;
-							portal.prior = -1;
+							portal.r = Infinity;
+							portal.p = -1;
 
-							dataStore.portals.push(portal);
+							dataStore.q.push(portal);
 
 						}
 					}
@@ -410,43 +410,44 @@ console.log('buildPortals');
 			//check each path for connections to other paths
 			//checks only possible matchs on same floor, and only for half-1 triangle of search area to speed up search
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathOuterNum = 0; pathOuterNum < dataStore.paths[mapNum].length - 1; pathOuterNum++) {
-					for (pathInnerNum = pathOuterNum + 1; pathInnerNum < dataStore.paths[mapNum].length; pathInnerNum++) {
+				for (pathOuterNum = 0; pathOuterNum < dataStore.p[mapNum].length - 1; pathOuterNum++) {
+					for (pathInnerNum = pathOuterNum + 1; pathInnerNum < dataStore.p[mapNum].length; pathInnerNum++) {
 						if (
-							(dataStore.paths[mapNum][pathInnerNum].ax === dataStore.paths[mapNum][pathOuterNum].ax &&
-							dataStore.paths[mapNum][pathInnerNum].ay === dataStore.paths[mapNum][pathOuterNum].ay) ||
-								(dataStore.paths[mapNum][pathInnerNum].bx === dataStore.paths[mapNum][pathOuterNum].ax &&
-									dataStore.paths[mapNum][pathInnerNum].by === dataStore.paths[mapNum][pathOuterNum].ay) ||
-								(dataStore.paths[mapNum][pathInnerNum].ax === dataStore.paths[mapNum][pathOuterNum].bx &&
-									dataStore.paths[mapNum][pathInnerNum].ay === dataStore.paths[mapNum][pathOuterNum].by) ||
-								(dataStore.paths[mapNum][pathInnerNum].bx === dataStore.paths[mapNum][pathOuterNum].bx &&
-									dataStore.paths[mapNum][pathInnerNum].by === dataStore.paths[mapNum][pathOuterNum].by)
+							(dataStore.p[mapNum][pathInnerNum].x === dataStore.p[mapNum][pathOuterNum].x &&
+							dataStore.p[mapNum][pathInnerNum].y === dataStore.p[mapNum][pathOuterNum].y) ||
+								(dataStore.p[mapNum][pathInnerNum].m === dataStore.p[mapNum][pathOuterNum].x &&
+									dataStore.p[mapNum][pathInnerNum].n === dataStore.p[mapNum][pathOuterNum].y) ||
+								(dataStore.p[mapNum][pathInnerNum].x === dataStore.p[mapNum][pathOuterNum].m &&
+									dataStore.p[mapNum][pathInnerNum].y === dataStore.p[mapNum][pathOuterNum].n) ||
+								(dataStore.p[mapNum][pathInnerNum].m === dataStore.p[mapNum][pathOuterNum].m &&
+									dataStore.p[mapNum][pathInnerNum].n === dataStore.p[mapNum][pathOuterNum].n)
 						) {
-							dataStore.paths[mapNum][pathOuterNum].connections.push(pathInnerNum);
-							dataStore.paths[mapNum][pathInnerNum].connections.push(pathOuterNum);
+							// push onto connections
+							dataStore.p[mapNum][pathOuterNum].c.push(pathInnerNum);
+							dataStore.p[mapNum][pathInnerNum].c.push(pathOuterNum);
 						}
 					}
 				}
 			}
 
 			//optimize portal searching of paths
-			for (portalNum = 0; portalNum < dataStore.portals.length; portalNum++) {
+			for (portalNum = 0; portalNum < dataStore.q.length; portalNum++) {
 				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-						if (dataStore.portals[portalNum].floorA === dataStore.paths[mapNum][pathNum].floor &&
-								((dataStore.portals[portalNum].xA === dataStore.paths[mapNum][pathNum].ax &&
-									dataStore.portals[portalNum].yA === dataStore.paths[mapNum][pathNum].ay) ||
-									(dataStore.portals[portalNum].xA === dataStore.paths[mapNum][pathNum].bx &&
-										dataStore.portals[portalNum].yA === dataStore.paths[mapNum][pathNum].by))) {
-							dataStore.portals[portalNum].connectionsA.push(pathNum);
-							dataStore.paths[mapNum][pathNum].portals.push(portalNum);
-						} else if (dataStore.portals[portalNum].floorB === dataStore.paths[mapNum][pathNum].floor &&
-								((dataStore.portals[portalNum].xB === dataStore.paths[mapNum][pathNum].ax &&
-									dataStore.portals[portalNum].yB === dataStore.paths[mapNum][pathNum].ay) ||
-								(dataStore.portals[portalNum].xB === dataStore.paths[mapNum][pathNum].bx &&
-									dataStore.portals[portalNum].yB === dataStore.paths[mapNum][pathNum].by))) {
-							dataStore.portals[portalNum].connectionsB.push(pathNum);
-							dataStore.paths[mapNum][pathNum].portals.push(portalNum);
+					for (pathNum = 0; pathNum < dataStore.p[mapNum].length; pathNum++) {
+						if (dataStore.q[portalNum].floorA === dataStore.p[mapNum][pathNum].floor &&
+								((dataStore.q[portalNum].x === dataStore.p[mapNum][pathNum].x &&
+									dataStore.q[portalNum].y === dataStore.p[mapNum][pathNum].y) ||
+									(dataStore.q[portalNum].x === dataStore.p[mapNum][pathNum].m &&
+										dataStore.q[portalNum].y === dataStore.p[mapNum][pathNum].n))) {
+							dataStore.q[portalNum].c.push(pathNum);
+							dataStore.p[mapNum][pathNum].q.push(portalNum);
+						} else if (dataStore.q[portalNum].floorB === dataStore.p[mapNum][pathNum].floor &&
+								((dataStore.q[portalNum].m === dataStore.p[mapNum][pathNum].x &&
+									dataStore.q[portalNum].n === dataStore.p[mapNum][pathNum].y) ||
+								(dataStore.q[portalNum].m === dataStore.p[mapNum][pathNum].m &&
+									dataStore.q[portalNum].n === dataStore.p[mapNum][pathNum].n))) {
+							dataStore.q[portalNum].d.push(pathNum);
+							dataStore.p[mapNum][pathNum].q.push(portalNum);
 						}
 					}
 				}
@@ -470,17 +471,17 @@ console.log('buildPortals');
 console.log('getDoorPaths', door);
 
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
-				for (pathNum = 0; pathNum < dataStore.paths[mapNum].length; pathNum++) {
-					for (doorANum = 0; doorANum < dataStore.paths[mapNum][pathNum].doorA.length; doorANum++) {
-						if (dataStore.paths[mapNum][pathNum].doorA[doorANum] === door) {
+				for (pathNum = 0; pathNum < dataStore.p[mapNum].length; pathNum++) {
+					for (doorANum = 0; doorANum < dataStore.p[mapNum][pathNum].d.length; doorANum++) {
+						if (dataStore.p[mapNum][pathNum].d[doorANum] === door) {
 							doorPaths.paths.push(pathNum); // only pushing pathNum because starting on a single floor
-							doorPaths.floor = dataStore.paths[mapNum][pathNum].floor;
+							doorPaths.floor = dataStore.p[mapNum][pathNum].floor;
 						}
 					}
-					for (doorBNum = 0; doorBNum < dataStore.paths[mapNum][pathNum].doorB.length; doorBNum++) {
-						if (dataStore.paths[mapNum][pathNum].doorB[doorBNum] === door) {
+					for (doorBNum = 0; doorBNum < dataStore.p[mapNum][pathNum].e.length; doorBNum++) {
+						if (dataStore.p[mapNum][pathNum].e[doorBNum] === door) {
 							doorPaths.paths.push(pathNum); // only pushing pathNum because starting on a single floor
-							doorPaths.floor = dataStore.paths[mapNum][pathNum].floor;
+							doorPaths.floor = dataStore.p[mapNum][pathNum].floor;
 						}
 					}
 				}
@@ -494,53 +495,54 @@ console.log('getDoorPaths', door);
 
 // console.log('recursiveSearch', segmentType, segmentFloor, segment, length);
 
-			$.each(dataStore.paths[segmentFloor][segment].connections, function (i, tryPath) {
+			// for each connection
+			$.each(dataStore.p[segmentFloor][segment].c, function (i, tryPath) {
 				// check and see if the current path is a shorter path to the new path
-				if (length + dataStore.paths[segmentFloor][tryPath].length < dataStore.paths[segmentFloor][tryPath].route) {
-					dataStore.paths[segmentFloor][tryPath].route = length + dataStore.paths[segmentFloor][tryPath].length;
-					dataStore.paths[segmentFloor][tryPath].prior = segment;
-					dataStore.paths[segmentFloor][tryPath].priorType = segmentType;
-					recursiveSearch('pa', segmentFloor,  tryPath, dataStore.paths[segmentFloor][tryPath].route);
+				if (length + dataStore.p[segmentFloor][tryPath].l < dataStore.p[segmentFloor][tryPath].r) {
+					dataStore.p[segmentFloor][tryPath].r = length + dataStore.p[segmentFloor][tryPath].l;
+					dataStore.p[segmentFloor][tryPath].p = segment;
+					dataStore.p[segmentFloor][tryPath].o = segmentType;
+					recursiveSearch('pa', segmentFloor,  tryPath, dataStore.p[segmentFloor][tryPath].r);
 				}
 			});
 
 			// if the current path is connected to any portals
-			if (dataStore.paths[segmentFloor][segment].portals.length > 0) {
+			if (dataStore.p[segmentFloor][segment].q.length > 0) {
 
-// console.log('recursiveSearch', segmentType, segmentFloor, segment, dataStore.paths[segmentFloor][segment].portals);
+// console.log('recursiveSearch', segmentType, segmentFloor, segment, dataStore.p[segmentFloor][segment].portals);
 
 				// look at each portal, tryPortal is portal index in portals
-				$.each(dataStore.paths[segmentFloor][segment].portals, function (i, tryPortal) {
+				$.each(dataStore.p[segmentFloor][segment].q, function (i, tryPortal) {
 
-// console.log('tryPortal', length, dataStore.portals[tryPortal].length, dataStore.portals[tryPortal].route, accessible);
+// console.log('tryPortal', length, dataStore.q[tryPortal].length, dataStore.q[tryPortal].r, accessible);
 
-					if (length + dataStore.portals[tryPortal].length < dataStore.portals[tryPortal].route && (options.accessibleRoute === false || (options.accessibleRoute === true && dataStore.portals[tryPortal].accessible))) {
-						dataStore.portals[tryPortal].route = length + dataStore.portals[tryPortal].length;
-						dataStore.portals[tryPortal].prior = segment;
-						dataStore.portals[tryPortal].priormapNum = dataStore.paths[segmentFloor][segment].mapNum;
-						dataStore.portals[tryPortal].priorType = segmentType;
+					if (length + dataStore.q[tryPortal].l < dataStore.q[tryPortal].r && (options.accessibleRoute === false || (options.accessibleRoute === true && dataStore.q[tryPortal].a))) {
+						dataStore.q[tryPortal].r = length + dataStore.q[tryPortal].l;
+						dataStore.q[tryPortal].p = segment;
+						dataStore.q[tryPortal].q = segmentFloor;
+						dataStore.q[tryPortal].o = segmentType;
 
 // console.log('following!');
 
 						// if the incoming segment to the portal is at one end of the portal try all the paths at the other end
-						if ($.inArray(segment, dataStore.portals[tryPortal].connectionsA) !== -1) {
-							$.each(dataStore.portals[tryPortal].connectionsB, function (ia, tryPath) {
+						if ($.inArray(segment, dataStore.q[tryPortal].c) !== -1) {
+							$.each(dataStore.q[tryPortal].d, function (ia, tryPath) {
 								//if adding this path
-								if (length + dataStore.portals[tryPortal].length + dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].length < dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].route) {
-									dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].route = dataStore.portals[tryPortal].route + dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].length;
-									dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].prior = tryPortal;
-									dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].priorType = 'po';
-									recursiveSearch('pa', dataStore.portals[tryPortal].floorBNum, tryPath, dataStore.paths[dataStore.portals[tryPortal].floorBNum][tryPath].route);
+								if (length + dataStore.q[tryPortal].l + dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].l < dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].r) {
+									dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].r = dataStore.q[tryPortal].r + dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].l;
+									dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].p = tryPortal;
+									dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].o = 'po';
+									recursiveSearch('pa', dataStore.q[tryPortal].floorBNum, tryPath, dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].r);
 								}
 							});
 						} else {
-							$.each(dataStore.portals[tryPortal].connectionsA, function (ib, tryPath) {
+							$.each(dataStore.q[tryPortal].c, function (ib, tryPath) {
 								// if adding this path
-								if (length + dataStore.portals[tryPortal].length + dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].length < dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].route) {
-									dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].route = dataStore.portals[tryPortal].route + dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].length;
-									dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].prior = tryPortal;
-									dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].priorType = 'po';
-									recursiveSearch('pa', dataStore.portals[tryPortal].floorANum, tryPath, dataStore.paths[dataStore.portals[tryPortal].floorANum][tryPath].route);
+								if (length + dataStore.q[tryPortal].l + dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].l < dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].r) {
+									dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].r = dataStore.q[tryPortal].r + dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].l;
+									dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].p = tryPortal;
+									dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].o = 'po';
+									recursiveSearch('pa', dataStore.q[tryPortal].floorANum, tryPath, dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].r);
 								}
 							});
 						}
@@ -565,9 +567,9 @@ console.log('generateRoutes');
 			}
 
 			$.each(sourceInfo.paths, function (i, pathId) {
-				dataStore.paths[sourcemapNum][pathId].route = dataStore.paths[sourcemapNum][pathId].length;
-				dataStore.paths[sourcemapNum][pathId].prior = 'door';
-				recursiveSearch('pa', sourcemapNum, pathId, dataStore.paths[sourcemapNum][pathId].length);
+				dataStore.p[sourcemapNum][pathId].r = dataStore.p[sourcemapNum][pathId].l;
+				dataStore.p[sourcemapNum][pathId].p = 'door';
+				recursiveSearch('pa', sourcemapNum, pathId, dataStore.p[sourcemapNum][pathId].l);
 			});
 		}
 
@@ -590,10 +592,10 @@ console.log('step', step);
 
 				switch (segmentType) {
 				case 'pa':
-					backTrack(dataStore.paths[segmentFloor][segment].priorType, segmentFloor, dataStore.paths[segmentFloor][segment].prior);
+					backTrack(dataStore.p[segmentFloor][segment].o, segmentFloor, dataStore.p[segmentFloor][segment].p);
 					break;
 				case 'po':
-					backTrack(dataStore.portals[segment].priorType, dataStore.portals[segment].priormapNum, dataStore.portals[segment].prior);
+					backTrack(dataStore.q[segment].o, dataStore.q[segment].q, dataStore.q[segment].p);
 					break;
 				}
 			}
@@ -629,10 +631,10 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 
 				for (i = 0; i < destInfo.paths.length; i++) {
 
-// console.log('shorty route', dataStore.paths[destinationmapNum][destInfo.paths[i]]);
+// console.log('shorty route', dataStore.p[destinationmapNum][destInfo.paths[i]]);
 
-					if (dataStore.paths[destinationmapNum][destInfo.paths[i]].route < minPath) {
-						minPath = dataStore.paths[destinationmapNum][destInfo.paths[i]].route;
+					if (dataStore.p[destinationmapNum][destInfo.paths[i]].r < minPath) {
+						minPath = dataStore.p[destinationmapNum][destInfo.paths[i]].r;
 						reversePathStart = destInfo.paths[i];
 					}
 				}
@@ -676,8 +678,8 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 console.log('build');
 
 			dataStore = {
-				'paths': [],
-				'portals': []
+				'p': [],
+				'q': []
 			};
 
 			portalSegments = [];
@@ -1289,39 +1291,39 @@ console.log('routeTo', destination);
 					}
 
 console.log('solution', solution.length, solution, portalsEntered, startpoint);
-// console.log('startpoint', startpoint, dataStore.paths[solution[0].floor][solution[0].segment]);
+// console.log('startpoint', startpoint, dataStore.p[solution[0].floor][solution[0].segment]);
 
 					//if statement incorrectly assumes one door at the end of the path, works in that case, need to generalize
-					if (dataStore.paths[solution[0].floor][solution[0].segment].doorA[0] === startpoint) {
+					if (dataStore.p[solution[0].floor][solution[0].segment].d[0] === startpoint) {
 						draw = {};
 						draw.floor = solution[0].floor;
 						draw.type = 'M';
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].ax;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].ay;
+						draw.x = dataStore.p[solution[0].floor][solution[0].segment].x;
+						draw.y = dataStore.p[solution[0].floor][solution[0].segment].y;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
 						draw.floor = solution[0].floor;
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].bx;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].by;
-						draw.length = dataStore.paths[solution[0].floor][solution[0].segment].length;
+						draw.x = dataStore.p[solution[0].floor][solution[0].segment].m;
+						draw.y = dataStore.p[solution[0].floor][solution[0].segment].n;
+						draw.length = dataStore.p[solution[0].floor][solution[0].segment].l;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
-					} else if (dataStore.paths[solution[0].floor][solution[0].segment].doorB[0] === startpoint) {
+					} else if (dataStore.p[solution[0].floor][solution[0].segment].e[0] === startpoint) {
 						draw = {};
 						draw.type = 'M';
 						draw.floor = solution[0].floor;
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].bx;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].by;
+						draw.x = dataStore.p[solution[0].floor][solution[0].segment].m;
+						draw.y = dataStore.p[solution[0].floor][solution[0].segment].n;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
 						draw.floor = solution[0].floor;
-						draw.x = dataStore.paths[solution[0].floor][solution[0].segment].ax;
-						draw.y = dataStore.paths[solution[0].floor][solution[0].segment].ay;
-						draw.length = dataStore.paths[solution[0].floor][solution[0].segment].length;
+						draw.x = dataStore.p[solution[0].floor][solution[0].segment].x;
+						draw.y = dataStore.p[solution[0].floor][solution[0].segment].y;
+						draw.length = dataStore.p[solution[0].floor][solution[0].segment].l;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
 					}
@@ -1334,10 +1336,10 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 					for (i = 0; i < portalsEntered + 1; i++) {
 						for (stepNum = lastStep; stepNum < solution.length; stepNum++) {
 							if (solution[stepNum].type === 'pa') {
-								ax = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].ax;
-								ay = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].ay;
-								bx = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].bx;
-								by = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].by;
+								ax = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].x;
+								ay = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].y;
+								bx = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].m;
+								by = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].n;
 
 								draw = {};
 								draw.floor = solution[stepNum].floor;
@@ -1349,7 +1351,7 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 									draw.x = ax;
 									draw.y = ay;
 								}
-								draw.length = dataStore.paths[solution[stepNum].floor][solution[stepNum].segment].length;
+								draw.length = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].l;
 								draw.type = 'L';
 								drawing[i].push(draw);
 								drawing[i].routeLength += draw.length;
@@ -1360,16 +1362,16 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 								// push the first object on
 								// check for more than just floor number here....
 								pick = '';
-								if (dataStore.portals[solution[stepNum].segment].floorANum === dataStore.portals[solution[stepNum].segment].floorBNum) {
-									if (dataStore.portals[solution[stepNum].segment].xA === draw.x && dataStore.portals[solution[stepNum].segment].yA === draw.y) {
+								if (dataStore.q[solution[stepNum].segment].floorANum === dataStore.q[solution[stepNum].segment].floorBNum) {
+									if (dataStore.q[solution[stepNum].segment].x === draw.x && dataStore.q[solution[stepNum].segment].y === draw.y) {
 										pick = 'B';
 									} else {
 										pick = 'A';
 									}
 								} else {
-									if (dataStore.portals[solution[stepNum].segment].floorANum === solution[stepNum].floor) {
+									if (dataStore.q[solution[stepNum].segment].floorANum === solution[stepNum].floor) {
 										pick = 'A';
-									} else if (dataStore.portals[solution[stepNum].segment].floorBNum === solution[stepNum].floor) {
+									} else if (dataStore.q[solution[stepNum].segment].floorBNum === solution[stepNum].floor) {
 										pick = 'B';
 									}
 								}
@@ -1377,8 +1379,8 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = dataStore.portals[solution[stepNum].segment].xA;
-									draw.y = dataStore.portals[solution[stepNum].segment].yA;
+									draw.x = dataStore.q[solution[stepNum].segment].x;
+									draw.y = dataStore.q[solution[stepNum].segment].y;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
@@ -1386,8 +1388,8 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = dataStore.portals[solution[stepNum].segment].xB;
-									draw.y = dataStore.portals[solution[stepNum].segment].yB;
+									draw.x = dataStore.q[solution[stepNum].segment].m;
+									draw.y = dataStore.q[solution[stepNum].segment].n;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
