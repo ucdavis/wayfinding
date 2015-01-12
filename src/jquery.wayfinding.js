@@ -71,10 +71,11 @@
 	// should array of arrays be looked into
 	// should floor only be stored by id?
 	// or is it enough that it is already the index of the enclosing array?
+	// remove portal id strings?
 
 	// p holds paths array (floor) of arrays of objects (paths)
 	// - f floor identifier
-	// - g map number in array
+	// r g map number in array
 	// * r current shortest combined lengths to reach here
 	// * p prior path segment to follow back for shortest path
 	// * x on the first end of the path the x coord
@@ -90,17 +91,17 @@
 	// q holds portals array of objects
 	// * t portal type as string
 	// * a accessible boolean
-	// - e string id of first end
-	// - f floor of first end as string
-	// - g floor of first end as number
-	// - x x coord of first end
-	// - y y coord of first end
+	// r e string id of first end - removed
+	// * f floor of first end as string
+	// * g floor of first end as number
+	// * x x coord of first end
+	// * y y coord of first end
 	// * c connections to paths of first end
-	// - i string id of second end
-	// - j floor of second end as string
-	// - k floor of second end as number
-	// - m x coord of second end
-	// - n y coord of second end
+	// r i string id of second end - removed
+	// * j floor of second end as string
+	// * k floor of second end as number
+	// * m x coord of second end
+	// * n y coord of second end
 	// * d connections to paths of second end
 	// * l length of this segment
 	// * r current shortest combined lengths to reach here
@@ -264,7 +265,7 @@ console.log('buildDataStore', mapNum, map, el);
 			$('#Paths line', el).each(function () {
 				path = {};
 				path.floor = map.id; // floor_1
-				path.mapNum = mapNum; // index of floor in array 1
+//				path.mapNum = mapNum; // index of floor in array 1
 				path.r = Infinity; //Distance
 				path.p = -1; //Prior node in path that yielded route distance
 
@@ -381,16 +382,16 @@ console.log('buildPortals');
 							portal.t = outerSegment.type;
 							portal.a = (portal.t === 'Elev' || portal.t === 'Door') ? true : false; // consider changing to != Stair
 
-							portal.idA = outerSegment.id;
-							portal.floorA = outerSegment.floor;
-							portal.floorANum = outerSegment.mapNum;
+//							portal.idA = outerSegment.id;
+							portal.f = outerSegment.floor;
+							portal.g = outerSegment.mapNum;
 							portal.x = outerSegment.x;
 							portal.y = outerSegment.y;
 							portal.c = []; //only paths
 
-							portal.idB = innerSegment.id;
-							portal.floorB = innerSegment.floor;
-							portal.floorBNum = innerSegment.mapNum;
+//							portal.idB = innerSegment.id;
+							portal.j = innerSegment.floor;
+							portal.k = innerSegment.mapNum;
 							portal.m = innerSegment.x;
 							portal.n = innerSegment.y;
 							portal.d = []; // only paths
@@ -434,14 +435,14 @@ console.log('buildPortals');
 			for (portalNum = 0; portalNum < dataStore.q.length; portalNum++) {
 				for (mapNum = 0; mapNum < maps.length; mapNum++) {
 					for (pathNum = 0; pathNum < dataStore.p[mapNum].length; pathNum++) {
-						if (dataStore.q[portalNum].floorA === dataStore.p[mapNum][pathNum].floor &&
+						if (dataStore.q[portalNum].f === dataStore.p[mapNum][pathNum].floor &&
 								((dataStore.q[portalNum].x === dataStore.p[mapNum][pathNum].x &&
 									dataStore.q[portalNum].y === dataStore.p[mapNum][pathNum].y) ||
 									(dataStore.q[portalNum].x === dataStore.p[mapNum][pathNum].m &&
 										dataStore.q[portalNum].y === dataStore.p[mapNum][pathNum].n))) {
 							dataStore.q[portalNum].c.push(pathNum);
 							dataStore.p[mapNum][pathNum].q.push(portalNum);
-						} else if (dataStore.q[portalNum].floorB === dataStore.p[mapNum][pathNum].floor &&
+						} else if (dataStore.q[portalNum].j === dataStore.p[mapNum][pathNum].floor &&
 								((dataStore.q[portalNum].m === dataStore.p[mapNum][pathNum].x &&
 									dataStore.q[portalNum].n === dataStore.p[mapNum][pathNum].y) ||
 								(dataStore.q[portalNum].m === dataStore.p[mapNum][pathNum].m &&
@@ -528,21 +529,21 @@ console.log('getDoorPaths', door);
 						if ($.inArray(segment, dataStore.q[tryPortal].c) !== -1) {
 							$.each(dataStore.q[tryPortal].d, function (ia, tryPath) {
 								//if adding this path
-								if (length + dataStore.q[tryPortal].l + dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].l < dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].r) {
-									dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].r = dataStore.q[tryPortal].r + dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].l;
-									dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].p = tryPortal;
-									dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].o = 'po';
-									recursiveSearch('pa', dataStore.q[tryPortal].floorBNum, tryPath, dataStore.p[dataStore.q[tryPortal].floorBNum][tryPath].r);
+								if (length + dataStore.q[tryPortal].l + dataStore.p[dataStore.q[tryPortal].k][tryPath].l < dataStore.p[dataStore.q[tryPortal].k][tryPath].r) {
+									dataStore.p[dataStore.q[tryPortal].k][tryPath].r = dataStore.q[tryPortal].r + dataStore.p[dataStore.q[tryPortal].k][tryPath].l;
+									dataStore.p[dataStore.q[tryPortal].k][tryPath].p = tryPortal;
+									dataStore.p[dataStore.q[tryPortal].k][tryPath].o = 'po';
+									recursiveSearch('pa', dataStore.q[tryPortal].k, tryPath, dataStore.p[dataStore.q[tryPortal].k][tryPath].r);
 								}
 							});
 						} else {
 							$.each(dataStore.q[tryPortal].c, function (ib, tryPath) {
 								// if adding this path
-								if (length + dataStore.q[tryPortal].l + dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].l < dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].r) {
-									dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].r = dataStore.q[tryPortal].r + dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].l;
-									dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].p = tryPortal;
-									dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].o = 'po';
-									recursiveSearch('pa', dataStore.q[tryPortal].floorANum, tryPath, dataStore.p[dataStore.q[tryPortal].floorANum][tryPath].r);
+								if (length + dataStore.q[tryPortal].l + dataStore.p[dataStore.q[tryPortal].g][tryPath].l < dataStore.p[dataStore.q[tryPortal].g][tryPath].r) {
+									dataStore.p[dataStore.q[tryPortal].g][tryPath].r = dataStore.q[tryPortal].r + dataStore.p[dataStore.q[tryPortal].g][tryPath].l;
+									dataStore.p[dataStore.q[tryPortal].g][tryPath].p = tryPortal;
+									dataStore.p[dataStore.q[tryPortal].g][tryPath].o = 'po';
+									recursiveSearch('pa', dataStore.q[tryPortal].g, tryPath, dataStore.p[dataStore.q[tryPortal].g][tryPath].r);
 								}
 							});
 						}
@@ -1362,16 +1363,16 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 								// push the first object on
 								// check for more than just floor number here....
 								pick = '';
-								if (dataStore.q[solution[stepNum].segment].floorANum === dataStore.q[solution[stepNum].segment].floorBNum) {
+								if (dataStore.q[solution[stepNum].segment].g === dataStore.q[solution[stepNum].segment].k) {
 									if (dataStore.q[solution[stepNum].segment].x === draw.x && dataStore.q[solution[stepNum].segment].y === draw.y) {
 										pick = 'B';
 									} else {
 										pick = 'A';
 									}
 								} else {
-									if (dataStore.q[solution[stepNum].segment].floorANum === solution[stepNum].floor) {
+									if (dataStore.q[solution[stepNum].segment].g === solution[stepNum].floor) {
 										pick = 'A';
-									} else if (dataStore.q[solution[stepNum].segment].floorBNum === solution[stepNum].floor) {
+									} else if (dataStore.q[solution[stepNum].segment].k === solution[stepNum].floor) {
 										pick = 'B';
 									}
 								}
