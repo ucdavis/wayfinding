@@ -68,6 +68,46 @@
 	},
 	dataStore;
 
+	// should array of arrays be looked into
+	// should floor only be stored by id?
+	// or is it enough that it is already the index of the enclosing array?
+
+	// p holds paths array (floor) of arrays of objects (paths)
+	// - f floor identifier
+	// - g map number in array
+	// - r current shortest combined lengths to reach here
+	// - p prior path segment to follow back for shortest path
+	// - x on the first end of the path the x coord
+	// - y on the first end of the path the y coord
+	// - d an array of doors that connect to the first end of the path
+	// - m on the second end of the path the x coord
+	// - n on the second end of the path the y coord
+	// - e an array of doors that connect to the second end of the path
+	// - l length of this segment
+	// - c array of connections to other paths
+	// - q array of connections to portals
+	// - o prior path type "pa" or "po"
+	// q holds portals array of objects
+	// - t portal type as string
+	// - a accessible boolean
+	// - e string id of first end
+	// - f floor of first end as string
+	// - g floor of first end as number
+	// - x x coord of first end
+	// - y y coord of first end
+	// - c connections to paths of first end
+	// - i string id of second end
+	// - j floor of second end as string
+	// - k floor of second end as number
+	// - m x coord of second end
+	// - n y coord of second end
+	// - d connections to paths of second end
+	// - l length of this segment
+	// - r current shortest combined lengths to reach here
+	// - p prior path segment to follow back for shortest path
+	// - q prior map number
+	// - o prior path type "pa" or "po"
+
 	$.fn.wayfinding = function (action, options, callback) {
 		var passed = options,
 			obj, // the jQuery object being worked with;
