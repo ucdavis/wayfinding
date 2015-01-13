@@ -164,8 +164,6 @@
 				defaultMapValid = false,
 				status;
 
-console.log('checkIds');
-
 			status = $(el).find('div')
 				.hide()
 				.end()
@@ -209,8 +207,6 @@ console.log('checkIds');
 				circle,
 				height = options.locationIndicator.height, // add error checking?
 				symbolPath;
-
-console.log('makePin', x, y, type);
 
 			indicator = document.createElementNS('http://www.w3.org/2000/svg', 'g');
 
@@ -256,8 +252,6 @@ console.log('makePin', x, y, type);
 				matches,
 				portal,
 				portalId;
-
-console.log('buildDataStore', mapNum, map, el);
 
 			//Paths
 			dataStore.p[mapNum] = [];
@@ -361,8 +355,6 @@ console.log('buildDataStore', mapNum, map, el);
 				pathInnerNum,
 				portalNum,
 				pathNum;
-
-console.log('buildPortals');
 
 			for (segmentOuterNum = 0; segmentOuterNum < portalSegments.length; segmentOuterNum++) {
 
@@ -469,8 +461,6 @@ console.log('buildPortals');
 					'floor': null
 				};
 
-console.log('getDoorPaths', door);
-
 			for (mapNum = 0; mapNum < maps.length; mapNum++) {
 				for (pathNum = 0; pathNum < dataStore.p[mapNum].length; pathNum++) {
 					for (doorANum = 0; doorANum < dataStore.p[mapNum][pathNum].d.length; doorANum++) {
@@ -494,8 +484,6 @@ console.log('getDoorPaths', door);
 			//SegmentType is PAth or POrtal, segment floor limits search, segment is id per type and floor, length is total length of current thread
 			// for each path on this floor look at all the paths we know connect to it
 
-// console.log('recursiveSearch', segmentType, segmentFloor, segment, length);
-
 			// for each connection
 			$.each(dataStore.p[segmentFloor][segment].c, function (i, tryPath) {
 				// check and see if the current path is a shorter path to the new path
@@ -510,20 +498,14 @@ console.log('getDoorPaths', door);
 			// if the current path is connected to any portals
 			if (dataStore.p[segmentFloor][segment].q.length > 0) {
 
-// console.log('recursiveSearch', segmentType, segmentFloor, segment, dataStore.p[segmentFloor][segment].portals);
-
 				// look at each portal, tryPortal is portal index in portals
 				$.each(dataStore.p[segmentFloor][segment].q, function (i, tryPortal) {
-
-// console.log('tryPortal', length, dataStore.q[tryPortal].length, dataStore.q[tryPortal].r, accessible);
 
 					if (length + dataStore.q[tryPortal].l < dataStore.q[tryPortal].r && (options.accessibleRoute === false || (options.accessibleRoute === true && dataStore.q[tryPortal].a))) {
 						dataStore.q[tryPortal].r = length + dataStore.q[tryPortal].l;
 						dataStore.q[tryPortal].p = segment;
 						dataStore.q[tryPortal].q = segmentFloor;
 						dataStore.q[tryPortal].o = segmentType;
-
-// console.log('following!');
 
 						// if the incoming segment to the portal is at one end of the portal try all the paths at the other end
 						if ($.inArray(segment, dataStore.q[tryPortal].c) !== -1) {
@@ -556,7 +538,6 @@ console.log('getDoorPaths', door);
 			var sourceInfo,
 				mapNum,
 				sourcemapNum;
-console.log('generateRoutes');
 
 			sourceInfo = getDoorPaths(startpoint);
 
@@ -579,8 +560,6 @@ console.log('generateRoutes');
 		function backTrack(segmentType, segmentFloor, segment) {
 			var step;
 
-console.log('backTrack', segmentType, segmentFloor, segment);
-
 			// if we aren't at the startpoint point
 			if (segment !== 'door') {
 				step = {};
@@ -588,8 +567,6 @@ console.log('backTrack', segmentType, segmentFloor, segment);
 				step.floor = segmentFloor;
 				step.segment = segment;
 				solution.push(step);
-
-console.log('step', step);
 
 				switch (segmentType) {
 				case 'pa':
@@ -604,8 +581,6 @@ console.log('step', step);
 
 		function getShortestRoute(maps, destinations, startpoint) {
 
-console.log('getShortestRoute', maps, destinations, startpoint);
-
 			function minLengthRoute(maps, destination, startpoint) {
 				var destInfo,
 				mapNum,
@@ -615,8 +590,6 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 				i;
 
 				destInfo = getDoorPaths(destination);
-
-// console.log('shorty', maps, destination, startpoint, destInfo);
 
 				for (mapNum = 0; mapNum < maps.length; mapNum++) {
 					if (maps[mapNum].id === destInfo.floor) {
@@ -628,11 +601,7 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 				minPath = Infinity;
 				reversePathStart = -1;
 
-// console.log('shorty dest', destInfo);
-
 				for (i = 0; i < destInfo.paths.length; i++) {
-
-// console.log('shorty route', dataStore.p[destinationmapNum][destInfo.paths[i]]);
 
 					if (dataStore.p[destinationmapNum][destInfo.paths[i]].r < minPath) {
 						minPath = dataStore.p[destinationmapNum][destInfo.paths[i]].r;
@@ -645,8 +614,6 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 					backTrack('pa', destinationmapNum, reversePathStart);
 					solution.reverse();
 
-// console.log('shorty worked', solution);
-
 					return {
 						'startpoint': startpoint,
 						'endpoint': destination,
@@ -654,8 +621,6 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 						'distance': minPath
 					};
 				}
-
-// console.log('shorty sucks');
 
 				return {
 					'startpoint': startpoint,
@@ -676,11 +641,9 @@ console.log('getShortestRoute', maps, destinations, startpoint);
 
 		function build() {
 
-console.log('build');
-
 			dataStore = {
-				'p': [],
-				'q': []
+				'p': [], // paths
+				'q': [] // portals
 			};
 
 			portalSegments = [];
@@ -694,16 +657,12 @@ console.log('build');
 			buildPortals();
 			generateRoutes();
 
-// console.log(dataStore);
-
 			return dataStore;
 		} // function build
 
 		// Ensure a dataStore exists and is set, whether from a cache
 		// or by building it.
 		function establishDataStore(onReadyCallback) {
-
-console.log('establishDataStore', onReadyCallback);
 
 			if (options.dataStoreCache) {
 				if (typeof options.dataStoreCache === 'object') {
@@ -718,14 +677,10 @@ console.log('establishDataStore', onReadyCallback);
 					var cacheUrl = options.dataStoreCache + startpoint + ((options.accessibleRoute) ? '.acc' : '') + '.json';
 					console.debug('Attempting to load dataStoreCache from URL ...', cacheUrl);
 
-console.log('start load');
-
 					$.getJSON(cacheUrl, function (response) {
 						console.debug('Using dataStoreCache from remote.');
 
 						dataStore = response;
-
-console.log('loaded');
 
 						if(typeof onReadyCallback === 'function') {
 							onReadyCallback();
@@ -760,8 +715,6 @@ console.log('loaded');
 				x,
 				y,
 				pin;
-
-console.log('setStartPoint', point, el);
 
 			//clears locationIndicators from the maps
 			$('g.startPin', el).remove();
@@ -806,8 +759,6 @@ console.log('setStartPoint', point, el);
 				y,
 				pin;
 
-console.log('setEndPoint', endPoint, el);
-
 			//clears locationIndicators from the maps
 			$('g.destinationPin', el).remove();
 
@@ -831,8 +782,6 @@ console.log('setEndPoint', endPoint, el);
 		// Set options based on either provided options or defaults
 		function getOptions(el) {
 			var optionsPrior = el.data('wayfinding:options');
-
-console.log('getOptions', el);
 
 			drawing = el.data('wayfinding:drawing'); // load a drawn path, if it exists
 
@@ -868,8 +817,6 @@ console.log('getOptions', el);
 
 		function setOptions(el) {
 
-console.log('setOptions', el);
-
 			el.data('wayfinding:options', options);
 			el.data('wayfinding:drawing', drawing);
 			// need to handle cases where WayfindingDataStore isn't loaded if we are separating these out
@@ -877,21 +824,14 @@ console.log('setOptions', el);
 		}
 
 		function cleanupSVG(el) { // should only be called once instead of twice if initalize and build for non datastore
-
-console.log('cleanupSVG', $(el));
-
 			var svg = $(el).find('svg'),
 				height = parseInt($(svg).attr('height').replace('px', '').split('.')[0], 10),
 				width = parseInt($(svg).attr('width').replace('px', '').split('.')[0], 10);
-
-console.log($(svg).attr('height'), $(svg).attr('width'));
 
 			// Ensure SVG w/h are divisble by 2 (to avoid webkit blurriness bug on pan/zoom)
 			// might need to shift this change to the enclosing element for responsive svgs?
 			height = Math.ceil(height / 2) * 2;
 			width = Math.ceil(width / 2) * 2;
-
-console.log(height, width);
 
 			// if ($(el).css('padding-bottom') === '' || $(el).css('padding-bottom') === '0px') {
 				$(el).css('padding-bottom', (100 * (height / width)) + '%');
@@ -913,8 +853,6 @@ console.log(height, width);
 		// Ensures '$el' has a valid jQuery.panzoom object
 		function initializePanZoom(el) {
 
-console.log('initializePanZoom', el);
-
 			el.panzoom({
 				minScale: 1.0,
 				contain: 'invert',
@@ -929,8 +867,6 @@ console.log('initializePanZoom', el);
 
 		// Hide SVG div, hide path lines (they're data, not visuals), make rooms clickable
 		function activateSVG(el, svgDiv) {
-
-console.log('activateSVG', el, svgDiv);
 
 			// Hide maps until explicitly displayed
 			$(svgDiv).hide();
@@ -973,8 +909,6 @@ console.log('activateSVG', el, svgDiv);
 		// Called when animatePath() is switching the floor and also when
 		function switchFloor(floor, el) {
 			var height = $(el).height();
-
-console.log('switchFloor', floor, el);
 
 			$(el).height(height); // preserve height as I'm not yet set switching
 
@@ -1023,9 +957,6 @@ console.log('switchFloor', floor, el);
 		} //function switchFloor
 
 		function hidePath(el) {
-
-console.log('hidepath', el);
-
 			$('path[class^=directionPath]', el).css({
 				'stroke': 'none'
 			});
@@ -1033,8 +964,6 @@ console.log('hidepath', el);
 
 		// Uses jQuery.panzoom to pan/zoom to the SVG viewbox coordinate equivalent of (x, y, w, h)
 		function panzoomWithViewBoxCoords(cssDiv, svg, x, y, w, h) {
-
-console.log('panzoomWithViewBoxCoords', cssDiv, svg, x, y, w, h);
 
 			x = parseFloat(x);
 			y = parseFloat(y);
@@ -1078,8 +1007,6 @@ console.log('panzoomWithViewBoxCoords', cssDiv, svg, x, y, w, h);
 			oldViewBox,
 			animationDuration,
 			pad = options.zoomPadding;
-
-console.log('animatePath', drawing, drawingSegment);
 
 			if (1 !== 1 && drawingSegment >= drawing.length) {
 				// if repeat is set, then delay and rerun display from first.
@@ -1243,8 +1170,6 @@ console.log('animatePath', drawing, drawingSegment);
 				thisPath,
 				pick;
 
-console.log('routeTo', destination);
-
 			options.endpoint = destination;
 
 			// remove any prior paths from the current map set
@@ -1264,8 +1189,6 @@ console.log('routeTo', destination);
 				setEndPoint(options.endpoint, el);
 
 				solution = getShortestRoute(maps, destination, startpoint).solution;
-
-// console.log('routeTo', solution, maps, destination, startpoint);
 
 				if (reversePathStart !== -1) {
 
@@ -1290,9 +1213,6 @@ console.log('routeTo', destination);
 						console.warn('Attempting to route with no solution. This should never happen. SVG likely has errors. Destination is: ' + destination);
 						return;
 					}
-
-console.log('solution', solution.length, solution, portalsEntered, startpoint);
-// console.log('startpoint', startpoint, dataStore.p[solution[0].floor][solution[0].segment]);
 
 					//if statement incorrectly assumes one door at the end of the path, works in that case, need to generalize
 					if (dataStore.p[solution[0].floor][solution[0].segment].d[0] === startpoint) {
@@ -1329,8 +1249,6 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 						drawing[0].routeLength = draw.length;
 					}
 
-// console.log('drawing', drawing);
-
 					lastStep = 1;
 
 					// for each floor that we have to deal with
@@ -1344,7 +1262,6 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 
 								draw = {};
 								draw.floor = solution[stepNum].floor;
-// console.log('step ', solution, stepNum, ax, ay, bx, by, drawing, i, drawing[i].slice(-1)[0]);
 								if (drawing[i].slice(-1)[0].x === ax && drawing[i].slice(-1)[0].y === ay) {
 									draw.x = bx;
 									draw.y = by;
@@ -1522,8 +1439,6 @@ console.log('solution', solution.length, solution, portalsEntered, startpoint);
 			var displayNum,
 				mapNum;
 
-console.log('replaceLoadScreen', el);
-
 			$('#WayfindingStatus').remove();
 
 			// loop ensures defaultMap is in fact one of the maps
@@ -1552,8 +1467,6 @@ console.log('replaceLoadScreen', el);
 		// Initialize the jQuery target object
 		function initialize(el, cb) {
 			var mapsProcessed = 0;
-
-console.log('initialize', el, cb);
 
 			// Load SVGs off the network
 			$.each(maps, function (i, map) {
@@ -1585,9 +1498,6 @@ console.log('initialize', el, cb);
 								setStartPoint(startpoint, el);
 								setOptions(el);
 								replaceLoadScreen(el);
-
-// console.log(dataStore);
-
 								if (typeof cb === 'function') {
 									cb();
 								}
@@ -1612,8 +1522,6 @@ console.log('initialize', el, cb);
 			obj = $(this);
 
 			getOptions(obj); // load the current options
-
-console.log('wayfinding', action, options, callback);
 
 			// Handle actions
 			if (action && typeof (action) === 'string') {
