@@ -579,64 +579,41 @@
 			}
 		}
 
-		function getShortestRoute(maps, destinations, startpoint) {
+		function getShortestRoute() {
 
-			function minLengthRoute(maps, destination, startpoint) {
-				var destInfo,
+			var destInfo,
 				mapNum,
-				minPath,
-				reversePathStart,
 				destinationmapNum,
+				reversePathStart,
+				minPath,
 				i;
 
-				destInfo = getDoorPaths(destination);
+			destInfo = getDoorPaths(options.endpoint);
 
-				for (mapNum = 0; mapNum < maps.length; mapNum++) {
-					if (maps[mapNum].id === destInfo.floor) {
-						destinationmapNum = mapNum;
-						break;
-					}
+			for (mapNum = 0; mapNum < maps.length; mapNum++) {
+				if (maps[mapNum].id === destInfo.floor) {
+					destinationmapNum = mapNum;
+					break;
 				}
-
-				minPath = Infinity;
-				reversePathStart = -1;
-
-				for (i = 0; i < destInfo.paths.length; i++) {
-
-					if (dataStore.p[destinationmapNum][destInfo.paths[i]].r < minPath) {
-						minPath = dataStore.p[destinationmapNum][destInfo.paths[i]].r;
-						reversePathStart = destInfo.paths[i];
-					}
-				}
-
-				if (reversePathStart !== -1) {
-					solution = []; //can't be set in backtrack because it is recursive.
-					backTrack('pa', destinationmapNum, reversePathStart);
-					solution.reverse();
-
-					return {
-						'startpoint': startpoint,
-						'endpoint': destination,
-						'solution': solution,
-						'distance': minPath
-					};
-				}
-
-				return {
-					'startpoint': startpoint,
-					'endpoint': destination,
-					'solution': [],
-					'distance': minPath
-				};
 			}
 
-			if (Array.isArray(destinations)) {
-				return $.map(destinations, function (dest) {
-					return minLengthRoute(maps, dest, startpoint);
-				});
-			} else {
-				return minLengthRoute(maps, destinations, startpoint);
+			minPath = Infinity;
+			reversePathStart = -1;
+
+			for (i = 0; i < destInfo.paths.length; i++) {
+
+				if (dataStore.p[destinationmapNum][destInfo.paths[i]].r < minPath) {
+					minPath = dataStore.p[destinationmapNum][destInfo.paths[i]].r;
+					reversePathStart = destInfo.paths[i];
+				}
 			}
+
+			if (reversePathStart !== -1) {
+				solution = []; //can't be set in backtrack because it is recursive.
+				backTrack('pa', destinationmapNum, reversePathStart);
+				solution.reverse();
+			}
+			return solution;
 		}
 
 		function build() {
@@ -1188,7 +1165,7 @@
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 				setEndPoint(options.endpoint, el);
 
-				solution = getShortestRoute(maps, destination, startpoint).solution;
+				solution = getShortestRoute();
 
 				if (reversePathStart !== -1) {
 
@@ -1589,16 +1566,6 @@
 					//shows JSON version of dataStore when called from console.
 					//To facilitate caching dataStore.
 					result = JSON.stringify(dataStore);
-					// $('body').replaceWith(result);
-					break;
-				case 'getRoutes':
-					//gets the length of the shortest route to one or more
-					//destinations.
-					if (passed === undefined) {
-						result = getShortestRoute(maps, options.endpoint, startpoint);
-					} else {
-						result = getShortestRoute(maps, passed, startpoint);
-					}
 					break;
 				case 'destroy':
 					//remove all traces of wayfinding from the obj
