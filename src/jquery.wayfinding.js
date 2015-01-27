@@ -1010,17 +1010,17 @@
 
 			function adjustOut(current, old, target, count, speed) {
 				setTimeout(function() {
-					var zoomOut = {};
-					zoomOut.X = interpolateValue(target.X, old.X, current, count);
-					zoomOut.Y = interpolateValue(target.Y, old.Y, current, count);
-					zoomOut.W = interpolateValue(target.W, old.W, current, count);
-					zoomOut.H = interpolateValue(target.H, old.H, current, count);
+					var zoom = {};
+					zoom.X = interpolateValue(target.X, old.X, current, count);
+					zoom.Y = interpolateValue(target.Y, old.Y, current, count);
+					zoom.W = interpolateValue(target.W, old.W, current, count);
+					zoom.H = interpolateValue(target.H, old.H, current, count);
 
 					if(options.pinchToZoom) {
 						// Use CSS 3-based zooming
-						panzoomWithViewBoxCoords($(svg).parent()[0], svg, zoomOut.X, zoomOut.Y, zoomOut.W, zoomOut.H);
+						panzoomWithViewBoxCoords($(svg).parent()[0], svg, zoom.X, zoom.Y, zoom.W, zoom.H);
 					} else {
-						svg.setAttribute('viewBox', zoomOut.X + ' ' + zoomOut.Y + ' ' + zoomOut.W + ' ' + zoomOut.H);
+						svg.setAttribute('viewBox', zoom.X + ' ' + zoom.Y + ' ' + zoom.W + ' ' + zoom.H);
 					}
 
 					if(current === count) {
@@ -1551,19 +1551,6 @@
 						result = options.path;
 					} else {
 						options.path = $.extend(true, {}, options.path, passed);
-					}
-					break;
-				case 'zoom':
-					if (passed === undefined) {
-						result = {x: 0, y: 0, z: 0};
-					} else {
-						if (passed === 'reset') {
-							// reset zoom
-							console.log('reset zoom');
-						} else {
-							// accept object and set zoom
-							console.log('zoom to');
-						}
 					}
 					break;
 				case 'getDataStore':
