@@ -23,7 +23,6 @@ module.exports = function (config) {
 
 			// include our JavaScript files
 			'src/jquery.wayfinding.js',
-			'src/wayfinding.datastore.js',
 
 			// simple patterns to load the needed testfiles
 			// equals to {pattern: 'test/*-test.js', watched: true, served: true, included: true}
@@ -74,7 +73,7 @@ module.exports = function (config) {
 		// this will output coverage reports in the test/coverage dir using Istanbul
 		coverageReporter: {
 			type: 'html',
-			dir: 'test/coverage/'
+			dir: 'coverage/'
 		},
 
 		// web server port

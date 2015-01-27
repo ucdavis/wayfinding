@@ -7,7 +7,7 @@
 	"predef": [],
 
 		"maxerr": 50,
-		"maxparams": 5,
+	"maxparams": 6,
 		"maxdepth": 10,
 	"maxstatements":175,
 	"maxcomplexity": 60,

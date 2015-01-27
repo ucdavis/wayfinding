@@ -24,17 +24,56 @@ module.exports = function (grunt) {
 			' Licensed MIT */\n',
 		// Task configuration.
 		lifecycle: { // need to build out
+			'bowerSetup': [
+				'bowerInstall'
+			],
 			// Lint Step
-			// js hint all js
-			// lint the css?
-			// leaning toward the client and admin being separate files in dist as such concat not needed
-			// clean
-			// test
-			// uglify
-			// plato?
-			// open plato and coverage?
+			'validate': [
+				'jshint',
+				'eslint'
+			],
+			'test': [ // run all tests
+				'connect:test',
+				'karma:unit'
+			],
+			'package': [
+				'clean',
+				'uglify'
+			],
+			'document': [
+				'jsdoc'
+			],
+			'open-docs': [
+				'open:docs',
+				'open:coverage'
+			],
+			'benchmark': [ // separate from document as it adds a milestone each time
+				'plato',
+				'open:plato'
+			]
 			// separate from lifecycle build task for taking a group of maps and building caches
 			// separate from lifecycle support watch and serve
+		},
+		bowerInstall: { // Automatically inject Bower components into the HTML file https://github.com/stephenplusplus/grunt-bower-install
+			target: {
+				// Point to the files that should be updated when
+				// you run `grunt bower-install`
+				src: [
+					'<%= config.app %>/index.html' // .html support...
+				],
+
+				// Optional:
+				// ---------
+				cwd: '',
+				dependencies: true,
+				devDependencies: false,
+				exclude: [
+					/jquery/,
+					/modernizr/
+				],
+				fileTypes: {},
+				ignorePath: ''
+			}
 		},
 		jshint: {
 			options: {
@@ -51,18 +90,18 @@ module.exports = function (grunt) {
 				src: ['test/**/*-test.js']
 			}
 		},
+		eslint: {
+			options: {
+				config: 'eslint.json',
+				format: 'stylish'
+			},
+			target: [
+				'<%= config.app %>/src/{,*/}*.js',
+				'test/spec/{,*/}*.js'
+			]
+		},
 		clean: {
 			files: ['dist', 'test/coverage', 'test/report']
-		},
-		concat: {
-			options: {
-				banner: '<%= banner %>',
-				stripBanners: true
-			},
-			dist: {
-				src: ['src/**/*.js'],
-				dest: 'dist/jquery.<%= pkg.name %>.js'
-			}
 		},
 		uglify: {
 			options: {
@@ -74,11 +113,36 @@ module.exports = function (grunt) {
 			}
 		},
 		connect: {
-			server: {
+			options: {
+				port: 9000,
+				livereload: 35729,
+				// Change this to '0.0.0.0' to access the server from outside
+				hostname: 'localhost'
+			},
+			livereload: {
 				options: {
-					hostname: 'localhost',
-					port: 9000,
-					livereload: true
+					open: true,
+					base: [
+						'.tmp',
+						'<%= config.app %>'
+					]
+				}
+			},
+			test: {
+				options: {
+					port: 9001,
+					base: [
+						'.tmp',
+						'test',
+						'<%= config.app %>'
+					]
+				}
+			},
+			dist: {
+				options: {
+					open: true,
+					base: '<%= config.dist %>',
+					livereload: false
 				}
 			}
 		},
@@ -93,6 +157,56 @@ module.exports = function (grunt) {
 				singleRun: true,
 				browsers: ['Chrome'],
 				reporters: ['progress', 'html', 'coverage']
+			}
+		},
+		jsdoc: {
+			dist: {
+				// Force usage of JSDoc 3.3.0
+				jsdoc: './node_modules/.bin/jsdoc',
+				// The rest of your configuration.
+				src: ['<%= config.app %>/src/**/*.js',
+					'README.md'],
+				options: {
+					destination: 'docs/',
+					template: 'node_modules/grunt-jsdoc/node_modules/ink-docstrap/template',
+					configure: 'node_modules/grunt-jsdoc/node_modules/ink-docstrap/template/jsdoc.conf.json'
+				}
+			}
+		},
+		plato: {
+			all: {
+				options: {
+					jshint: grunt.file.readJSON('.jshintrc'),
+					complexity: {
+						logicalor: false,
+						switchcase: false,
+						forin: true,
+						trycatch: true
+					},
+					exclude: /\.min\.js$/ // excludes source files finishing with ".min.js"
+				},
+				files: {
+					'plato': [
+						'<%= config.dev %>/{,*/}*.js'
+					]
+				}
+			}
+		},
+		open: {
+			server: {
+				path: 'http://localhost:<%= connect.options.port %>'
+			},
+			plato: {
+				file: 'plato/index.html'
+			},
+			coverage: { // grab the latest Chrome coverage report, currently bug that only covers last browser to finish
+				path: function () {
+					var reports = grunt.file.expand('coverage/Chrome*/index.html');
+					return reports[reports.length - 1].toString();
+				}
+			},
+			docs: {
+				file: 'docs/index.html'
 			}
 		},
 		watch: {
@@ -118,8 +232,6 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-build-lifecycle');
 
 	// Default task.
-	grunt.registerTask('default', ['clean', 'jshint', 'karma:unit', 'server']);
-	grunt.registerTask('server', ['connect', 'watch']);
-	grunt.registerTask('report', ['clean', 'jshint', 'karma:report']);
-	grunt.registerTask('release', ['clean', 'jshint', 'concat', 'uglify']);
+	grunt.registerTask('default', ['package']);
+	grunt.registerTask('server', ['connect:live', 'watch']);
 };
