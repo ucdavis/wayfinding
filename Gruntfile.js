@@ -11,6 +11,7 @@ module.exports = function (grunt) {
 		// Project settings
 		config: {
 			// Configurable paths
+			app: '.',
 			dev: 'src',
 			dist: 'dist',
 			temp: '.tmp'
@@ -164,8 +165,10 @@ module.exports = function (grunt) {
 				// Force usage of JSDoc 3.3.0
 				jsdoc: './node_modules/.bin/jsdoc',
 				// The rest of your configuration.
-				src: ['<%= config.app %>/src/**/*.js',
-					'README.md'],
+				src: [
+					'<%= config.app %>/src/**/*.js',
+					'README.md'
+				],
 				options: {
 					destination: 'docs/',
 					template: 'node_modules/grunt-jsdoc/node_modules/ink-docstrap/template',

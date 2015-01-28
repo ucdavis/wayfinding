@@ -3,7 +3,7 @@
 
 /**
  * @preserve
- * Wayfinding v0.4.1
+ * Wayfinding v2.0.0
  * https://github.com/ucdavis/wayfinding
  *
  * Copyright (c) 2010-2014 University of California Regents
@@ -12,12 +12,26 @@
  *
  * Date: 2014-12-02
  *
+ * @module wayfinding
+ * @main wayfinding
+ * @namespace wayfinding
+ * @version 2.0.0
+ * @requires jQuery
+ *
  */
 
 //  <![CDATA[
 
 (function ($) {
 	'use strict';
+
+	/**
+	 * @typedef defaults
+	 * @memberOf wayfinding
+	 * @type object
+	 * @property {map[]} maps collection of maps to be used by wayfinding
+	 * @property {path} path collection of behavior and styling for the solution path
+	 */
 
 	var defaults = {
 		// the maps collection defaults to a local file called floorplan.svg
@@ -73,6 +87,33 @@
 	// or is it enough that it is already the index of the enclosing array?
 	// remove portal id strings?
 
+	/**
+	 * @typedef datastore
+	 * @memberOf plugin
+	 * @type {object}
+	 * @property {floors[]} p holds an array of floors each of which has an array of paths
+	 * @property {portals[]} q holds an array of portals
+	 */
+
+	/**
+	 * @typedef floors
+	 * @memberOf plugin
+	 * @type {object}
+	 * @property {string} f floor identifier
+	 * @property {float} x on the first end of the path the x coord
+	 * @property {float} y on the first end of the path the y coord
+	 * @property {float} m on the second end of the path the x coord
+	 * @property {float} n on the second end of the path the y coord
+	 * @property {string[]} d an array of doors that connect to the first end of the path
+	 * @property {string[]} e an array of doors that connect to the second end of the path
+	 * @property {string[]} c array of connections to other paths
+	 * @property {string[]} q array of connections to portals
+	 * @property {string} o prior path type "pa" or "po"
+	 * @property {float} l length of this segment
+	 * @property {float} r current shortest combined lengths to reach here
+	 * @property {string} p prior path segment to follow back for shortest path
+	 */
+
 	// p holds paths array (floor) of arrays of objects (paths)
 	// - f floor identifier
 	// r g map number in array
@@ -109,6 +150,18 @@
 	// * q prior map number
 	// * o prior path type "pa" or "po"
 
+	/**
+	 * The jQuery plugin namespace.
+	 * @external "jQuery.fn"
+	 * @see {@link http://docs.jquery.com/Plugins/Authoring The jQuery Plugin Guide}
+	 */
+
+	/**
+	 * Wayfinding
+	 * @function external:"jQuery.fn".wayfinding
+	 * @namespace plugin
+	 */
+
 	$.fn.wayfinding = function (action, options, callback) {
 		var passed = options,
 			obj, // the jQuery object being worked with;
@@ -120,7 +173,15 @@
 			result, // used to return non jQuery results
 			drawing;
 
-		// to handle jQuery selecting ids with periods and other special characters
+
+		/**
+		 * @function escapeSelector
+		 * @memberOf plugin
+		 * @private
+		 * @inner
+		 * @param {string} sel the jQuery selector to escape
+		 * @description to handle jQuery selecting ids with periods and other special characters
+		 */
 		function escapeSelector(sel) {
 			return sel.replace(/(:|\.|\[|\])/g, '\\$1');
 		}
@@ -1031,7 +1092,7 @@
 				}, current * (speed / count));
 			}
 
-			if (1 !== 1 && drawingSegment >= drawing.length) {
+			if (options.repeat && drawingSegment >= drawing.length) {
 				// if repeat is set, then delay and rerun display from first.
 				// Don't implement, until we have click to cancel out of this
 				setTimeout(function () {
@@ -1507,18 +1568,71 @@
 			// Handle actions
 			if (action && typeof (action) === 'string') {
 				switch (action) {
+
+				/**
+				 * @function wayfinding
+				 * @memberOf wayfinding
+				 * @param {object} settings an object holding the settings to initialize the plugin with
+				 * @param {function} [callback] optional callback that gets called once setup is completed.
+				 * @example
+				 * $('#myMaps').wayfinding({
+				 * 	'maps': [
+				 * 		{'path': 'test/fixtures/demo_map_1.svg', 'id': 'floor1'},
+				 * 		{'path': 'test/fixtures/demo_map_2.svg', 'id': 'floor2'}
+				 * 	],
+				 * 	'startpoint': function () {
+				 * 		return 'lcd.1';
+				 * 	},
+				 * 	'defaultMap': 'floor1',
+				 * }, function(){
+				 * 	console.log('callback reached');
+				 * });
+				 */
 				case 'initialize':
 					checkIds(obj);
 					initialize(obj, callback);
 					break;
+
+				/**
+				 * @function routeTo
+				 * @name routeTo
+				 * @public
+				 * @memberOf wayfinding
+				 * @example $('target').wayfinding('routeTo', 'doorID');
+				 */
 				case 'routeTo':
 					// call method
 					routeTo(passed, obj);
 					break;
+
+				/**
+				 * @function animatePath
+				 * @memberOf wayfinding
+				 * @example $('target').wayfinding('animatePath');
+				 */
+				/**
+				 * @todo add callback to animatePath
+				 */
 				case 'animatePath':
 					hidePath(obj);
 					animatePath(0);
 					break;
+
+				/**
+				 * @function startpoint
+				 * @memberOf wayfinding
+				 * @param {string} newStartPoint a door ID specifying a new starting location
+				 * @param {function} [callback]
+				 * @example $('target').wayfinding('startpoint', 'R1001');
+				 */
+
+				/**
+				 * @function startpoint
+				 * @memberOf wayfinding
+				 * @param {function} newStartPointFunction a door ID specifying a new starting location
+				 * @param {function} [callback]
+				 * @example $('target').wayfinding('startpoint', startpointFunction);
+				 */
 				case 'startpoint':
 					// change the startpoint or startpoint for the instruction path
 					if (passed === undefined) {
@@ -1545,6 +1659,23 @@
 						establishDataStore(callback);
 					}
 					break;
+
+				/**
+				 * @function path
+				 * @name path
+				 * @memberOf wayfinding
+				 * @Returns optional path if no param is passed
+				 * @example getPath = $('target').wayfinding('path');
+				 */
+
+				/**
+				 * @function path
+				 * @name path
+				 * @memberOf wayfinding
+				 * @param {pathtype} nameNotSpecified sets options.path
+				 * @Returns optional path if no param is passed
+				 */
+
 				case 'path':
 					// return and set
 					if (passed === undefined) {
@@ -1553,6 +1684,15 @@
 						options.path = $.extend(true, {}, options.path, passed);
 					}
 					break;
+
+				/**
+				 * @function getDataStore
+				 * @name getDataStore
+				 * @memberOf wayfinding
+				 * @returns {string} a JSON object representing the current state of the map for a given startpoint and accessibility setting
+				 * @example capture = $('target').wayfinding('getDataStore');
+				 */
+
 				case 'getDataStore':
 					//shows JSON version of dataStore when called from console.
 					//To facilitate caching dataStore.
