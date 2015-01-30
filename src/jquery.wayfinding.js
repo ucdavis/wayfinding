@@ -28,15 +28,49 @@
 	/**
 	 * @typedef defaults
 	 * @memberOf wayfinding
-	 * @type object
+	 * @type {object}
 	 * @property {map[]} maps collection of maps to be used by wayfinding
 	 * @property {path} path collection of behavior and styling for the solution path
+	 * @property {string|function} startpoint either a string identifier for
+	 * the startpoint or a function that returns the same
+	 * @property {string|function} endpoint either a string identifier for the
+	 * endpoint or a function that returns the same
+	 * @property {boolean} accessibleRoute if true will avoid routes that use stairs
+	 * @property {string|function} defaultMap either a string idenfier for the
+	 * map to show upon load, or a function that returns the same
+	 * @property {string} loadMessage the message to show while the maps are bring loaded
+	 * @property {null|object|string} datastoreCache [description]
+	 * @property {boolean} showLocation [description]
+	 * @property {object} locationIndicator [description]
+	 * @property {boolean} pinchToZoom [description]
+	 * @property {boolean} zoomToRoute [description]
+	 * @property {integer} zoomPadding [description]
+	 * @property {integer} floorChangeAnimationDelay [description]
+	 */
+
+	/**
+	 * @todo verify that endpoint can take both string and function, there is
+	 * some code in place for this
 	 */
 
 	var defaults = {
-		// the maps collection defaults to a local file called floorplan.svg
+		/**
+		 * @typedef map
+		 * @memberOf wayfinding
+		 * @type object
+		 * @property {string} path relative URL to load the map from
+		 * @property {string} id the identifier by which the map is referenced by other maps
+		 */
 		'maps': [{'path': 'floorplan.svg', 'id': 'map.1'}],
-		// Path formatting
+		/**
+		 * @typedef path
+		 * @memberOf wayfinding
+		 * @typedef {object}
+		 * @property {string} color any valid CSS color
+		 * @property {integer} radius the turn ration in pixels to apply to the solution path
+		 * @property {integer} speed the speed at which the solution path will be drawn
+		 * @property {integer} width the width in pixels of the solution path
+		 */
 		'path': {
 			color: 'red', // the color of the solution path that will be drawn
 			radius: 10, // the radius in pixels to apply to the solution path
@@ -98,8 +132,14 @@
 	/**
 	 * @typedef floors
 	 * @memberOf plugin
+	 * @type {paths[]}
+	 */
+
+	/**
+	 * @typedef paths
+	 * @memberOf plugin
 	 * @type {object}
-	 * @property {string} f floor identifier
+	 * @property {string} floor floor identifier
 	 * @property {float} x on the first end of the path the x coord
 	 * @property {float} y on the first end of the path the y coord
 	 * @property {float} m on the second end of the path the x coord
@@ -114,41 +154,32 @@
 	 * @property {string} p prior path segment to follow back for shortest path
 	 */
 
-	// p holds paths array (floor) of arrays of objects (paths)
-	// - f floor identifier
-	// r g map number in array
-	// * r current shortest combined lengths to reach here
-	// * p prior path segment to follow back for shortest path
-	// * x on the first end of the path the x coord
-	// * y on the first end of the path the y coord
-	// * d an array of doors that connect to the first end of the path
-	// * m on the second end of the path the x coord
-	// * n on the second end of the path the y coord
-	// * e an array of doors that connect to the second end of the path
-	// * l length of this segment
-	// * c array of connections to other paths
-	// * q array of connections to portals
-	// * o prior path type "pa" or "po"
-	// q holds portals array of objects
-	// * t portal type as string
-	// * a accessible boolean
-	// r e string id of first end - removed
-	// * f floor of first end as string
-	// * g floor of first end as number
-	// * x x coord of first end
-	// * y y coord of first end
-	// * c connections to paths of first end
-	// r i string id of second end - removed
-	// * j floor of second end as string
-	// * k floor of second end as number
-	// * m x coord of second end
-	// * n y coord of second end
-	// * d connections to paths of second end
-	// * l length of this segment
-	// * r current shortest combined lengths to reach here
-	// * p prior path segment to follow back for shortest path
-	// * q prior map number
-	// * o prior path type "pa" or "po"
+	/**
+	 * @todo change floor to f in floors
+	 */
+
+	/**
+	 * @typedef portals
+	 * @memberOf plugin
+	 * @type {object}
+	 * @property {string} t portal type as string
+	 * @property {boolean} a accessible boolean
+	 * @property {string} f floor of first end as string
+	 * @property {integer} g floor of first end as number
+	 * @property {float} x x coord of first end
+	 * @property {float} y y coord of first end
+	 * @property {float} c connections to paths of first end
+	 * @property {string} j floor of second end as string
+	 * @property {integer} k floor of second end as number
+	 * @property {float} m x coord of second end
+	 * @property {float} n y coord of second end
+	 * @property {string[]} d connections to paths of second end
+	 * @property {float} l length of this segment
+	 * @property {float} r current shortest combined lengths to reach here
+	 * @property {string} p prior path segment to follow back for shortest path
+	 * @property {integer} q prior map number
+	 * @property {string} o prior path type "pa" or "po"
+	 */
 
 	/**
 	 * The jQuery plugin namespace.
