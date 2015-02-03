@@ -1541,8 +1541,11 @@
 		function initialize(el, cb) {
 			var mapsProcessed = 0;
 
+			$('div:not("#WayfindingStatus")', el).remove();
+
 			// Load SVGs off the network
 			$.each(maps, function (i, map) {
+
 				var svgDiv = $('<div id="' + map.id + '"><\/div>');
 
 				//create svg in that div
@@ -1561,7 +1564,7 @@
 
 							activateSVG(el, svgDiv);
 
-							mapsProcessed = mapsProcessed + 1;
+							mapsProcessed += 1;
 						}
 
 						if(mapsProcessed === maps.length) {
@@ -1579,6 +1582,7 @@
 					}
 				);
 			});
+
 		} // function initialize
 
 		if (action && typeof (action) === 'object') {
@@ -1586,6 +1590,7 @@
 				callback = options;
 			}
 			options = action;
+			passed = action;
 			action = 'initialize';
 		}
 
@@ -1620,8 +1625,15 @@
 				 * });
 				 */
 				case 'initialize':
-					checkIds(obj);
-					initialize(obj, callback);
+					if (passed && passed.maps) {
+						checkIds(obj);
+						initialize(obj, callback);
+					} else {
+						if (passed && passed.showLocation !== undefined) {
+							options.showLocation = passed.showLocation;
+							setStartPoint(options.startpoint, obj);
+						}
+					}
 					break;
 
 				/**

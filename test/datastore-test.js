@@ -32,7 +32,8 @@ describe('Wayfinding', function () {
 			'startpoint': function () {
 				return 'lcd.1';
 			},
-			'defaultMap': 'floor1'
+			'defaultMap': 'floor1',
+			'dataStoreCache': 'test/fixtures/datastores/'
 		});
 		setTimeout(function() {
 			done();
@@ -77,6 +78,5 @@ describe('Wayfinding', function () {
 		$example.wayfinding('destroy');
 		expect($example).not.toBeInDOM();
 	});
-
 
 });

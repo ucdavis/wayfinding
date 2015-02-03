@@ -133,9 +133,7 @@ module.exports = function (grunt) {
 				options: {
 					port: 9001,
 					base: [
-						'.tmp',
-						'test',
-						'<%= config.app %>'
+						'test'
 					]
 				}
 			},
@@ -152,7 +150,9 @@ module.exports = function (grunt) {
 				configFile: 'karma.conf.js'
 			},
 			unit: {
-				background: true
+				singleRun: true,
+				browsers: ['PhantomJS'],
+				reporters: ['progress']
 			},
 			report: {
 				singleRun: true,
@@ -236,5 +236,5 @@ module.exports = function (grunt) {
 
 	// Default task.
 	grunt.registerTask('default', ['package']);
-	grunt.registerTask('server', ['connect:live', 'watch']);
+	grunt.registerTask('server', ['connect:livereload', 'watch']);
 };
