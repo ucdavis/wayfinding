@@ -1624,6 +1624,11 @@
 				 * 	console.log('callback reached');
 				 * });
 				 */
+
+				/**
+				 * @todo build out the rest of the options in the non maps version of the call
+				 */
+
 				case 'initialize':
 					if (passed && passed.maps) {
 						checkIds(obj);
