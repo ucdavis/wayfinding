@@ -137,6 +137,15 @@ module.exports = function (grunt) {
 					]
 				}
 			},
+			datastore: {
+				options: {
+					open: false,
+					keepalive: true,
+					base: [
+						'<%= config.app %>'
+					]
+				}
+			},
 			dist: {
 				options: {
 					open: true,
@@ -226,6 +235,24 @@ module.exports = function (grunt) {
 				files: ['src/**/*.js', 'test/**/*-test.js'],
 				tasks: ['karma:unit:run']
 			}
+		},
+		shell: {
+			datastore: {
+				command: 'node tasks/datastores.js',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			}
+		},
+		concurrent: {
+			datastore: {
+				tasks: ['connect:datastore', 'shell:datastore'],
+				options: {
+					logConcurrentOutput: true
+				}
+			}
 		}
 	});
 
@@ -237,4 +264,5 @@ module.exports = function (grunt) {
 	// Default task.
 	grunt.registerTask('default', ['package']);
 	grunt.registerTask('server', ['connect:livereload', 'watch']);
+	grunt.registerTask('datastore', ['concurrent:datastore']);
 };

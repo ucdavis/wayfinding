@@ -735,7 +735,6 @@
 
 			if (options.dataStoreCache) {
 				if (typeof options.dataStoreCache === 'object') {
-					console.debug('Using passed dataStoreCache object.');
 
 					dataStore = options.dataStoreCache;
 
@@ -744,10 +743,8 @@
 					}
 				} else if (typeof options.dataStoreCache === 'string') {
 					var cacheUrl = options.dataStoreCache + startpoint + ((options.accessibleRoute) ? '.acc' : '') + '.json';
-					console.debug('Attempting to load dataStoreCache from URL ...', cacheUrl);
 
 					$.getJSON(cacheUrl, function (response) {
-						console.debug('Using dataStoreCache from remote.');
 
 						dataStore = response;
 
@@ -755,7 +752,6 @@
 							onReadyCallback();
 						}
 					}).fail(function () {
-						console.error('Failed to load dataStore cache from URL. Falling back to client-side dataStore generation.');
 
 						dataStore = build();
 
@@ -765,7 +761,6 @@
 					});
 				}
 			} else {
-				console.debug('No dataStore cache set, building with startpoint "' + startpoint + '" ...');
 
 				dataStore = build();
 

@@ -110,8 +110,10 @@ function getDoors() {
 					},
 					function(result) {
 						doors = result;
-						next(processDoors);
-						next(report, 'end');
+						next([
+							[processDoors],
+							[report, 'end']
+						]);
 						ph.exit();
 					}
 				);
