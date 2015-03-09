@@ -583,7 +583,7 @@
 					dataStore.p[segmentFloor][tryPath].r = length + dataStore.p[segmentFloor][tryPath].l;
 					dataStore.p[segmentFloor][tryPath].p = segment;
 					dataStore.p[segmentFloor][tryPath].o = segmentType;
-					recursiveSearch('pa', segmentFloor,  tryPath, dataStore.p[segmentFloor][tryPath].r);
+					recursiveSearch('pa', segmentFloor, tryPath, dataStore.p[segmentFloor][tryPath].r);
 				}
 			});
 
