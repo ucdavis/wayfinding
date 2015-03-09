@@ -4,8 +4,8 @@
 
 var fs = require('fs'),
 	phantom = require('phantom'),
-	prompt = require('prompt'),
-	selectionPrompt = [
+	questions = require('prompt'),
+	selectionquestions = [
 		{
 			name: 'serverURL',
 			message: 'server'.grey + ':'.white,
@@ -25,21 +25,6 @@ var fs = require('fs'),
 	doors = [],
 	serverURL,
 	destination;
-
-function enstack() {
-	var todo;
-	if (arguments.length > 0) {
-		if (!Array.isArray(arguments['0'])) {
-			todo = [arguments];
-		} else {
-			todo = [];
-			arguments['0'].forEach(function (item) {
-				todo.push(item);
-			});
-		}
-		nextList = todo.concat(nextList);
-	}
-}
 
 function next() {
 	var todo,
@@ -65,10 +50,6 @@ function next() {
 	}
 }
 
-function die() {
-	nextList = [];
-}
-
 function report(message) {
 	if (typeof message === 'string') {
 		console.log(message);
@@ -76,50 +57,6 @@ function report(message) {
 		console.dir(message);
 	}
 	next();
-}
-
-function handleError(err, caller) {
-	die();
-	if (!caller) {
-		caller = 'A function';
-	}
-	next([
-		[report, caller + ' responded with: ' + err.message],
-		[done]
-	]);
-}
-
-
-function getDoors() {
-	phantom.create(function (ph) {
-		ph.createPage(function(page) {
-			page.onConsoleMessage = function (msg, lineNum, sourceId) {
-				console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
-			};
-			page.open(serverURL, function(status) {
-				console.log('Opened ', status);
-				page.evaluate(
-					function() {
-						var response = [];
-						$.each($('#myMaps div'), function (i, map) {
-							$.each($('#Doors line', map), function(j, door) {
-								response.push($(door).attr('id'));
-							});
-						});
-						return response;
-					},
-					function(result) {
-						doors = result;
-						next([
-							[processDoors],
-							[report, 'end']
-						]);
-						ph.exit();
-					}
-				);
-			});
-		});
-	});
 }
 
 function getDataStore(door, acc) {
@@ -170,12 +107,50 @@ function processDoors() {
 	next(actions);
 }
 
-console.log('Wayfinding dataStore generator');
-prompt.message = '';
-prompt.delimiter = '';
-prompt.start();
+function getDoors() {
+	phantom.create(function (ph) {
+		ph.createPage(function(page) {
+			page.onConsoleMessage = function (msg, lineNum, sourceId) {
+				console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
+			};
+			page.open(serverURL, function(status) {
+				console.log('Opened ', status);
+				page.evaluate(
+					function() {
+						var response = [],
+							id;
+						$.each($('#myMaps div'), function (i, map) {
+							$.each($('#Doors line', map), function(j, door) {
+								// if the id isn't already in the array then add it
+								id = $(door).attr('id');
+								if (response.indexOf(id) === -1) {
+									response.push(id);
+								}
+							});
+						});
+						return response;
+					},
+					function(result) {
+						doors = result.sort();
+						next([
+							[processDoors],
+							[report, 'end'],
+							[process.exit, '0']
+						]);
+						ph.exit();
+					}
+				);
+			});
+		});
+	});
+}
 
-prompt.get(selectionPrompt, function(err, result) {
+console.log('Wayfinding dataStore generator');
+questions.message = '';
+questions.delimiter = '';
+questions.start();
+
+questions.get(selectionquestions, function(err, result) {
 	if (!err) {
 		serverURL = result.serverURL;
 		destination = result.destination;
@@ -193,7 +168,8 @@ prompt.get(selectionPrompt, function(err, result) {
 			next([
 				[report, 'start'],
 				[processDoors],
-				[report, 'end']
+				[report, 'end'],
+				[process.exit, '0']
 			]);
 		}
 	} else {
