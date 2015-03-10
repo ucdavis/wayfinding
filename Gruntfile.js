@@ -139,9 +139,10 @@ module.exports = function (grunt) {
 			},
 			datastore: {
 				options: {
+					livereload: false,
 					open: false,
-					keepalive: true,
 					base: [
+						'.tmp',
 						'<%= config.app %>'
 					]
 				}
@@ -245,14 +246,6 @@ module.exports = function (grunt) {
 					}
 				}
 			}
-		},
-		concurrent: {
-			datastore: {
-				tasks: ['connect:datastore', 'shell:datastore'],
-				options: {
-					logConcurrentOutput: true
-				}
-			}
 		}
 	});
 
@@ -264,5 +257,5 @@ module.exports = function (grunt) {
 	// Default task.
 	grunt.registerTask('default', ['package']);
 	grunt.registerTask('server', ['connect:livereload', 'watch']);
-	grunt.registerTask('datastore', ['concurrent:datastore']);
+	grunt.registerTask('datastore', ['connect:datastore', 'shell:datastore']);
 };
