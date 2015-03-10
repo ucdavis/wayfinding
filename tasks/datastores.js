@@ -60,151 +60,31 @@ function report(message) {
 	next();
 }
 
-// function waitFor(testFx, onReady, onFail, timeOutMillis) {
-// 	var maxtimeOutMillis = timeOutMillis ? timeOutMillis : 3000, //< Default Max Timout is 3s
-// 		start = new Date().getTime(),
-// 		condition = false,
-// 		interval = setInterval(function() {
-// 			if ( (new Date().getTime() - start < maxtimeOutMillis) && !condition ) {
-// 				// If not time-out yet and condition not yet fulfilled
-// 				condition = testFx();
-// 				console.log(condition);
-// 			} else {
-// 				if (!condition) {
-// 					// If condition still not fulfilled (timeout but condition is 'false')
-// 					console.log('timed out waiting');
-// 					clearInterval(interval); //< Stop this interval
-// 					onFail();
-// 				} else {
-// 					// Condition fulfilled (timeout and/or condition is 'true')
-// 					console.log("'waitFor()' finished in " + (new Date().getTime() - start) + "ms.");
-// 					clearInterval(interval); //< Stop this interval
-// 					onReady(); //< Do what it's supposed to do once the condition is fulfilled
-// 				}
-// 			}
-// 		}, 250); //< repeat check every 250ms
-// }
-
-// function getDataStore(door, acc) {
-// 	phantom.create(function (ph) {
-// 		ph.createPage(function(page) {
-// 			page.onConsoleMessage = function (msg, lineNum, sourceId) {
-// 				console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
-// 			};
-// 			page.open(serverURL + '?d=' + door + '&a=' + acc, function(status) {
-// 				if (status !== 'success') {
-// 					console.log('unable to open datastore page');
-// 				} else {
-// 					waitFor(function() {
-// 						// Check in the page if a specific element is now visible
-// 						return page.evaluate(function() {
-// 							return $('#status').is(':visible');
-// 						});
-// 					}, function() {
-// 						page.evaluate(
-// 							function() {
-// 								// trigger mapping with certain startpoint
-// 								// return JSON
-// 								return $('#myMaps').wayfinding('getDataStore');
-// 							},
-// 							function(result) {
-// 								console.log('result', result);
-// 								//write resulting JSON to appropriate file
-// 								// next(report, 'Door ' + door + ' returned ' + result.substring(0, 71));
-// 								fs.writeFile(destination + door + ((acc) ? '.acc' : '') + '.JSON', result, function(err) {
-// 									if (err) {
-// 										next(report, 'ERROR creating ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
-// 									} else {
-// 										next(report, ' successfully wrote ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
-// 									}
-// 								});
-// 								ph.exit();
-// 							}
-// 						);
-// 					}, function() {
-// 						console.log('FAILED for', door, acc);
-// 						next();
-// 						ph.exit();
-// 					},
-// 					5000);
-// 				}
-// 			});
-// 		});
-// 	});
-// }
-
-// function getDataStore(door, acc) {
-// 	phantom.create(function (ph) {
-// 		ph.createPage(function(page) {
-// 			page.onConsoleMessage = function (msg, lineNum, sourceId) {
-// 				console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
-// 			};
-// 			page.open(serverURL + '?d=' + door + '&a=' + acc, function(status) {
-// 				var result;
-// 				if (status !== 'success') {
-// 					console.log('unable to open datastore page');
-// 				} else {
-// 					// page.set('onCallback', function(data) {
-// 					// 	console.log(data);
-// 					// });
-
-// 					result = page.evaluate(
-// 						function() {
-// 							// trigger mapping with certain startpoint
-// 							// return $('#myMaps').wayfinding('getDataStore');
-
-// 							return 'fred';
-
-// 							// if (typeof window.callPhantom === 'function') {
-// 							// 	var ret = $('#myMaps').wayfinding('getDataStore');
-// 							// 	window.callPhantom(ret);
-// 							// }
-
-// 						});
-// 					console.log('result', result);
-// 					//write resulting JSON to appropriate file
-// 					// next(report, 'Door ' + door + ' returned ' + result.substring(0, 71));
-// 					fs.writeFile(destination + door + ((acc) ? '.acc' : '') + '.JSON', result, function(err) {
-// 						if (err) {
-// 							next(report, 'ERROR creating ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
-// 						} else {
-// 							next(report, ' successfully wrote ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
-// 						}
-// 					});
-// 					ph.exit();
-// 				}
-// 			});
-// 		});
-// 	});
-// }
-
 function getDataStore(door, acc) {
 	phantom.create(function (ph) {
 		ph.createPage(function(page) {
+			page.set('onConsoleMessage', function () {
+				page.evaluate(
+					function() {
+						// return JSON
+						return $('#myMaps').wayfinding('getDataStore');
+					},
+					function(result) {
+						//write resulting JSON to appropriate file
+						fs.writeFile(destination + door + ((acc) ? '.acc' : '') + '.JSON', result, function(err) {
+							if (err) {
+								next(report, 'ERROR creating ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
+							} else {
+								next(report, 'successfully wrote ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
+							}
+						});
+						ph.exit();
+					}
+				);
+			});
 			page.open(serverURL + '?d=' + door + '&a=' + acc, function(status) {
 				if (status !== 'success') {
 					console.log('unable to open datastore page');
-				} else {
-					page.set('onConsoleMessage', function (msg, lineNum, sourceId) {
-						page.evaluate(
-							function() {
-								// return JSON
-								return $('#myMaps').wayfinding('getDataStore');
-							},
-							function(result) {
-								//write resulting JSON to appropriate file
-								// next(report, 'Door ' + door + ' returned ' + result.substring(0, 71));
-								fs.writeFile(destination + door + ((acc) ? '.acc' : '') + '.JSON', result, function(err) {
-									if (err) {
-										next(report, 'ERROR creating ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
-									} else {
-										next(report, ' successfully wrote ' + destination + door + ((acc) ? '.acc' : '') + '.JSON');
-									}
-								});
-								ph.exit();
-							}
-						);
-					});
 				}
 			});
 		});
@@ -219,23 +99,14 @@ function processDoors() {
 		actions.push([getDataStore, door, false]);
 		actions.push([getDataStore, door, true]);
 	});
-	// for (var item in actions) {
-	// 	if (actions.hasOwnProperty(item)) {
-	// 		next(report, actions[item]);
-	// 	}
-	// }
 	next(actions);
 }
 
 function getDoors() {
 	phantom.create(function (ph) {
-		ph.createPage(function(page) {
-			page.onConsoleMessage = function (msg, lineNum, sourceId) {
-				console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
-			};
-			page.open(serverURL, function(status) {
-				console.log('Reading map to get doors:', status);
-				page.evaluate(
+		ph.createPage(function(allpage) {
+			allpage.set('onConsoleMessage', function () {
+				allpage.evaluate(
 					function() {
 						var response = [],
 							id;
@@ -251,6 +122,7 @@ function getDoors() {
 						return response;
 					},
 					function(result) {
+						console.log(JSON.stringify(result));
 						doors = result;
 						next([
 							[processDoors],
@@ -260,6 +132,11 @@ function getDoors() {
 						ph.exit();
 					}
 				);
+			});
+			allpage.open(serverURL, function(status) {
+				if (status !== 'success') {
+					console.log('unable to open server to get door list');
+				}
 			});
 		});
 	});

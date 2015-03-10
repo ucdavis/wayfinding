@@ -17,8 +17,16 @@
 		<script>
 			$().ready(function () {
 				var params = location.search.substring(1).split('&'),
-					door = params[0].split('=')[1],
+					door,
+					accessible;
+
+				if (params.length === 2) {
+					door = params[0].split('=')[1];
 					accessible = params[1].split('=')[1];
+				} else {
+					door = 'R101';
+					accessible = false;
+				}
 				$('#myMaps').wayfinding({
 					'maps': [
 						{'path': '/test/fixtures/demo_map_1.svg', 'id': 'floor1'},
