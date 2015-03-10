@@ -122,7 +122,6 @@ function getDoors() {
 						return response;
 					},
 					function(result) {
-						console.log(JSON.stringify(result));
 						doors = result;
 						next([
 							[processDoors],
