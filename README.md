@@ -3,6 +3,20 @@ Wayfinding
 
 jQuery plugin for interactive SVG maps. Wayfinding provides the shortest route through a series of one or more svg maps. It supports client side map processing or pretraversal of the maps with the server holding the cached traversals. It is useful for kiosks and interactive digital signage, but can also be used to share mobile maps.
 
+---
+
+### Install & Setup
+
+1. `npm install` in base directory to install all dependencies listed in
+package.json
+2. `bower install` in base directory to install all front-end library dependcies
+(such as jQuery). If the command bower does not exist, install it with `npm
+install bower`.
+3. `grunt` in base directory to run all tasks such as validation, testing,
+benchmarking, etc 
+
+---
+
 ![SVG File](http://i.imgur.com/Em7Lb5Z.jpg)
 An example screenshot from a svg file
 
