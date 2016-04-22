@@ -14,6 +14,9 @@ package.json
 install bower`.
 3. `grunt` in base directory to run all tasks such as validation, testing,
 benchmarking, etc 
+4. To generate documentation, `grunt document`. If it can't find conf file, go
+to node\_modules/grunt-jsdoc and run `npm install inkdocstrap`
+5. To see a list of all possible grunt tasks, `grunt --help`
 
 ---
 
