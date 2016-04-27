@@ -16,7 +16,8 @@ benchmarking, etc. If the command *grunt* does not exist, install it with `npm
 install grunt-cli -g`
 4. To generate documentation, `grunt jsdoc`. If it can't find conf file, go
 to **node\_modules/grunt-jsdoc** and run `npm install inkdocstrap`
-- To see a list of all possible grunt tasks, `grunt --help`
+5. To see a list of all possible grunt tasks, `grunt --help`
+
 ---
 
 ![SVG File](http://i.imgur.com/Em7Lb5Z.jpg)
