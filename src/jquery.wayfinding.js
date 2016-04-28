@@ -962,8 +962,6 @@
 	        });
 
 	        matchPortals();
-
-            return dataStore;
     	} // function build
 
 		// Ensure a dataStore exists and is set, whether from a cache
@@ -1483,6 +1481,10 @@
 			//clear all rooms
 			$('#Rooms *.wayfindingRoom', obj).removeAttr('class');
 
+			// contains steps
+			// steps have a type ('pa' or 'po'),
+			//				floor number,
+			//				segment number
 			solution = [];
 
 			//if startpoint != destination
@@ -1493,7 +1495,20 @@
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 				setEndPoint(options.endpoint, el);
 
+				
+				// TODO: replace with Module.pathfinding
+				// pass in start, end, stringified datastore, accessible
 				solution = getShortestRoute();
+
+				/*
+				var path_result = Module.pathfinding(dsafasd)
+				
+				error check path result
+				If error, dont move forward
+				Else
+					Turn path_result into solution datastructure format
+
+				*/
 
 				if (reversePathStart !== -1) {
 
@@ -1638,7 +1653,7 @@
 									// if the change in Y for both is Zero
 									if ((aDY === 0 && bDY === 0) || (aDX === 0 && bDX === 0) || ((aDX / aDY) === (bDX / bDY) && !(aDX === 0 && aDY === 0 && bDX === 0 && bDY === 0))) {
 										drawing[level][i + 1].length = drawing[level][i].length + drawing[level][i + 1].length;
-//                                      drawing[level][i+1].type = "L";
+                                     // drawing[level][i+1].type = "L";
 										drawing[level].splice(i, 1);
 										i = 1;
 									}
@@ -1865,7 +1880,7 @@
 				case 'initialize':
 					if (passed && passed.maps) {
 						checkIds(obj);
-						initialize(obj, function() { console.log(dataStore); });
+						initialize(obj, callback);
 					} else {
 						if (passed && passed.showLocation !== undefined) {
 							options.showLocation = passed.showLocation;
