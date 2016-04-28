@@ -202,7 +202,9 @@
 			portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
 			solution,
 			result, // used to return non jQuery results
-			drawing;
+			drawing,
+			id_to_index = {},  // maps floor IDs to an index in 'maps'
+			queue;
 
 
 		/**
@@ -708,7 +710,7 @@
 			return solution;
 		}
 
-		function build() {
+		function buildOld() {
 
 			dataStore = {
 				'p': [], // paths
@@ -727,7 +729,240 @@
 			generateRoutes();
 
 			return dataStore;
-		} // function build
+		} // function buildOld
+
+
+		// Orders points based on x, y, and ID in that order.
+	    function comparePoints(point_a, point_b) {
+	       if (point_a.x != point_b.x) {
+	           return point_a.x - point_b.x;
+	       }
+	       else if (point_a.y != point_b.y) {
+	           return point_a.y - point_b.y;
+	       }
+	       else {
+	           return point_a.id - point_b.id;
+	       }
+	    }
+
+
+		function buildDoors(floor, map) {        
+	        dataStore.doors[floor] = [];
+	        
+	        $('#Doors line', map).each(function () { // index, line
+	            var door = {};
+	            
+	            door.floor = floor;
+	            door.x1 = parseInt($(this).attr('x1'));
+	            door.x1_f = parseFloat($(this).attr('x1'));
+	            door.y1 = parseInt($(this).attr('y1'));
+	            door.y1_f = parseFloat($(this).attr('y1'));
+	            door.x2 = parseInt($(this).attr('x2'));
+	            door.x2_f = parseFloat($(this).attr('x2'));
+	            door.y2 = parseInt($(this).attr('y2'));
+	            door.y2_f = parseFloat($(this).attr('y2'));
+	            door.doorId = $(this).attr('id').split("_")[0];
+	            door.id = dataStore.doors[floor].length;
+	            //door.length = Math.sqrt(Math.pow(door.x2_f - door.x1_f, 2) + Math.pow(door.y2_f - door.y1_f, 2));
+
+	            door.paths = [];
+	            door.doors = [];
+	            door.portals = [];
+	            
+	            dataStore.doors[floor].push(door);
+	            queue.queue({
+	                x: door.x1,
+	                y: door.y1,
+	                id: dataStore.doors[floor].length - 1,
+	                type: "doors"
+	            });
+	            queue.queue({
+	                x: door.x2,
+	                y: door.y2,
+	                id: dataStore.doors[floor].length - 1,
+	                type: "doors"
+	            });
+	        });
+	    }
+
+	    function buildPaths(floor, map) {
+        	        
+	        dataStore.paths[floor] = [];
+	        
+	        $('#Paths line', map).each(function (i, line) {
+	            var path = {};
+	            
+	            path.floor = floor;
+	            path.x1 = parseInt($(this).attr('x1'));
+	            path.x1_f = parseFloat($(this).attr('x1'));
+	            path.y1 = parseInt($(this).attr('y1'));
+	            path.y1_f = parseFloat($(this).attr('y1'));
+	            path.x2 = parseInt($(this).attr('x2'));
+	            path.x2_f = parseFloat($(this).attr('x2'));
+	            path.y2 = parseInt($(this).attr('y2'));
+	            path.y2_f = parseFloat($(this).attr('y2'));
+	            path.length = Math.sqrt(Math.pow(path.x2_f - path.x1_f, 2) + Math.pow(path.y2_f - path.y1_f, 2));
+	            path.pathId = dataStore.paths[floor].length;
+	            path.id = dataStore.paths[floor].length;
+	            
+	            path.paths = [];
+	            path.doors = [];
+	            path.portals = [];
+	            
+	            dataStore.paths[floor].push(path);
+	            queue.queue({
+	                x: path.x1,
+	                y: path.y1,
+	                id: dataStore.paths[floor].length - 1,
+	                type: "paths"
+	            });
+	            queue.queue({
+	                x: path.x2,
+	                y: path.y2,
+	                id: dataStore.paths[floor].length - 1,
+	                type: "paths"
+	            });
+	        });
+	    }
+
+	    function buildPortals(floor, map) {
+
+	        dataStore.portals[floor] = [];
+	        
+	        $('#Portals line', map).each(function () { // index, line
+	            var portal = {};
+
+	            portal.floor = floor;
+	            portal.x1 = parseInt($(this).attr('x1'));
+	            portal.x1_f = parseFloat($(this).attr('x1'));
+	            portal.y1 = parseInt($(this).attr('y1'));
+	            portal.y1_f = parseFloat($(this).attr('y1'));
+	            portal.x2 = parseInt($(this).attr('x2'));
+	            portal.x2_f = parseFloat($(this).attr('x2'));
+	            portal.y2 = parseInt($(this).attr('y2'));
+	            portal.y2_f = parseFloat($(this).attr('y2'));
+
+	            portal.paths = [];
+	            portal.doors = [];
+	            portal.portals = [];
+	            portal.id = dataStore.portals[floor].length;
+
+	            var portalID = $(this).attr('id').split("_")[0].split(".");
+	            
+	            portal.portalId = portalID[0] + "." + portalID[1];
+	            
+	            var to_floor = id_to_index[portalID[2]];
+	            if (to_floor == undefined) {
+	                to_floor = -1;
+	            }
+	            
+	            portal.to_floor = parseInt(to_floor);
+	            portal.accessible = false;
+	            portal.match = -1;
+	            
+	            if (portalID[0] === "Elev") {
+	                portal.accessible = true;
+	            }
+
+	            portal.length = Math.sqrt(Math.pow(portal.x2_f - portal.x1_f, 2) + Math.pow(portal.y2_f - portal.y1_f, 2));
+
+	            dataStore.portals[floor].push(portal);
+	            queue.queue({
+	                x: portal.x1,
+	                y: portal.y1,
+	                id: dataStore.portals[floor].length - 1,
+	                type: "portals"
+	            });
+	            queue.queue({
+	                x: portal.x2,
+	                y: portal.y2,
+	                id: dataStore.portals[floor].length - 1,
+	                type: "portals"
+	            });
+	        });
+	    }
+
+	    function buildConnections(floor) {
+	        	       
+	        if (queue.length == 0 ) {
+	            return;
+	        }
+
+	        var start = queue.dequeue();
+	        var connected = [start];
+	        var previous = start;
+	        
+	        while(queue.length > 0) {
+	            var point = queue.dequeue();
+	            
+	            if (previous.x == point.x && previous.y == point.y) {
+	                connected.push(point);
+	            }
+	            else {
+	                // matches "closest" paths together, stores connection in 'dataStore'
+	                $.each(connected, function(i, firstPath) {
+	                    $.each(connected, function(j, secondPath) {
+	                        if (i != j) {
+	                            dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
+	                        }
+	                    });
+	                });
+	                connected = [point];
+	            }
+	            previous = point;
+	        }
+	        
+	        $.each(connected, function(i, firstPath) {
+	            $.each(connected, function(j, secondPath) {
+	                if (i != j) {
+	                    dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
+	                }
+	            });
+	        }); 
+	    }
+
+	    function matchPortals() {
+        
+	        // Go through each portal
+	        $.each(dataStore.portals, function(floor, floor_portals) {
+	          $.each(floor_portals, function(i, portal) {
+	            if (portal.match == -1) {
+	              // For each portal, go through linked floor portals
+	              // -1 indicates that the other floor does not exist
+	              if (portal.to_floor != -1) {
+	                $.each(dataStore.portals[portal.to_floor], function(j, portal2) {
+	                    if (portal2.portalId == portal.portalId &&
+	                        portal2.to_floor == portal.floor)
+	                    {
+	                      portal.match = portal2.id;
+	                      portal2.match = portal.id;
+	                    }
+	                });
+	              }
+	            }
+	          });
+	        });
+	    }
+
+		function build() {
+	        
+	        dataStore = {
+	            'doors': [],
+	            'paths': [],
+	            'portals': []
+	        };
+
+	        // Build the dataStore from each map given
+	        $.each(maps, function(i, map) {
+	            queue = new PriorityQueue({ comparator: comparePoints });
+	            buildDoors(i, map.el);
+	            buildPaths(i, map.el);
+	            buildPortals(i, map.el); 
+	            buildConnections(i);
+	        });
+
+	        matchPortals();
+    	} // function build
 
 		// Ensure a dataStore exists and is set, whether from a cache
 		// or by building it.
@@ -1542,6 +1777,7 @@
 			$.each(maps, function (i, map) {
 
 				var svgDiv = $('<div id="' + map.id + '"><\/div>');
+				id_to_index[map.id] = i;
 
 				//create svg in that div
 				svgDiv.load(
@@ -1627,7 +1863,7 @@
 				case 'initialize':
 					if (passed && passed.maps) {
 						checkIds(obj);
-						initialize(obj, callback);
+						initialize(obj, function() { console.log(dataStore); });
 					} else {
 						if (passed && passed.showLocation !== undefined) {
 							options.showLocation = passed.showLocation;

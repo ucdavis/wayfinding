@@ -79,6 +79,7 @@
 
 
 		<script src="bower_components/jquery/dist/jquery.js"></script>
+		<script src="priority-queue.min.js"></script>
 		<script src="src/jquery.wayfinding.js"></script>
 
 		<script>
@@ -103,7 +104,7 @@
 				}, function(){
 					console.log('callback reached');
 				});
-
+/*
 				//make the floor buttons clickable
 				$('#controls button').click(function () {
 					$('#myMaps').wayfinding('currentMap', $(this).prop('id'));
@@ -134,7 +135,7 @@
 				$('#myMaps').on('wayfinding:roomClicked', function(e, r) {
 					$('#endSelect option[value="' + r.roomId + '"]').attr('selected', true);
 				});
-
+*/
 			});
 		</script>
 	</body>
