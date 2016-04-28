@@ -962,6 +962,8 @@
 	        });
 
 	        matchPortals();
+
+            return dataStore;
     	} // function build
 
 		// Ensure a dataStore exists and is set, whether from a cache
