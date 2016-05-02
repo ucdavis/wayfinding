@@ -962,6 +962,8 @@
 	        });
 
 	        matchPortals();
+
+            return dataStore;
     	} // function build
 
 		// Ensure a dataStore exists and is set, whether from a cache
@@ -1481,11 +1483,7 @@
 			//clear all rooms
 			$('#Rooms *.wayfindingRoom', obj).removeAttr('class');
 
-			// contains steps
-			// steps have a type ('pa' or 'po'),
-			//				floor number,
-			//				segment number
-			solution = [];
+            solution = [];
 
 			//if startpoint != destination
 			if (startpoint !== destination) {
@@ -1494,23 +1492,51 @@
 				//highlight the destination room
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 				setEndPoint(options.endpoint, el);
+                 
+				var path_result = Module.pathfinding(
+                    JSON.stringify(dataStore),
+                    startpoint,
+                    destination,
+                    options.accessibleRoute);
+			
+                var error = false;
 
-				
-				// TODO: replace with Module.pathfinding
-				// pass in start, end, stringified datastore, accessible
-				solution = getShortestRoute();
+                if (path_result.size() == 1)
+                {
+                    var error = true;
+                    alert(path_result.get(0));
+                    return;
+                }
+                
+                for (var i = 1; i < path_result.size() - 1; i++)
+                {
+                    var path_string = path_result.get(i).split("-");
 
-				/*
-				var path_result = Module.pathfinding(dsafasd)
-				
-				error check path result
-				If error, dont move forward
-				Else
-					Turn path_result into solution datastructure format
+                    if (path_string[0] == "path")
+                    {
+                        solution.push({
+                            type : "pa",
+                            floor : path_string[1],
+                            segment : path_string[2]
+                        });
+                    }
+                    else if (path_string[0] == "portal")
+                    {
+                        solution.push({
+                            type : "po",
+                            floor : path_string[1],
+                            segment : path_string[2]
+                        });
+                    }
+                    else 
+                    {
+                        console.log("Not a path or portal");
+                        console.log(path_result.get(i));
+                    }
+                }
 
-				*/
-
-				if (reversePathStart !== -1) {
+                return;
+				if (!error) {
 
 					portalsEntered = 0;
 					// Count number of portal trips
