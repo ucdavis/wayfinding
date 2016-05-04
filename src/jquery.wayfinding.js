@@ -1,3 +1,4 @@
+var moo;
 /*global document, jQuery*/
 /*jslint devel: true, browser: true, windows: true, plusplus: true, maxerr: 50, indent: 4 */
 
@@ -335,7 +336,7 @@
 
 		} //function makePin
 
-		// Extract data from the svg maps
+/*		// Extract data from the svg maps
 		function buildDataStore(mapNum, map, el) {
 			var path,
 				doorId,
@@ -730,7 +731,7 @@
 
 			return dataStore;
 		} // function buildOld
-
+*/
 
 		// Orders points based on x, y, and ID in that order.
 	    function comparePoints(point_a, point_b) {
@@ -1447,6 +1448,29 @@
 			}, animationDuration + options.floorChangeAnimationDelay);
 		} //function animatePath
 
+
+        function check_if_connected_at_x1y1(previous_line, current_line)
+        {
+            var previous_from_datastore = dataStore[previous_line.type]
+                                                   [previous_line.floor]
+                                                   [previous_line.segment];
+
+            var current_from_datastore = dataStore[current_line.type]
+                                                  [current_line.floor]
+                                                  [current_line.segment];
+    
+            if ((current_from_datastore.x1 == previous_from_datastore.x1 &&
+                 current_from_datastore.y1 == previous_from_datastore.y1) ||
+                (current_from_datastore.x1 == previous_from_datastore.x2 &&
+                 current_from_datastore.y1 == previous_from_datastore.y2))
+            {
+                return true;
+            }
+            else { // We're assuming the two passed in lines are connected
+                return false;
+            }
+        }
+
 		// The combined routing function
 		// revise to only interate if startpoint has changed since last time?
 		function routeTo(destination, el) {
@@ -1498,50 +1522,71 @@
                     startpoint,
                     destination,
                     options.accessibleRoute);
-			
+                
                 var error = false;
 
                 if (path_result.size() == 1)
                 {
-                    var error = true;
+                    error = true;
                     alert(path_result.get(0));
-                    return;
                 }
-                
-                for (var i = 1; i < path_result.size() - 1; i++)
+             
+                if (!error) 
                 {
-                    var path_string = path_result.get(i).split("-");
+                    var start_door_string = path_result.get(path_result.size() - 1);
+                    start_door_string = start_door_string.split("-");
 
-                    if (path_string[0] == "path")
-                    {
-                        solution.push({
-                            type : "pa",
-                            floor : path_string[1],
-                            segment : path_string[2]
-                        });
-                    }
-                    else if (path_string[0] == "portal")
-                    {
-                        solution.push({
-                            type : "po",
-                            floor : path_string[1],
-                            segment : path_string[2]
-                        });
-                    }
-                    else 
-                    {
-                        console.log("Not a path or portal");
-                        console.log(path_result.get(i));
-                    }
-                }
+                    var start_door = {
+                        type : "doors",
+                        floor : start_door_string[1],
+                        segment : start_door_string[2]
+                    }   
 
-                return;
-				if (!error) {
+                    var end_door_string = path_result.get(0);
+                    end_door_string = end_door_string.split("-");
+    
+                    var end_door = {
+                        type : "doors",
+                        floor : end_door_string[1],
+                        segment : end_door_string[2]
+                    }
+                    
+                    // Vectors holds the path in reverse order
+                    for (var i = path_result.size() - 2; i > 0 ; i--)
+                    {
+                        var path_string = path_result.get(i);
+                        console.log(path_string);
+                        path_string = path_string.split("-");
+
+                        if (path_string[0] == "path")
+                        {
+                            solution.push({
+                                type : "paths",
+                                floor : path_string[1],
+                                segment : path_string[2]
+                            });
+                        }
+                        else if (path_string[0] == "portal")
+                        {
+                            i--; // only need second portal per pair
+                            path_string = path_result.get(i).split("-");
+                            solution.push({
+                                type : "portals",
+                                floor : path_string[1],
+                                segment : path_string[2]
+                            });
+                        }
+                        else 
+                        {
+                            console.log("Not a path or portal");
+                            console.log(path_result.get(i));
+                        }
+                    }
 
 					portalsEntered = 0;
 					// Count number of portal trips
 					for (i = 0; i < solution.length; i++) {
-						if (solution[i].type === 'po') {
+						if (solution[i].type === "portals") {
 							portalsEntered++;
 						}
 					}
@@ -1560,37 +1605,42 @@
 						return;
 					}
 
-					//if statement incorrectly assumes one door at the end of the path, works in that case, need to generalize
-					if (dataStore.p[solution[0].floor][solution[0].segment].d[0] === startpoint) {
+                    check_if_connected_at_x1y1(start_door, solution[0]);
+                    var line_from_datastore = dataStore[solution[0].type]
+                                                       [solution[0].floor]
+                                                       [solution[0].segment];
+
+					if (check_if_connected_at_x1y1(start_door, solution[0])) {
 						draw = {};
 						draw.floor = solution[0].floor;
 						draw.type = 'M';
-						draw.x = dataStore.p[solution[0].floor][solution[0].segment].x;
-						draw.y = dataStore.p[solution[0].floor][solution[0].segment].y;
+						draw.x = line_from_datastore.x1;
+						draw.y = line_from_datastore.y1;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
 						draw.floor = solution[0].floor;
-						draw.x = dataStore.p[solution[0].floor][solution[0].segment].m;
-						draw.y = dataStore.p[solution[0].floor][solution[0].segment].n;
-						draw.length = dataStore.p[solution[0].floor][solution[0].segment].l;
+						draw.x = line_from_datastore.x2;
+						draw.y = line_from_datastore.y2;
+						draw.length = line_from_datastore.length;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
-					} else if (dataStore.p[solution[0].floor][solution[0].segment].e[0] === startpoint) {
+					} 
+                    else {
 						draw = {};
 						draw.type = 'M';
 						draw.floor = solution[0].floor;
-						draw.x = dataStore.p[solution[0].floor][solution[0].segment].m;
-						draw.y = dataStore.p[solution[0].floor][solution[0].segment].n;
+						draw.x = line_from_datastore.x2;
+						draw.y = line_from_datastore.y2;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
 						draw.floor = solution[0].floor;
-						draw.x = dataStore.p[solution[0].floor][solution[0].segment].x;
-						draw.y = dataStore.p[solution[0].floor][solution[0].segment].y;
-						draw.length = dataStore.p[solution[0].floor][solution[0].segment].l;
+						draw.x = line_from_datastore.x1;
+						draw.y = line_from_datastore.y1;
+						draw.length = line_from_datastore.length;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
 					}
@@ -1600,11 +1650,15 @@
 					// for each floor that we have to deal with
 					for (i = 0; i < portalsEntered + 1; i++) {
 						for (stepNum = lastStep; stepNum < solution.length; stepNum++) {
-							if (solution[stepNum].type === 'pa') {
-								ax = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].x;
-								ay = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].y;
-								bx = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].m;
-								by = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].n;
+                            line_from_datastore = dataStore[solution[stepNum].type]
+                                                           [solution[stepNum].floor]
+                                                           [solution[stepNum].segment];
+
+							if (solution[stepNum].type === "paths") {
+								ax = line_from_datastore.x1;
+								ay = line_from_datastore.y1;
+								bx = line_from_datastore.x2;
+								by = line_from_datastore.y2;
 
 								draw = {};
 								draw.floor = solution[stepNum].floor;
@@ -1615,17 +1669,17 @@
 									draw.x = ax;
 									draw.y = ay;
 								}
-								draw.length = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].l;
+								draw.length = line_from_datastore.length;
 								draw.type = 'L';
 								drawing[i].push(draw);
 								drawing[i].routeLength += draw.length;
 							}
-							if (solution[stepNum].type === 'po') {
+							if (solution[stepNum].type === "portals") {
 								drawing[i + 1] = [];
 								drawing[i + 1].routeLength = 0;
 								// push the first object on
 								// check for more than just floor number here....
-								pick = '';
+						/*		pick = '';
 								if (dataStore.q[solution[stepNum].segment].g === dataStore.q[solution[stepNum].segment].k) {
 									if (dataStore.q[solution[stepNum].segment].x === draw.x && dataStore.q[solution[stepNum].segment].y === draw.y) {
 										pick = 'B';
@@ -1638,22 +1692,25 @@
 									} else if (dataStore.q[solution[stepNum].segment].k === solution[stepNum].floor) {
 										pick = 'B';
 									}
-								}
-								if (pick === 'A') {
+								}*/
+								if (check_if_connected_at_x1y1(
+                                    solution[stepNum + 1],
+                                    solution[stepNum])) 
+                                {
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = dataStore.q[solution[stepNum].segment].x;
-									draw.y = dataStore.q[solution[stepNum].segment].y;
+									draw.x = line_from_datastore.x1;
+									draw.y = line_from_datastore.y1;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
-								} else if (pick === 'B') {
+								} else {
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = dataStore.q[solution[stepNum].segment].m;
-									draw.y = dataStore.q[solution[stepNum].segment].n;
+									draw.x = line_from_datastore.x2;
+									draw.y = line_from_datastore.y2;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
