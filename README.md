@@ -13,7 +13,7 @@ package.json
 install bower -g`.
 3. `grunt` in base directory to run all tasks such as validation, testing,
 benchmarking, etc. If the command *grunt* does not exist, install it with `npm
-install grunt-cli -g`
+install grunt`. Also might need to do `npm install grunt-cli -g`.
 4. To generate documentation, `grunt jsdoc`. If it can't find conf file, go
 to **node\_modules/grunt-jsdoc** and run `npm install inkdocstrap`
 5. To see a list of all possible grunt tasks, `grunt --help`
