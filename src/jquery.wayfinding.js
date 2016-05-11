@@ -126,61 +126,81 @@ var moo;
 	 * @typedef datastore
 	 * @memberOf plugin
 	 * @type {object}
-	 * @property {floors[]} p holds an array of floors each of which has an array of paths
-	 * @property {portals[]} q holds an array of portals
+	 * @property {floors[]} doors holds an array of floors each of which has an array of doors
+	 * @property {floors[]} paths holds an array of floors each of which has an array of paths
+	 * @property {floors[]} portals holds an array of floors each of which has an array of portals
 	 */
 
 	/**
 	 * @typedef floors
 	 * @memberOf plugin
-	 * @type {paths[]}
+	 * @type {(doors[]|paths[]|portals[])}
 	 */
 
-	/**
-	 * @typedef paths
-	 * @memberOf plugin
-	 * @type {object}
-	 * @property {string} floor floor identifier
-	 * @property {float} x on the first end of the path the x coord
-	 * @property {float} y on the first end of the path the y coord
-	 * @property {float} m on the second end of the path the x coord
-	 * @property {float} n on the second end of the path the y coord
-	 * @property {string[]} d an array of doors that connect to the first end of the path
-	 * @property {string[]} e an array of doors that connect to the second end of the path
-	 * @property {string[]} c array of connections to other paths
-	 * @property {string[]} q array of connections to portals
-	 * @property {string} o prior path type "pa" or "po"
-	 * @property {float} l length of this segment
-	 * @property {float} r current shortest combined lengths to reach here
-	 * @property {string} p prior path segment to follow back for shortest path
-	 */
-
-	/**
-	 * @todo change floor to f in floors
-	 */
-
-	/**
-	 * @typedef portals
-	 * @memberOf plugin
-	 * @type {object}
-	 * @property {string} t portal type as string
-	 * @property {boolean} a accessible boolean
-	 * @property {string} f floor of first end as string
-	 * @property {integer} g floor of first end as number
-	 * @property {float} x x coord of first end
-	 * @property {float} y y coord of first end
-	 * @property {float} c connections to paths of first end
-	 * @property {string} j floor of second end as string
-	 * @property {integer} k floor of second end as number
-	 * @property {float} m x coord of second end
-	 * @property {float} n y coord of second end
-	 * @property {string[]} d connections to paths of second end
-	 * @property {float} l length of this segment
-	 * @property {float} r current shortest combined lengths to reach here
-	 * @property {string} p prior path segment to follow back for shortest path
-	 * @property {integer} q prior map number
-	 * @property {string} o prior path type "pa" or "po"
-	 */
+    /** 
+     * @typedef doors
+     * @memberOf plugin
+     * @type {object}
+     * @property {integer} floor index of parent floor in floors[]
+     * @property {integer} x1 int x coord of first end of door line in SVG
+     * @property {integer} y1 int y coord of first end of door line in SVG
+     * @property {integer} x2 int x coord of second end of door line in SVG
+     * @property {integer} y2 int y coord of second end of door line in SVG
+     * @property {float} x1_f float x coord of first end of door line in SVG
+     * @property {float} y1_f float y coord of first end of door line in SVG
+     * @property {float} x2_f float x coord of second end of door line in SVG
+     * @property {float} y2_f float y coord of second end of door line in SVG
+     * @property {string} doorId door identifier that matches room name ex: "R101"
+     * @property {integer} id index in doors[floor]
+     * @property {integer[]} paths contains id of each path connected to this door at either end
+     * @property {integer[]} doors contains id of each door connected to this door at either end
+     * @property {integer[]} portals contains id of each portal connected to this door at either end
+     */
+	
+    /** 
+     * @typedef paths
+     * @memberOf plugin
+     * @type {object}
+     * @property {integer} floor index of parent floor in floors[]
+     * @property {integer} x1 int x coord of first end of path line in SVG
+     * @property {integer} y1 int y coord of first end of path line in SVG
+     * @property {integer} x2 int x coord of second end of path line in SVG
+     * @property {integer} y2 int y coord of second end of path line in SVG
+     * @property {float} x1_f float x coord of first end of path line in SVG
+     * @property {float} y1_f float y coord of first end of path line in SVG
+     * @property {float} x2_f float x coord of second end of path line in SVG
+     * @property {float} y2_f float y coord of second end of path line in SVG
+     * @property {integer} pathId index in paths[floor]
+     * @property {integer} id same as pathId
+     * @property {integer[]} paths contains id of each path connected to this path at either end
+     * @property {integer[]} doors contains id of each door connected to this path at either end
+     * @property {integer[]} portals contains id of each portal connected to this path at either end
+     * @property {float} length length of path calculated using end points
+     */
+	
+	/** 
+     * @typedef portals
+     * @memberOf plugin
+     * @type {object}
+     * @property {integer} floor index of parent floor in floors[]
+     * @property {integer} x1 int x coord of first end of portal line in SVG
+     * @property {integer} y1 int y coord of first end of portal line in SVG
+     * @property {integer} x2 int x coord of second end of portal line in SVG
+     * @property {integer} y2 int y coord of second end of portal line in SVG
+     * @property {float} x1_f float x coord of first end of portal line in SVG
+     * @property {float} y1_f float y coord of first end of portal line in SVG
+     * @property {float} x2_f float x coord of second end of portal line in SVG
+     * @property {float} y2_f float y coord of second end of portal line in SVG
+     * @property {string} portalId portal identifier for which stair or elevator it references ex: "Elev.1"
+     * @property {integer} id index in portals[floor]
+     * @property {integer[]} paths contains id of each path connected to this portal at either end
+     * @property {integer[]} doors contains id of each door connected to this portal at either end
+     * @property {integer[]} portals contains id of each portal connected to this portal at either end
+     * @property {float} length length of portal calculated using end points
+     * @property {integer} to_floor floor which the portal connects to (-1 if not valid)
+     * @property {integer} match id of portal on floor #to_floor that this portal connects to (-1 if not found)length of portal calculated using end points
+     * @property {boolean} accessible whether this portal is wheelchair accessible
+     */
 
 	/**
 	 * The jQuery plugin namespace.
