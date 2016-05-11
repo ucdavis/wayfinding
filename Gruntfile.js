@@ -79,7 +79,11 @@ module.exports = function (grunt) {
 		jshint: {
 			options: {
 				jshintrc: '.jshintrc',
-				reporter: require('jshint-stylish')
+				reporter: require('jshint-stylish'),
+                ignores: [
+                    'src/**/datastore.js',
+                    'src/**/priority-queue.min.js'
+                ]
 			},
 			gruntfile: {
 				src: 'Gruntfile.js'
