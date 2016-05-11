@@ -39,9 +39,9 @@ describe('Wayfinding', function () {
 		function wayfindingCallback() {
 			done();
 		}
-		// setTimeout(function() {
-		// 	done();
-		// }, 1000);
+		setTimeout(function() {
+			done();
+		}, 1000);
 		// waits(5000); // could implement a callback to speed this up rather than just waiting...
 	});
 
@@ -83,140 +83,139 @@ describe('Wayfinding', function () {
 		expect($example).not.toBeInDOM();
 	});
 
+    // Testing the internals
 
+    it("builds the right number of doors per floor", function() {
+        // First obtain the datastore
+        var datastore = JSON.parse($('#myMaps').wayfinding('getDataStore'));
 
-    // it("builds the right number of doors per floor", function() {
-    //     // First, let's try building everything
-    //     datastore_object.build();
+        // Do we have doors for each floor?
+        expect(datastore.paths.length).toEqual(2);
+
+        // Do we have the proper number of doors for each floor?
+        // These magic numbers are from the maps SVG door counts
+        expect(datastore.doors[0].length).toEqual(18);
+        expect(datastore.doors[1].length).toEqual(2);
+     });
+
+    it("builds the right number of paths per floor", function() {
+        var datastore = JSON.parse($('#myMaps').wayfinding('getDataStore'));
         
-    //     // Do we have doors for each floor?
-    //     expect(datastore_object.dataStore.doors.length).toEqual(2);
-
-    //     // Do we have the proper number of doors for each floor?
-    //     // These magic numbers are from the maps SVG door counts
-    //     expect(datastore_object.dataStore.doors[0].length).toEqual(18);
-    //     expect(datastore_object.dataStore.doors[1].length).toEqual(2);
-    // });
-
-    // it("builds the right number of paths per floor", function() {
-    //     // First, let's try building everything
-    //     datastore_object.build();
-        
-    //     // Do we have paths for each floor?
-    //     expect(datastore_object.dataStore.paths.length).toEqual(2);
+        // Do we have paths for each floor?
+        expect(datastore.paths.length).toEqual(2);
  
-    //     // Do we have the proper number of paths for each floor?
-    //     // These magic numbers are from the maps SVG path counts
-    //     expect(datastore_object.dataStore.paths[0].length).toEqual(64);
-    //     expect(datastore_object.dataStore.paths[1].length).toEqual(28);
-    // });
+        // Do we have the proper number of paths for each floor?
+        // These magic numbers are from the maps SVG path counts
+        expect(datastore.paths[0].length).toEqual(64);
+        expect(datastore.paths[1].length).toEqual(28);
+    });
     
-    // it("builds the right number of portals per floor", function() {
-    //     // First, let's try building everything
-    //     datastore_object.build();
-        
-    //     // Do we have portals for each floor?
-    //     expect(datastore_object.dataStore.portals.length).toEqual(2);
-        
-    //     // Do we have the proper number of portals for each floor?
-    //     // These magic numbers are from the maps SVG portal counts
-    //     expect(datastore_object.dataStore.portals[0].length).toEqual(2);
-    //     expect(datastore_object.dataStore.portals[1].length).toEqual(2);
-    // });
+    it("builds the right number of portals per floor", function() {
+        var datastore = JSON.parse($('#myMaps').wayfinding('getDataStore'));
 
-    // it("correctly matches portals on different floors", function() {
-    //     // First, let's try building everything
-    //     datastore_object.build();
+        
+        // Do we have portals for each floor?
+        expect(datastore.portals.length).toEqual(2);
+        
+        // Do we have the proper number of portals for each floor?
+        // These magic numbers are from the maps SVG portal counts
+        expect(datastore.portals[0].length).toEqual(2);
+        expect(datastore.portals[1].length).toEqual(2);
+    });
 
-    //     // Is each portal linking to the correct floor?
-    //     expect(datastore_object.dataStore.portals[0][0].to_floor).toEqual(1);
-    //     expect(datastore_object.dataStore.portals[0][1].to_floor).toEqual(1);
-    //     expect(datastore_object.dataStore.portals[1][0].to_floor).toEqual(0);
-    //     expect(datastore_object.dataStore.portals[1][1].to_floor).toEqual(0);
+    it("correctly matches portals on different floors", function() {
+        // First, let's try building everything
+        var datastore = JSON.parse($('#myMaps').wayfinding('getDataStore'))
+
+        // Is each portal linking to the correct floor?
+        expect(datastore.portals[0][0].to_floor).toEqual(1);
+        expect(datastore.portals[0][1].to_floor).toEqual(1);
+        expect(datastore.portals[1][0].to_floor).toEqual(0);
+        expect(datastore.portals[1][1].to_floor).toEqual(0);
    
-    //     // Is each portal correctly paired?
-    //     expect(datastore_object.dataStore.portals[0][0].match).toEqual(0);
-    //     expect(datastore_object.dataStore.portals[0][1].match).toEqual(1);
-    //     expect(datastore_object.dataStore.portals[1][0].match).toEqual(0);
-    //     expect(datastore_object.dataStore.portals[1][1].match).toEqual(1);
-    // });
+        // Is each portal correctly paired?
+        expect(datastore.portals[0][0].match).toEqual(0);
+        expect(datastore.portals[0][1].match).toEqual(1);
+        expect(datastore.portals[1][0].match).toEqual(0);
+        expect(datastore.portals[1][1].match).toEqual(1);
+    });
 
-    // it("has the right number of connections for doors per floor", function() {
-    //     // First, let's try building everything
-    //     datastore_object.build();
+    it("has the right number of connections for doors per floor", function() {
+        // First, let's try building everything
+        var datastore = JSON.parse($('#myMaps').wayfinding('getDataStore'))
 
-    //     var connection_count_floor1 = 0;
-    //     var connection_count_floor2 = 0;
+        var connection_count_floor1 = 0;
+        var connection_count_floor2 = 0;
 
-    //     // Loop through each door element and count its connections
-    //     datastore_object.dataStore.doors[0].forEach(function(el, i) {
-    //         connection_count_floor1 += el.doors.length;
-    //         connection_count_floor1 += el.paths.length;
-    //         connection_count_floor1 += el.portals.length;
-    //     });
+        // Loop through each door element and count its connections
+        datastore.doors[0].forEach(function(el, i) {
+            connection_count_floor1 += el.doors.length;
+            connection_count_floor1 += el.paths.length;
+            connection_count_floor1 += el.portals.length;
+        });
 
-    //     datastore_object.dataStore.doors[1].forEach(function(el, i) {
-    //         connection_count_floor2 += el.doors.length;
-    //         connection_count_floor2 += el.paths.length;
-    //         connection_count_floor2 += el.portals.length;
-    //     });
+        datastore.doors[1].forEach(function(el, i) {
+            connection_count_floor2 += el.doors.length;
+            connection_count_floor2 += el.paths.length;
+            connection_count_floor2 += el.portals.length;
+        });
 
-    //     // Are the number of connections correct for doors on each floor?
-    //     // The magic numbers are from hand counting the connections on the maps
-    //     expect(connection_count_floor1).toEqual(20);
-    //     expect(connection_count_floor2).toEqual(2);
-    // });
+        // Are the number of connections correct for doors on each floor?
+        // The magic numbers are from hand counting the connections on the maps
+        expect(connection_count_floor1).toEqual(20);
+        expect(connection_count_floor2).toEqual(2);
+    });
     
-    // it("has the right number of connections for paths per floor", function() {
-    //     // First, let's try building everything
-    //     datastore_object.build();
+    it("has the right number of connections for paths per floor", function() {
+        // First, let's try building everything
+        var datastore = JSON.parse($('#myMaps').wayfinding('getDataStore'))
 
-    //     var connection_count_floor1 = 0;
-    //     var connection_count_floor2 = 0;
+        var connection_count_floor1 = 0;
+        var connection_count_floor2 = 0;
 
-    //     // Loop through each path element and count its connections
-    //     datastore_object.dataStore.paths[0].forEach(function(el, i) {
-    //         connection_count_floor1 += el.doors.length;
-    //         connection_count_floor1 += el.paths.length;
-    //         connection_count_floor1 += el.portals.length;
-    //     });
+        // Loop through each path element and count its connections
+        datastore.paths[0].forEach(function(el, i) {
+            connection_count_floor1 += el.doors.length;
+            connection_count_floor1 += el.paths.length;
+            connection_count_floor1 += el.portals.length;
+        });
 
-    //     datastore_object.dataStore.paths[1].forEach(function(el, i) {
-    //         connection_count_floor2 += el.doors.length;
-    //         connection_count_floor2 += el.paths.length;
-    //         connection_count_floor2 += el.portals.length;
-    //     });
+        datastore.paths[1].forEach(function(el, i) {
+            connection_count_floor2 += el.doors.length;
+            connection_count_floor2 += el.paths.length;
+            connection_count_floor2 += el.portals.length;
+        });
 
-    //     // Are the number of connections correct for paths on each floor?
-    //     // The magic numbers are from hand counting the connections on the maps
-    //     expect(connection_count_floor1).toEqual(296);
-    //     expect(connection_count_floor2).toEqual(70);
-    // });
+        // Are the number of connections correct for paths on each floor?
+        // The magic numbers are from hand counting the connections on the maps
+        expect(connection_count_floor1).toEqual(296);
+        expect(connection_count_floor2).toEqual(70);
+    });
 
-    // it("has the right number of connections for portals per floor", function() {
-    //     // First, let's try building everything
-    //     datastore_object.build();
+    it("has the right number of connections for portals per floor", function() {
+        // First, let's try building everything
+        var datastore = JSON.parse($('#myMaps').wayfinding('getDataStore'))
 
-    //     var connection_count_floor1 = 0;
-    //     var connection_count_floor2 = 0;
+        var connection_count_floor1 = 0;
+        var connection_count_floor2 = 0;
 
-    //     // Loop through each portal element and count its connections
-    //     datastore_object.dataStore.portals[0].forEach(function(el, i) {
-    //         connection_count_floor1 += el.doors.length;
-    //         connection_count_floor1 += el.paths.length;
-    //         connection_count_floor1 += el.portals.length;
-    //     });
+        // Loop through each portal element and count its connections
+        datastore.portals[0].forEach(function(el, i) {
+            connection_count_floor1 += el.doors.length;
+            connection_count_floor1 += el.paths.length;
+            connection_count_floor1 += el.portals.length;
+        });
 
-    //     datastore_object.dataStore.portals[1].forEach(function(el, i) {
-    //         connection_count_floor2 += el.doors.length;
-    //         connection_count_floor2 += el.paths.length;
-    //         connection_count_floor2 += el.portals.length;
-    //     });
+        datastore.portals[1].forEach(function(el, i) {
+            connection_count_floor2 += el.doors.length;
+            connection_count_floor2 += el.paths.length;
+            connection_count_floor2 += el.portals.length;
+        });
 
-    //     // Are the number of connections correct for portals on each floor?
-    //     // The magic numbers are from hand counting the connections on the maps
-    //     expect(connection_count_floor1).toEqual(2);
-    //     expect(connection_count_floor2).toEqual(2);
-    // });
+        // Are the number of connections correct for portals on each floor?
+        // The magic numbers are from hand counting the connections on the maps
+        expect(connection_count_floor1).toEqual(2);
+        expect(connection_count_floor2).toEqual(2);
+    });
 
 });
