@@ -46,7 +46,7 @@
      * @property {boolean} zoomToRoute if true, zooms closer to path animation
      * @property {integer} zoomPadding the padding of the zoom box
      * @property {integer} floorChangeAnimationDelay how long it takes to switch floors in the animation
-     * @property {boolean} newBackend defaults to true, determine whether to use improved backend
+     * @property {boolean} emscriptenBackend defaults to true, determine whether to use improved backend
      */
 
     /**
@@ -120,7 +120,7 @@
         'zoomPadding': 25,
         // milliseconds to wait during animation when a floor change occurs
         'floorChangeAnimationDelay': 1250,
-        'newBackend': true
+        'emscriptenBackend': true
     },
     dataStore;
 
@@ -1070,7 +1070,7 @@
         } // function buildNew
 
         function build() {
-            if (options.newBackend) {
+            if (options.emscriptenBackend) {
                 return buildNew();
             }
             else {
@@ -1919,19 +1919,27 @@
                 $('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
                 setEndPoint(options.endpoint, el);
 
-                var pathResult = Module.pathfinding(
-                    JSON.stringify(dataStore),
-                    startpoint,
-                    destination,
-                    options.accessibleRoute);
-
                 var error = false;
+                var pathResult;
 
-                if (pathResult.size() === 1)
-                {
+                try {
+                    pathResult = Module.pathfinding(
+                        JSON.stringify(dataStore),
+                        startpoint,
+                        destination,
+                        options.accessibleRoute);
+
+
+                    if (pathResult.size() === 1)
+                    {
+                        error = true;
+                        console.error(pathResult.get(0));
+                    }
+                }
+                catch (e) {
+                    console.error(e.stack);
+                    console.error('Did you forget to include emscripten.pathinding.js?');
                     error = true;
-                    //alert(pathResult.get(0));
-                    console.error(pathResult.get(0));
                 }
 
                 if (!error)
@@ -2226,7 +2234,7 @@
         } //RouteToNew
 
         function routeTo(destination, el) {
-            if (options.newBackend) {
+            if (options.emscriptenBackend) {
                 routeToNew(destination, el);
             }
             else {
@@ -2414,7 +2422,7 @@
                         result = startpoint;
                     } else {
                         setStartPoint(passed, obj);
-                        if (!options.newBackend) {
+                        if (!options.emscriptenBackend) {
                             establishDataStore(callback);
                         }
                     }
@@ -2433,7 +2441,7 @@
                         result = options.accessibleRoute;
                     } else {
                         options.accessibleRoute = passed;
-                        if (!options.newBackend){
+                        if (!options.emscriptenBackend){
                             establishDataStore(callback);
                         }
                     }
