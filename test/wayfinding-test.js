@@ -33,7 +33,8 @@ describe('Wayfinding plugin', function () {
 				return 'lcd.1';
 			},
 			'defaultMap': 'floor1',
-            'dataStoreCache': 'test/fixtures/datastores/'
+            'dataStoreCache': 'test/fixtures/datastores/',
+            'newBackend': false
 		}, function() {
             done();
         });

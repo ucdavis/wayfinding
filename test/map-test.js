@@ -32,7 +32,8 @@ describe('Wayfinding', function () {
 			'startpoint': function () {
 				return 'lcd.1';
 			},
-			'defaultMap': 'floor1'
+			'defaultMap': 'floor1',
+            'newBackend': false
 		}, function() {
             done();
         });

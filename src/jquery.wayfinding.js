@@ -46,6 +46,7 @@
      * @property {boolean} zoomToRoute [description]
      * @property {integer} zoomPadding [description]
      * @property {integer} floorChangeAnimationDelay [description]
+     * @property {boolean} newBackend defaults to true, determine whether to use improved backend
      */
 
     /**
@@ -112,7 +113,8 @@
         'zoomToRoute': true,
         'zoomPadding': 25,
         // milliseconds to wait during animation when a floor change occurs
-        'floorChangeAnimationDelay': 1250
+        'floorChangeAnimationDelay': 1250,
+        'newBackend': true
     },
     dataStore;
 
@@ -219,7 +221,7 @@
             maps, // the array of maps populated from options each time
             defaultMap, // the floor to show at start propulated from options
             startpoint, // the result of either the options.startpoint value or the value of the function
-            //portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
+            portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
             solution,
             result, // used to return non jQuery results
             drawing,
@@ -352,10 +354,8 @@
             indicator.setAttribute('transform', 'translate(' + x + ' ' + (y - 10 * (height / 125)) + ') scale(' + height / 125 + ')');
 
             return indicator;
-
         } //function makePin
 
-/*        // Extract data from the svg maps
         function buildDataStore(mapNum, map, el) {
             var path,
                 doorId,
@@ -373,7 +373,7 @@
             $('#Paths line', el).each(function () {
                 path = {};
                 path.floor = map.id; // floor_1
-//                path.mapNum = mapNum; // index of floor in array 1
+               // path.mapNum = mapNum; // index of floor in array 1
                 path.r = Infinity; //Distance
                 path.p = -1; //Prior node in path that yielded route distance
 
@@ -454,10 +454,10 @@
 
                 portalSegments.push(portal);
             });
-        } // function buildDataStore
+        } // function buildDataStoreOld
 
         // after data extracted from all svg maps then build portals between them
-        function buildPortals() {
+        function buildPortalsOld() {
 
             var segmentOuterNum,
                 segmentInnerNum,
@@ -488,14 +488,14 @@
                             portal.t = outerSegment.type;
                             portal.a = (portal.t === 'Elev' || portal.t === 'Door') ? true : false; // consider changing to != Stair
 
-//                            portal.idA = outerSegment.id;
+                           // portal.idA = outerSegment.id;
                             portal.f = outerSegment.floor;
                             portal.g = outerSegment.mapNum;
                             portal.x = outerSegment.x;
                             portal.y = outerSegment.y;
                             portal.c = []; //only paths
 
-//                            portal.idB = innerSegment.id;
+                           // portal.idB = innerSegment.id;
                             portal.j = innerSegment.floor;
                             portal.k = innerSegment.mapNum;
                             portal.m = innerSegment.x;
@@ -561,8 +561,7 @@
             }
 
             portalSegments = [];
-
-        } // end function buildportals
+        } // end function buildPortalsOld
 
         //get the set of paths adjacent to a door or endpoint.
         function getDoorPaths(door) {
@@ -669,7 +668,6 @@
             });
         }
 
-
         // from a given end point generate an array representing the reverse steps needed to reach destination along shortest path
         function backTrack(segmentType, segmentFloor, segment) {
             var step;
@@ -745,12 +743,11 @@
                 buildDataStore(i, map, map.el);
             });
 
-            buildPortals();
+            buildPortalsOld();
             generateRoutes();
 
             return dataStore;
         } // function buildOld
-*/
 
         // Orders points based on x, y, and ID in that order.
         function comparePoints(pointA, pointB) {
@@ -764,7 +761,6 @@
                return pointA.id - pointB.id;
            }
         }
-
 
         function buildDoors(floor, map) {
             dataStore.doors[floor] = [];
@@ -806,7 +802,6 @@
         }
 
         function buildPaths(floor, map) {
-
             dataStore.paths[floor] = [];
 
             $('#Paths line', map).each(function () {
@@ -846,7 +841,6 @@
         }
 
         function buildPortals(floor, map) {
-
             dataStore.portals[floor] = [];
 
             $('#Portals line', map).each(function () { // index, line
@@ -903,7 +897,6 @@
         }
 
         function buildConnections(floor) {
-
             if (queue.length === 0 ) {
                 return;
             }
@@ -955,7 +948,6 @@
         }
 
         function matchPortals() {
-
             // Go through each portal
             $.each(dataStore.portals, function(floor, floorPortals) {
               $.each(floorPortals, function(i, portal) {
@@ -977,8 +969,7 @@
             });
         }
 
-        function build() {
-
+        function buildNew() {
             dataStore = {
                 'doors': [],
                 'paths': [],
@@ -997,7 +988,16 @@
             matchPortals();
 
             return dataStore;
-        } // function build
+        } // function buildNew
+
+        function build() {
+            if (options.newBackend) {
+                return buildNew();
+            }
+            else {
+                return buildOld();
+            }
+        }
 
         // Ensure a dataStore exists and is set, whether from a cache
         // or by building it.
@@ -1505,7 +1505,298 @@
 
         // The combined routing function
         // revise to only interate if startpoint has changed since last time?
-        function routeTo(destination, el) {
+        function routeToOld(destination, el) {
+            var i,
+                draw,
+                stepNum,
+                level,
+                reversePathStart,
+                portalsEntered,
+                lastStep,
+                ax,
+                ay,
+                bx,
+                by,
+                aDX,
+                aDY,
+                bDX,
+                bDY,
+                cx,
+                cy,
+                px,
+                py,
+                curve,
+                nx,
+                ny,
+                thisPath,
+                pick;
+
+            options.endpoint = destination;
+
+            // remove any prior paths from the current map set
+            $('path[class^=directionPath]', obj).remove();
+
+            //clear all rooms
+            $('#Rooms *.wayfindingRoom', obj).removeAttr('class');
+
+            solution = [];
+
+            //if startpoint != destination
+            if (startpoint !== destination) {
+                // get accessibleRoute option -- options.accessibleRoute
+
+                //highlight the destination room
+                $('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
+                setEndPoint(options.endpoint, el);
+
+                solution = getShortestRoute();
+
+                if (reversePathStart !== -1) {
+
+                    portalsEntered = 0;
+                    // Count number of portal trips
+                    for (i = 0; i < solution.length; i++) {
+                        if (solution[i].type === 'po') {
+                            portalsEntered++;
+                        }
+                    }
+
+                    //break this into a new function?
+                    drawing = new Array(portalsEntered); // Problem at line 707 character 40: Use the array literal notation [].
+
+                    drawing[0] = [];
+
+                    //build drawing and modify solution for text generation by adding .direction to solution segments?
+
+                    draw = {};
+
+                    if(solution.length === 0) {
+                        console.warn('Attempting to route with no solution. This should never happen. SVG likely has errors. Destination is: ' + destination);
+                        return;
+                    }
+
+                    //if statement incorrectly assumes one door at the end of the path, works in that case, need to generalize
+                    if (dataStore.p[solution[0].floor][solution[0].segment].d[0] === startpoint) {
+                        draw = {};
+                        draw.floor = solution[0].floor;
+                        draw.type = 'M';
+                        draw.x = dataStore.p[solution[0].floor][solution[0].segment].x;
+                        draw.y = dataStore.p[solution[0].floor][solution[0].segment].y;
+                        draw.length = 0;
+                        drawing[0].push(draw);
+                        draw = {};
+                        draw.type = 'L';
+                        draw.floor = solution[0].floor;
+                        draw.x = dataStore.p[solution[0].floor][solution[0].segment].m;
+                        draw.y = dataStore.p[solution[0].floor][solution[0].segment].n;
+                        draw.length = dataStore.p[solution[0].floor][solution[0].segment].l;
+                        drawing[0].push(draw);
+                        drawing[0].routeLength = draw.length;
+                    } else if (dataStore.p[solution[0].floor][solution[0].segment].e[0] === startpoint) {
+                        draw = {};
+                        draw.type = 'M';
+                        draw.floor = solution[0].floor;
+                        draw.x = dataStore.p[solution[0].floor][solution[0].segment].m;
+                        draw.y = dataStore.p[solution[0].floor][solution[0].segment].n;
+                        draw.length = 0;
+                        drawing[0].push(draw);
+                        draw = {};
+                        draw.type = 'L';
+                        draw.floor = solution[0].floor;
+                        draw.x = dataStore.p[solution[0].floor][solution[0].segment].x;
+                        draw.y = dataStore.p[solution[0].floor][solution[0].segment].y;
+                        draw.length = dataStore.p[solution[0].floor][solution[0].segment].l;
+                        drawing[0].push(draw);
+                        drawing[0].routeLength = draw.length;
+                    }
+
+                    lastStep = 1;
+
+                    // for each floor that we have to deal with
+                    for (i = 0; i < portalsEntered + 1; i++) {
+                        for (stepNum = lastStep; stepNum < solution.length; stepNum++) {
+                            if (solution[stepNum].type === 'pa') {
+                                ax = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].x;
+                                ay = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].y;
+                                bx = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].m;
+                                by = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].n;
+
+                                draw = {};
+                                draw.floor = solution[stepNum].floor;
+                                if (drawing[i].slice(-1)[0].x === ax && drawing[i].slice(-1)[0].y === ay) {
+                                    draw.x = bx;
+                                    draw.y = by;
+                                } else {
+                                    draw.x = ax;
+                                    draw.y = ay;
+                                }
+                                draw.length = dataStore.p[solution[stepNum].floor][solution[stepNum].segment].l;
+                                draw.type = 'L';
+                                drawing[i].push(draw);
+                                drawing[i].routeLength += draw.length;
+                            }
+                            if (solution[stepNum].type === 'po') {
+                                drawing[i + 1] = [];
+                                drawing[i + 1].routeLength = 0;
+                                // push the first object on
+                                // check for more than just floor number here....
+                                pick = '';
+                                if (dataStore.q[solution[stepNum].segment].g === dataStore.q[solution[stepNum].segment].k) {
+                                    if (dataStore.q[solution[stepNum].segment].x === draw.x && dataStore.q[solution[stepNum].segment].y === draw.y) {
+                                        pick = 'B';
+                                    } else {
+                                        pick = 'A';
+                                    }
+                                } else {
+                                    if (dataStore.q[solution[stepNum].segment].g === solution[stepNum].floor) {
+                                        pick = 'A';
+                                    } else if (dataStore.q[solution[stepNum].segment].k === solution[stepNum].floor) {
+                                        pick = 'B';
+                                    }
+                                }
+                                if (pick === 'A') {
+                                    draw = {};
+                                    draw.floor = solution[stepNum].floor;
+                                    draw.type = 'M';
+                                    draw.x = dataStore.q[solution[stepNum].segment].x;
+                                    draw.y = dataStore.q[solution[stepNum].segment].y;
+                                    draw.length = 0;
+                                    drawing[i + 1].push(draw);
+                                    drawing[i + 1].routeLength = draw.length;
+                                } else if (pick === 'B') {
+                                    draw = {};
+                                    draw.floor = solution[stepNum].floor;
+                                    draw.type = 'M';
+                                    draw.x = dataStore.q[solution[stepNum].segment].m;
+                                    draw.y = dataStore.q[solution[stepNum].segment].n;
+                                    draw.length = 0;
+                                    drawing[i + 1].push(draw);
+                                    drawing[i + 1].routeLength = draw.length;
+                                }
+                                lastStep = stepNum;
+                                lastStep++;
+                                stepNum = solution.length;
+                            }
+                        }
+                    }
+
+                    //go back through the drawing and insert curves if requested
+                    //consolidate colinear line segments?
+                    if (options.path.radius > 0) {
+                        for (level = 0; level < drawing.length; level++) {
+                            for (i = 1; i < drawing[level].length - 1; i++) {
+                                if (drawing[level][i].type === 'L' && drawing[level][i].type === 'L') {
+                                    // check for colinear here and remove first segment, and add its length to second
+                                    aDX = (drawing[level][i - 1].x - drawing[level][i].x);
+                                    aDY = (drawing[level][i - 1].y - drawing[level][i].y);
+                                    bDX = (drawing[level][i].x - drawing[level][i + 1].x);
+                                    bDY = (drawing[level][i].y - drawing[level][i + 1].y);
+                                    // if the change in Y for both is Zero
+                                    if ((aDY === 0 && bDY === 0) || (aDX === 0 && bDX === 0) || ((aDX / aDY) === (bDX / bDY) && !(aDX === 0 && aDY === 0 && bDX === 0 && bDY === 0))) {
+                                        drawing[level][i + 1].length = drawing[level][i].length + drawing[level][i + 1].length;
+                                     // drawing[level][i+1].type = "L";
+                                        drawing[level].splice(i, 1);
+                                        i = 1;
+                                    }
+                                }
+                            }
+                            for (i = 1; i < drawing[level].length - 1; i++) {
+                                // locate possible curves based on both line segments being longer than options.path.radius
+                                if (drawing[level][i].type === 'L' && drawing[level][i].type === 'L' && drawing[level][i].length > options.path.radius && drawing[level][i + 1].length > options.path.radius) {
+                                    //save old end point
+                                    cx = drawing[level][i].x;
+                                    cy = drawing[level][i].y;
+                                    // change x,y and change length
+                                    px = drawing[level][i - 1].x;
+                                    py = drawing[level][i - 1].y;
+                                    //new=prior + ((center-prior) * ((length-radius)/length))
+                                    drawing[level][i].x = (Number(px) + ((cx - px) * ((drawing[level][i].length - options.path.radius) / drawing[level][i].length)));
+                                    drawing[level][i].y = (Number(py) + ((cy - py) * ((drawing[level][i].length - options.path.radius) / drawing[level][i].length)));
+                                    //shorten current line
+                                    drawing[level][i].length = drawing[level][i].length - options.path.radius;
+                                    curve = {};
+                                    //curve center is old end point
+                                    curve.cx = cx;
+                                    curve.cy = cy;
+                                    //curve end point is based on next line
+                                    nx = drawing[level][i + 1].x;
+                                    ny = drawing[level][i + 1].y;
+                                    curve.x = (Number(cx) + ((nx - cx) * ((options.path.radius) / drawing[level][i + 1].length)));
+                                    curve.y = (Number(cy) + ((ny - cy) * ((options.path.radius) / drawing[level][i + 1].length)));
+                                    //change length of next segment now that it has a new starting point
+                                    drawing[level][i + 1].length = drawing[level][i + 1].length - options.path.radius;
+                                    curve.type = 'Q';
+                                    curve.floor = drawing[level][i].floor;
+                                    // insert curve element
+                                    // splice function on arrays allows insertion
+                                    //   array.splice(start, delete count, value, value)
+                                    // drawing[level].splice(current line, 0, curve element object);
+
+                                    drawing[level].splice(i + 1, 0, curve);
+
+                                } // both possible segments long enough
+                            } // drawing segment
+                        } // level
+                    } // if we are doing curves at all
+
+                    $.each(drawing, function (j, map) {
+                        var path = '',
+                            newPath;
+                        $.each(map, function (k, stroke) {
+                            switch (stroke.type) {
+                            case 'M':
+                                path = 'M' + stroke.x + ',' + stroke.y;
+                                break;
+                            case 'L':
+                                path += 'L' + stroke.x + ',' + stroke.y;
+                                break;
+                            case 'Q':
+                                path += 'Q' + stroke.cx + ',' + stroke.cy + ' ' + stroke.x + ',' + stroke.y;
+                                break;
+                            }
+                        });
+
+                        newPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        newPath.setAttribute('d', path);
+                        newPath.style.fill = 'none';
+
+                        if (newPath.classList) {
+                            newPath.classList.add('directionPath' + j);
+                        } else {
+                            newPath.setAttribute('class', 'directionPath' + j);
+                        }
+
+
+                        // Attach the newpath to the startpin or endpin if they exist on this floor
+                        var attachPointSvg = $('#' + maps[map[0].floor].id + ' svg');
+                        var startPin = $('.startPin', attachPointSvg);
+                        var destinationPin = $('.destinationPin', attachPointSvg);
+
+                        if (startPin.length) {
+                            startPin.before(newPath);
+                        }
+                        else if (destinationPin.length) {
+                            destinationPin.before(newPath);
+                        }
+                        else {
+                            attachPointSvg.append(newPath);
+                        }
+
+                        thisPath = $('#' + maps[map[0].floor].id + ' svg .directionPath' + j);
+
+                        drawing[j].path = thisPath;
+
+                    });
+
+                    animatePath(0);
+
+                    //on switch which floor is displayed reset path svgStrokeDashOffset to minPath and the reanimate
+                    //notify animation loop?
+                }
+            }
+        } //RouteToOld
+
+        function routeToNew(destination, el) {
             var i,
                 draw,
                 stepNum,
@@ -1709,22 +2000,7 @@
                             if (solution[stepNum].type === 'portals') {
                                 drawing[i + 1] = [];
                                 drawing[i + 1].routeLength = 0;
-                                // push the first object on
-                                // check for more than just floor number here....
-                        /*        pick = '';
-                                if (dataStore.q[solution[stepNum].segment].g === dataStore.q[solution[stepNum].segment].k) {
-                                    if (dataStore.q[solution[stepNum].segment].x === draw.x && dataStore.q[solution[stepNum].segment].y === draw.y) {
-                                        pick = 'B';
-                                    } else {
-                                        pick = 'A';
-                                    }
-                                } else {
-                                    if (dataStore.q[solution[stepNum].segment].g === solution[stepNum].floor) {
-                                        pick = 'A';
-                                    } else if (dataStore.q[solution[stepNum].segment].k === solution[stepNum].floor) {
-                                        pick = 'B';
-                                    }
-                                }*/
+
                                 if (checkIfConnectionAtx1y1(
                                     solution[stepNum + 1],
                                     solution[stepNum]))
@@ -1868,7 +2144,16 @@
                     //notify animation loop?
                 }
             }
-        } //RouteTo
+        } //RouteToNew
+
+        function routeTo(destination, el) {
+            if (options.newBackend) {
+                routeToNew(destination, el);
+            }
+            else {
+                routeToOld(destination, el);
+            }
+        }
 
         function replaceLoadScreen(el) {
             var displayNum,
@@ -2050,7 +2335,9 @@
                         result = startpoint;
                     } else {
                         setStartPoint(passed, obj);
-                        establishDataStore(callback);
+                        if (!options.newBackend) {
+                            establishDataStore(callback);
+                        }
                     }
                     break;
                 case 'currentMap':
@@ -2067,7 +2354,9 @@
                         result = options.accessibleRoute;
                     } else {
                         options.accessibleRoute = passed;
-                        establishDataStore(callback);
+                        if (!options.newBackend){
+                            establishDataStore(callback);
+                        }
                     }
                     break;
 
