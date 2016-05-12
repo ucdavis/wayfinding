@@ -1,5 +1,4 @@
-var moo;
-/*global document, jQuery*/
+/*global document, jQuery, Module, PriorityQueue*/
 /*jslint devel: true, browser: true, windows: true, plusplus: true, maxerr: 50, indent: 4 */
 
 /**
@@ -146,10 +145,10 @@ var moo;
      * @property {integer} y1 int y coord of first end of door line in SVG
      * @property {integer} x2 int x coord of second end of door line in SVG
      * @property {integer} y2 int y coord of second end of door line in SVG
-     * @property {float} x1_f float x coord of first end of door line in SVG
-     * @property {float} y1_f float y coord of first end of door line in SVG
-     * @property {float} x2_f float x coord of second end of door line in SVG
-     * @property {float} y2_f float y coord of second end of door line in SVG
+     * @property {float} x1Float float x coord of first end of door line in SVG
+     * @property {float} y1Float float y coord of first end of door line in SVG
+     * @property {float} x2Float float x coord of second end of door line in SVG
+     * @property {float} y2Float float y coord of second end of door line in SVG
      * @property {string} doorId door identifier that matches room name ex: "R101"
      * @property {integer} id index in doors[floor]
      * @property {integer[]} paths contains id of each path connected to this door at either end
@@ -166,10 +165,10 @@ var moo;
      * @property {integer} y1 int y coord of first end of path line in SVG
      * @property {integer} x2 int x coord of second end of path line in SVG
      * @property {integer} y2 int y coord of second end of path line in SVG
-     * @property {float} x1_f float x coord of first end of path line in SVG
-     * @property {float} y1_f float y coord of first end of path line in SVG
-     * @property {float} x2_f float x coord of second end of path line in SVG
-     * @property {float} y2_f float y coord of second end of path line in SVG
+     * @property {float} x1Float float x coord of first end of path line in SVG
+     * @property {float} y1Float float y coord of first end of path line in SVG
+     * @property {float} x2Float float x coord of second end of path line in SVG
+     * @property {float} y2Float float y coord of second end of path line in SVG
      * @property {integer} pathId index in paths[floor]
      * @property {integer} id same as pathId
      * @property {integer[]} paths contains id of each path connected to this path at either end
@@ -187,18 +186,18 @@ var moo;
      * @property {integer} y1 int y coord of first end of portal line in SVG
      * @property {integer} x2 int x coord of second end of portal line in SVG
      * @property {integer} y2 int y coord of second end of portal line in SVG
-     * @property {float} x1_f float x coord of first end of portal line in SVG
-     * @property {float} y1_f float y coord of first end of portal line in SVG
-     * @property {float} x2_f float x coord of second end of portal line in SVG
-     * @property {float} y2_f float y coord of second end of portal line in SVG
+     * @property {float} x1Float float x coord of first end of portal line in SVG
+     * @property {float} y1Float float y coord of first end of portal line in SVG
+     * @property {float} x2Float float x coord of second end of portal line in SVG
+     * @property {float} y2Float float y coord of second end of portal line in SVG
      * @property {string} portalId portal identifier for which stair or elevator it references ex: "Elev.1"
      * @property {integer} id index in portals[floor]
      * @property {integer[]} paths contains id of each path connected to this portal at either end
      * @property {integer[]} doors contains id of each door connected to this portal at either end
      * @property {integer[]} portals contains id of each portal connected to this portal at either end
      * @property {float} length length of portal calculated using end points
-     * @property {integer} to_floor floor which the portal connects to (-1 if not valid)
-     * @property {integer} match id of portal on floor #to_floor that this portal connects to (-1 if not found)length of portal calculated using end points
+     * @property {integer} toFloor floor which the portal connects to (-1 if not valid)
+     * @property {integer} match id of portal on floor #toFloor that this portal connects to (-1 if not found)length of portal calculated using end points
      * @property {boolean} accessible whether this portal is wheelchair accessible
      */
 
@@ -220,11 +219,11 @@ var moo;
 			maps, // the array of maps populated from options each time
 			defaultMap, // the floor to show at start propulated from options
 			startpoint, // the result of either the options.startpoint value or the value of the function
-			portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
+			//portalSegments = [], // used to store portal pieces until the portals are assembled, then this is dumped.
 			solution,
 			result, // used to return non jQuery results
 			drawing,
-			id_to_index = {},  // maps floor IDs to an index in 'maps'
+			idToIndex = {},  // maps floor IDs to an index in 'maps'
 			queue;
 
 
@@ -754,15 +753,15 @@ var moo;
 */
 
 		// Orders points based on x, y, and ID in that order.
-	    function comparePoints(point_a, point_b) {
-	       if (point_a.x != point_b.x) {
-	           return point_a.x - point_b.x;
+	    function comparePoints(pointA, pointB) {
+	       if (pointA.x !== pointB.x) {
+	           return pointA.x - pointB.x;
 	       }
-	       else if (point_a.y != point_b.y) {
-	           return point_a.y - point_b.y;
+	       else if (pointA.y !== pointB.y) {
+	           return pointA.y - pointB.y;
 	       }
 	       else {
-	           return point_a.id - point_b.id;
+	           return pointA.id - pointB.id;
 	       }
 	    }
 
@@ -775,16 +774,16 @@ var moo;
 	            
 	            door.floor = floor;
 	            door.x1 = parseInt($(this).attr('x1'));
-	            door.x1_f = parseFloat($(this).attr('x1'));
+	            door.x1Float = parseFloat($(this).attr('x1'));
 	            door.y1 = parseInt($(this).attr('y1'));
-	            door.y1_f = parseFloat($(this).attr('y1'));
+	            door.y1Float = parseFloat($(this).attr('y1'));
 	            door.x2 = parseInt($(this).attr('x2'));
-	            door.x2_f = parseFloat($(this).attr('x2'));
+	            door.x2Float = parseFloat($(this).attr('x2'));
 	            door.y2 = parseInt($(this).attr('y2'));
-	            door.y2_f = parseFloat($(this).attr('y2'));
-	            door.doorId = $(this).attr('id').split("_")[0];
+	            door.y2Float = parseFloat($(this).attr('y2'));
+	            door.doorId = $(this).attr('id').split('_')[0];
 	            door.id = dataStore.doors[floor].length;
-	            //door.length = Math.sqrt(Math.pow(door.x2_f - door.x1_f, 2) + Math.pow(door.y2_f - door.y1_f, 2));
+	            //door.length = Math.sqrt(Math.pow(door.x2Float - door.x1Float, 2) + Math.pow(door.y2Float - door.y1Float, 2));
 
 	            door.paths = [];
 	            door.doors = [];
@@ -795,13 +794,13 @@ var moo;
 	                x: door.x1,
 	                y: door.y1,
 	                id: dataStore.doors[floor].length - 1,
-	                type: "doors"
+	                type: 'doors'
 	            });
 	            queue.queue({
 	                x: door.x2,
 	                y: door.y2,
 	                id: dataStore.doors[floor].length - 1,
-	                type: "doors"
+	                type: 'doors'
 	            });
 	        });
 	    }
@@ -810,19 +809,19 @@ var moo;
         	        
 	        dataStore.paths[floor] = [];
 	        
-	        $('#Paths line', map).each(function (i, line) {
+	        $('#Paths line', map).each(function () {
 	            var path = {};
 	            
 	            path.floor = floor;
 	            path.x1 = parseInt($(this).attr('x1'));
-	            path.x1_f = parseFloat($(this).attr('x1'));
+	            path.x1Float = parseFloat($(this).attr('x1'));
 	            path.y1 = parseInt($(this).attr('y1'));
-	            path.y1_f = parseFloat($(this).attr('y1'));
+	            path.y1Float = parseFloat($(this).attr('y1'));
 	            path.x2 = parseInt($(this).attr('x2'));
-	            path.x2_f = parseFloat($(this).attr('x2'));
+	            path.x2Float = parseFloat($(this).attr('x2'));
 	            path.y2 = parseInt($(this).attr('y2'));
-	            path.y2_f = parseFloat($(this).attr('y2'));
-	            path.length = Math.sqrt(Math.pow(path.x2_f - path.x1_f, 2) + Math.pow(path.y2_f - path.y1_f, 2));
+	            path.y2Float = parseFloat($(this).attr('y2'));
+	            path.length = Math.sqrt(Math.pow(path.x2Float - path.x1Float, 2) + Math.pow(path.y2Float - path.y1Float, 2));
 	            path.pathId = dataStore.paths[floor].length;
 	            path.id = dataStore.paths[floor].length;
 	            
@@ -835,13 +834,13 @@ var moo;
 	                x: path.x1,
 	                y: path.y1,
 	                id: dataStore.paths[floor].length - 1,
-	                type: "paths"
+	                type: 'paths'
 	            });
 	            queue.queue({
 	                x: path.x2,
 	                y: path.y2,
 	                id: dataStore.paths[floor].length - 1,
-	                type: "paths"
+	                type: 'paths'
 	            });
 	        });
 	    }
@@ -855,57 +854,57 @@ var moo;
 
 	            portal.floor = floor;
 	            portal.x1 = parseInt($(this).attr('x1'));
-	            portal.x1_f = parseFloat($(this).attr('x1'));
+	            portal.x1Float = parseFloat($(this).attr('x1'));
 	            portal.y1 = parseInt($(this).attr('y1'));
-	            portal.y1_f = parseFloat($(this).attr('y1'));
+	            portal.y1Float = parseFloat($(this).attr('y1'));
 	            portal.x2 = parseInt($(this).attr('x2'));
-	            portal.x2_f = parseFloat($(this).attr('x2'));
+	            portal.x2Float = parseFloat($(this).attr('x2'));
 	            portal.y2 = parseInt($(this).attr('y2'));
-	            portal.y2_f = parseFloat($(this).attr('y2'));
+	            portal.y2Float = parseFloat($(this).attr('y2'));
 
 	            portal.paths = [];
 	            portal.doors = [];
 	            portal.portals = [];
 	            portal.id = dataStore.portals[floor].length;
 
-	            var portalID = $(this).attr('id').split("_")[0].split(".");
+	            var portalID = $(this).attr('id').split('_')[0].split('.');
 	            
-	            portal.portalId = portalID[0] + "." + portalID[1];
+	            portal.portalId = portalID[0] + '.' + portalID[1];
 	            
-	            var to_floor = id_to_index[portalID[2]];
-	            if (to_floor == undefined) {
-	                to_floor = -1;
+	            var toFloor = idToIndex[portalID[2]];
+	            if (toFloor === undefined) {
+	                toFloor = -1;
 	            }
 	            
-	            portal.to_floor = parseInt(to_floor);
+	            portal.toFloor = parseInt(toFloor);
 	            portal.accessible = false;
 	            portal.match = -1;
 	            
-	            if (portalID[0] === "Elev") {
+	            if (portalID[0] === 'Elev') {
 	                portal.accessible = true;
 	            }
 
-	            portal.length = Math.sqrt(Math.pow(portal.x2_f - portal.x1_f, 2) + Math.pow(portal.y2_f - portal.y1_f, 2));
+	            portal.length = Math.sqrt(Math.pow(portal.x2Float - portal.x1Float, 2) + Math.pow(portal.y2Float - portal.y1Float, 2));
 
 	            dataStore.portals[floor].push(portal);
 	            queue.queue({
 	                x: portal.x1,
 	                y: portal.y1,
 	                id: dataStore.portals[floor].length - 1,
-	                type: "portals"
+	                type: 'portals'
 	            });
 	            queue.queue({
 	                x: portal.x2,
 	                y: portal.y2,
 	                id: dataStore.portals[floor].length - 1,
-	                type: "portals"
+	                type: 'portals'
 	            });
 	        });
 	    }
 
 	    function buildConnections(floor) {
 	        	       
-	        if (queue.length == 0 ) {
+	        if (queue.length === 0 ) {
 	            return;
 	        }
 
@@ -913,47 +912,60 @@ var moo;
 	        var connected = [start];
 	        var previous = start;
 	        
+	        function connectLines(connected, floor)
+	        {
+        	 	$.each(connected, function(i, firstPath) {
+                    $.each(connected, function(j, secondPath) {
+                        if (i !== j) {
+                            dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
+                        }
+                    });
+                });
+	        }
+
 	        while(queue.length > 0) {
 	            var point = queue.dequeue();
 	            
-	            if (previous.x == point.x && previous.y == point.y) {
+	            if (previous.x === point.x && previous.y === point.y) {
 	                connected.push(point);
 	            }
 	            else {
-	                // matches "closest" paths together, stores connection in 'dataStore'
-	                $.each(connected, function(i, firstPath) {
-	                    $.each(connected, function(j, secondPath) {
-	                        if (i != j) {
-	                            dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
-	                        }
-	                    });
-	                });
+	                // matches 'closest' paths together, stores connection in 'dataStore'
+	                // $.each(connected, function(i, firstPath) {
+	                //     $.each(connected, function(j, secondPath) {
+	                //         if (i !== j) {
+	                //             dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
+	                //         }
+	                //     });
+	                // });
+	                connectLines(connected, floor);
 	                connected = [point];
 	            }
 	            previous = point;
 	        }
 	        
-	        $.each(connected, function(i, firstPath) {
-	            $.each(connected, function(j, secondPath) {
-	                if (i != j) {
-	                    dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
-	                }
-	            });
-	        }); 
+	        connectLines(connected, floor);
+	        // $.each(connected, function(i, firstPath) {
+	        //     $.each(connected, function(j, secondPath) {
+	        //         if (i !== j) {
+	        //             dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
+	        //         }
+	        //     });
+	        // }); 
 	    }
 
 	    function matchPortals() {
         
 	        // Go through each portal
-	        $.each(dataStore.portals, function(floor, floor_portals) {
-	          $.each(floor_portals, function(i, portal) {
-	            if (portal.match == -1) {
+	        $.each(dataStore.portals, function(floor, floorPortals) {
+	          $.each(floorPortals, function(i, portal) {
+	            if (portal.match === -1) {
 	              // For each portal, go through linked floor portals
 	              // -1 indicates that the other floor does not exist
-	              if (portal.to_floor != -1) {
-	                $.each(dataStore.portals[portal.to_floor], function(j, portal2) {
-	                    if (portal2.portalId == portal.portalId &&
-	                        portal2.to_floor == portal.floor)
+	              if (portal.toFloor !== -1) {
+	                $.each(dataStore.portals[portal.toFloor], function(j, portal2) {
+	                    if (portal2.portalId === portal.portalId &&
+	                        portal2.toFloor === portal.floor)
 	                    {
 	                      portal.match = portal2.id;
 	                      portal2.match = portal.id;
@@ -1469,20 +1481,20 @@ var moo;
 		} //function animatePath
 
 
-        function check_if_connected_at_x1y1(previous_line, current_line)
+        function checkIfConnectionAtx1y1(previousLine, currentLine)
         {
-            var previous_from_datastore = dataStore[previous_line.type]
-                                                   [previous_line.floor]
-                                                   [previous_line.segment];
+            var previousFromDatastore = dataStore[previousLine.type]
+                                                   [previousLine.floor]
+                                                   [previousLine.segment];
 
-            var current_from_datastore = dataStore[current_line.type]
-                                                  [current_line.floor]
-                                                  [current_line.segment];
+            var currentFromDatatstore = dataStore[currentLine.type]
+                                                  [currentLine.floor]
+                                                  [currentLine.segment];
     
-            if ((current_from_datastore.x1 == previous_from_datastore.x1 &&
-                 current_from_datastore.y1 == previous_from_datastore.y1) ||
-                (current_from_datastore.x1 == previous_from_datastore.x2 &&
-                 current_from_datastore.y1 == previous_from_datastore.y2))
+            if ((currentFromDatatstore.x1 === previousFromDatastore.x1 &&
+                 currentFromDatatstore.y1 === previousFromDatastore.y1) ||
+                (currentFromDatatstore.x1 === previousFromDatastore.x2 &&
+                 currentFromDatatstore.y1 === previousFromDatastore.y2))
             {
                 return true;
             }
@@ -1498,7 +1510,7 @@ var moo;
 				draw,
 				stepNum,
 				level,
-				reversePathStart,
+				//reversePathStart,
 				portalsEntered,
 				lastStep,
 				ax,
@@ -1516,8 +1528,8 @@ var moo;
 				curve,
 				nx,
 				ny,
-				thisPath,
-				pick;
+				thisPath;
+				//pick;
 
 			options.endpoint = destination;
 
@@ -1537,7 +1549,7 @@ var moo;
 				$('#Rooms a[id="' + destination + '"] g', obj).attr('class', 'wayfindingRoom');
 				setEndPoint(options.endpoint, el);
                  
-				var path_result = Module.pathfinding(
+				var pathResult = Module.pathfinding(
                     JSON.stringify(dataStore),
                     startpoint,
                     destination,
@@ -1545,68 +1557,59 @@ var moo;
                 
                 var error = false;
 
-                if (path_result.size() == 1)
+                if (pathResult.size() === 1)
                 {
                     error = true;
-                    alert(path_result.get(0));
+                    alert(pathResult.get(0));
                 }
              
                 if (!error) 
                 {
-                    var start_door_string = path_result.get(path_result.size() - 1);
-                    start_door_string = start_door_string.split("-");
+                    var startDoorString = pathResult.get(pathResult.size() - 1);
+                    startDoorString = startDoorString.split('-');
 
-                    var start_door = {
-                        type : "doors",
-                        floor : start_door_string[1],
-                        segment : start_door_string[2]
-                    }   
+                    var startDoor = {
+                        type : 'doors',
+                        floor : startDoorString[1],
+                        segment : startDoorString[2]
+                    }; 
 
-                    var end_door_string = path_result.get(0);
-                    end_door_string = end_door_string.split("-");
-    
-                    var end_door = {
-                        type : "doors",
-                        floor : end_door_string[1],
-                        segment : end_door_string[2]
-                    }
-                    
                     // Vectors holds the path in reverse order
-                    for (var i = path_result.size() - 2; i > 0 ; i--)
+                    for (i = pathResult.size() - 2; i > 0 ; i--)
                     {
-                        var path_string = path_result.get(i);
-                        console.log(path_string);
-                        path_string = path_string.split("-");
+                        var pathString = pathResult.get(i);
+                        pathString = pathString.split('-');
 
-                        if (path_string[0] == "path")
+                        if (pathString[0] === 'path')
                         {
                             solution.push({
-                                type : "paths",
-                                floor : path_string[1],
-                                segment : path_string[2]
+                                type : 'paths',
+                                floor : pathString[1],
+                                segment : pathString[2]
                             });
                         }
-                        else if (path_string[0] == "portal")
+                        else if (pathString[0] === 'portal')
                         {
                             i--; // only need second portal per pair
-                            path_string = path_result.get(i).split("-");
+                            // TODO: Breaks if sees more than two portals in a row, need to just get last portal in sequence
+                            pathString = pathResult.get(i).split('-');
                             solution.push({
-                                type : "portals",
-                                floor : path_string[1],
-                                segment : path_string[2]
+                                type : 'portals',
+                                floor : pathString[1],
+                                segment : pathString[2]
                             });
                         }
                         else 
                         {
-                            console.log("Not a path or portal");
-                            console.log(path_result.get(i));
+                            console.log('Not a path or portal');
+                            console.log(pathResult.get(i));
                         }
                     }
 
 					portalsEntered = 0;
 					// Count number of portal trips
 					for (i = 0; i < solution.length; i++) {
-						if (solution[i].type === "portals") {
+						if (solution[i].type === 'portals') {
 							portalsEntered++;
 						}
 					}
@@ -1625,25 +1628,25 @@ var moo;
 						return;
 					}
 
-                    check_if_connected_at_x1y1(start_door, solution[0]);
-                    var line_from_datastore = dataStore[solution[0].type]
+                    checkIfConnectionAtx1y1(startDoor, solution[0]);
+                    var lineFromDatastore = dataStore[solution[0].type]
                                                        [solution[0].floor]
                                                        [solution[0].segment];
 
-					if (check_if_connected_at_x1y1(start_door, solution[0])) {
+					if (checkIfConnectionAtx1y1(startDoor, solution[0])) {
 						draw = {};
 						draw.floor = solution[0].floor;
 						draw.type = 'M';
-						draw.x = line_from_datastore.x1;
-						draw.y = line_from_datastore.y1;
+						draw.x = lineFromDatastore.x1;
+						draw.y = lineFromDatastore.y1;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
 						draw.floor = solution[0].floor;
-						draw.x = line_from_datastore.x2;
-						draw.y = line_from_datastore.y2;
-						draw.length = line_from_datastore.length;
+						draw.x = lineFromDatastore.x2;
+						draw.y = lineFromDatastore.y2;
+						draw.length = lineFromDatastore.length;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
 					} 
@@ -1651,16 +1654,16 @@ var moo;
 						draw = {};
 						draw.type = 'M';
 						draw.floor = solution[0].floor;
-						draw.x = line_from_datastore.x2;
-						draw.y = line_from_datastore.y2;
+						draw.x = lineFromDatastore.x2;
+						draw.y = lineFromDatastore.y2;
 						draw.length = 0;
 						drawing[0].push(draw);
 						draw = {};
 						draw.type = 'L';
 						draw.floor = solution[0].floor;
-						draw.x = line_from_datastore.x1;
-						draw.y = line_from_datastore.y1;
-						draw.length = line_from_datastore.length;
+						draw.x = lineFromDatastore.x1;
+						draw.y = lineFromDatastore.y1;
+						draw.length = lineFromDatastore.length;
 						drawing[0].push(draw);
 						drawing[0].routeLength = draw.length;
 					}
@@ -1670,15 +1673,15 @@ var moo;
 					// for each floor that we have to deal with
 					for (i = 0; i < portalsEntered + 1; i++) {
 						for (stepNum = lastStep; stepNum < solution.length; stepNum++) {
-                            line_from_datastore = dataStore[solution[stepNum].type]
+                            lineFromDatastore = dataStore[solution[stepNum].type]
                                                            [solution[stepNum].floor]
                                                            [solution[stepNum].segment];
 
-							if (solution[stepNum].type === "paths") {
-								ax = line_from_datastore.x1;
-								ay = line_from_datastore.y1;
-								bx = line_from_datastore.x2;
-								by = line_from_datastore.y2;
+							if (solution[stepNum].type === 'paths') {
+								ax = lineFromDatastore.x1;
+								ay = lineFromDatastore.y1;
+								bx = lineFromDatastore.x2;
+								by = lineFromDatastore.y2;
 
 								draw = {};
 								draw.floor = solution[stepNum].floor;
@@ -1689,12 +1692,12 @@ var moo;
 									draw.x = ax;
 									draw.y = ay;
 								}
-								draw.length = line_from_datastore.length;
+								draw.length = lineFromDatastore.length;
 								draw.type = 'L';
 								drawing[i].push(draw);
 								drawing[i].routeLength += draw.length;
 							}
-							if (solution[stepNum].type === "portals") {
+							if (solution[stepNum].type === 'portals') {
 								drawing[i + 1] = [];
 								drawing[i + 1].routeLength = 0;
 								// push the first object on
@@ -1713,15 +1716,15 @@ var moo;
 										pick = 'B';
 									}
 								}*/
-								if (check_if_connected_at_x1y1(
+								if (checkIfConnectionAtx1y1(
                                     solution[stepNum + 1],
                                     solution[stepNum])) 
                                 {
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = line_from_datastore.x1;
-									draw.y = line_from_datastore.y1;
+									draw.x = lineFromDatastore.x1;
+									draw.y = lineFromDatastore.y1;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
@@ -1729,8 +1732,8 @@ var moo;
 									draw = {};
 									draw.floor = solution[stepNum].floor;
 									draw.type = 'M';
-									draw.x = line_from_datastore.x2;
-									draw.y = line_from_datastore.y2;
+									draw.x = lineFromDatastore.x2;
+									draw.y = lineFromDatastore.y2;
 									draw.length = 0;
 									drawing[i + 1].push(draw);
 									drawing[i + 1].routeLength = draw.length;
@@ -1756,7 +1759,7 @@ var moo;
 									// if the change in Y for both is Zero
 									if ((aDY === 0 && bDY === 0) || (aDX === 0 && bDX === 0) || ((aDX / aDY) === (bDX / bDY) && !(aDX === 0 && aDY === 0 && bDX === 0 && bDY === 0))) {
 										drawing[level][i + 1].length = drawing[level][i].length + drawing[level][i + 1].length;
-                                     // drawing[level][i+1].type = "L";
+                                     // drawing[level][i+1].type = 'L';
 										drawing[level].splice(i, 1);
 										i = 1;
 									}
@@ -1897,7 +1900,7 @@ var moo;
 			$.each(maps, function (i, map) {
 
 				var svgDiv = $('<div id="' + map.id + '"><\/div>');
-				id_to_index[map.id] = i;
+				idToIndex[map.id] = i;
 
 				//create svg in that div
 				svgDiv.load(
