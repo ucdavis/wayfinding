@@ -18,8 +18,6 @@ install grunt`. Also might need to do `npm install grunt-cli -g`.
 to **node\_modules/grunt-jsdoc** and run `npm install ink-docstrap`
 5. To get unit testing working, go to
 **node\_modules/karma-phantomjs-loader** and run `npm install`. 
-6. The C++ code relies on **rapidjson**. The Makefile uses `wget` to install it.
-If your system does not have that, update the Makefile to alternative. 
 6. To see a list of all possible grunt tasks, `grunt --help`
 
 ---
