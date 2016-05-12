@@ -301,7 +301,7 @@ module.exports = function (grunt) {
 						cwd: '.'
 					}
 				}
-			}
+			},
 			downloadRapidJSON: {
 				command: 'make --always-make src/rapidjson',
 				options: {
