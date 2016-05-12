@@ -137,10 +137,6 @@ map<Node, Node> dijkstra(Graph& graph, int start_id, int start_floor, int end_id
         graph.found_path = true;  
         return path;
       }
-      else {
-        active_nodes.erase(active_nodes.begin());
-        continue;
-      }
     }
     
     active_nodes.erase(active_nodes.begin());
