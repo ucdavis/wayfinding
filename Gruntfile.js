@@ -33,13 +33,20 @@ module.exports = function (grunt) {
 				'jshint',
 				'eslint'
 			],
+			// C++ compilation step
+			'build': [
+				'shell:makeClean',
+				'shell:compileEmscripten'
+			],
 			'test': [ // run all tests
 				'connect:test',
 				'karma:unit'
 			],
 			'package': [
 				'clean',
-				'uglify'
+				'uglify',
+				'shell:pathfinding',
+				'shell:priorityQueue'
 			],
 			'document': [
 				'jsdoc'
@@ -189,7 +196,9 @@ module.exports = function (grunt) {
 				// The rest of your configuration.
 				src: [
 					'<%= config.app %>/src/**/*.js',
-					'README.md'
+					'README.md',
+                    '!src/**/pathfinding.js',
+                    '!src/**/priority-queue.min.js'
 				],
 				options: {
 					destination: 'docs/',
@@ -212,7 +221,9 @@ module.exports = function (grunt) {
 				},
 				files: {
 					'plato': [
-						'<%= config.dev %>/{,*/}*.js'
+						'<%= config.dev %>/{,*/}*.js',
+						'!<%= config.dev %>/{,*/}pathfinding.js',
+						'!<%= config.dev %>/{,*/}priority-queue.min.js'
 					]
 				}
 			}
@@ -226,8 +237,9 @@ module.exports = function (grunt) {
 			},
 			coverage: { // grab the latest Chrome coverage report, currently bug that only covers last browser to finish
 				path: function () {
-					var reports = grunt.file.expand('coverage/Chrome*/index.html');
-					return reports[reports.length - 1].toString();
+					//var reports = grunt.file.expand('coverage/Chrome*/index.html');
+					// return reports[reports.length - 1].toString();
+					return 'Broken';
 				}
 			},
 			docs: {
@@ -252,6 +264,38 @@ module.exports = function (grunt) {
 		shell: {
 			datastore: {
 				command: 'node tasks/datastores.js',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			pathfinding: {
+				command: 'cp src/pathfinding.js dist/',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			priorityQueue: {
+				command: 'cp src/priority-queue.min.js dist/',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			makeClean: {
+				command: 'make clean',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			compileEmscripten: {
+				command: 'make',
 				options: {
 					execOptions: {
 						cwd: '.'
