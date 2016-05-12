@@ -1,2 +1,2 @@
-src/**/pathfinding.js
+src/**/emscripten.pathfinding.js
 src/**/priority-queue.min.js

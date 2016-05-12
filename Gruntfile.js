@@ -45,7 +45,7 @@ module.exports = function (grunt) {
 			'package': [
 				'clean',
 				'uglify',
-				'shell:pathfinding',
+				'shell:emscriptenPathfinding',
 				'shell:priorityQueue'
 			],
 			'document': [
@@ -88,7 +88,7 @@ module.exports = function (grunt) {
 				jshintrc: '.jshintrc',
 				reporter: require('jshint-stylish'),
                 ignores: [
-                    'src/**/pathfinding.js',
+                    'src/**/emscripten.pathfinding.js',
                     'src/**/priority-queue.min.js'
                 ]
 			},
@@ -106,10 +106,6 @@ module.exports = function (grunt) {
 			options: {
 				config: 'eslint.json',
 				format: 'stylish',
-                /*ignorePattern: [
-                    'src/pathfinding.js',
-                    'src/priority-queue.min.js'
-                ]*/
 			},
 			target: [
 				'<%= config.app %>/src/{,*/}*.js',
@@ -126,7 +122,7 @@ module.exports = function (grunt) {
 			dist: {
 				src: [
                     'src/**/*.js',
-                    '!src/**/pathfinding.js',
+                    '!src/**/emscripten.pathfinding.js',
                     '!src/**/priority-queue.js'
                 ],
 				dest: 'dist/jquery.<%= pkg.name %>.min.js'
@@ -197,7 +193,7 @@ module.exports = function (grunt) {
 				src: [
 					'<%= config.app %>/src/**/*.js',
 					'README.md',
-                    '!src/**/pathfinding.js',
+                    '!src/**/emscripten.pathfinding.js',
                     '!src/**/priority-queue.min.js'
 				],
 				options: {
@@ -222,7 +218,7 @@ module.exports = function (grunt) {
 				files: {
 					'plato': [
 						'<%= config.dev %>/{,*/}*.js',
-						'!<%= config.dev %>/{,*/}pathfinding.js',
+						'!<%= config.dev %>/{,*/}emscripten.pathfinding.js',
 						'!<%= config.dev %>/{,*/}priority-queue.min.js'
 					]
 				}
@@ -269,8 +265,8 @@ module.exports = function (grunt) {
 					}
 				}
 			},
-			pathfinding: {
-				command: 'cp src/pathfinding.js dist/',
+			emscriptenPathfinding: {
+				command: 'cp src/emscripten.pathfinding.js dist/',
 				options: {
 					execOptions: {
 						cwd: '.'

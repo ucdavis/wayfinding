@@ -24,7 +24,7 @@ module.exports = function (config) {
 			// include our JavaScript files
             'src/priority-queue.min.js',
 			'src/jquery.wayfinding.js',
-            'src/pathfinding.js',
+            'src/emscripten.pathfinding.js',
 
 			// simple patterns to load the needed testfiles
 			// equals to {pattern: 'test/*-test.js', watched: true, served: true, included: true}
