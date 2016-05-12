@@ -43,9 +43,9 @@
      * @property {boolean} showLocation [description]
      * @property {object} locationIndicator [description]
      * @property {boolean} pinchToZoom [description]
-     * @property {boolean} zoomToRoute [description]
-     * @property {integer} zoomPadding [description]
-     * @property {integer} floorChangeAnimationDelay [description]
+     * @property {boolean} zoomToRoute if true, zooms closer to path animation
+     * @property {integer} zoomPadding the padding of the zoom box
+     * @property {integer} floorChangeAnimationDelay how long it takes to switch floors in the animation
      * @property {boolean} newBackend defaults to true, determine whether to use improved backend
      */
 
@@ -66,7 +66,7 @@
         /**
          * @typedef path
          * @memberOf wayfinding
-         * @typedef {object}
+         * @type {object}
          * @property {string} color any valid CSS color
          * @property {integer} radius the turn ration in pixels to apply to the solution path
          * @property {integer} speed the speed at which the solution path will be drawn
@@ -79,6 +79,12 @@
             width: 3 // the width of the solution path in pixels
         },
         // The door identifier for the default starting point
+        /**
+         * @typedef startpoint
+         * @memberOf wayfinding
+         * @type {string}
+         * @description returns the current startpoint
+         */
         'startpoint': function () {
             return 'startpoint';
         },
@@ -127,6 +133,7 @@
      * @typedef datastore
      * @memberOf plugin
      * @type {object}
+     * @description datastructure that holds parse information of SVGs in order to do pathfinding. Contains an array of each line type (path, portal, door) broken down per floor
      * @property {floors[]} doors holds an array of floors each of which has an array of doors
      * @property {floors[]} paths holds an array of floors each of which has an array of paths
      * @property {floors[]} portals holds an array of floors each of which has an array of portals
@@ -136,12 +143,14 @@
      * @typedef floors
      * @memberOf plugin
      * @type {(doors[]|paths[]|portals[])}
+     * @description array with size equal to number of floors. One for each line object (door, portal, path)
      */
 
     /**
      * @typedef doors
      * @memberOf plugin
      * @type {object}
+     * @description object that holds data for door lines
      * @property {integer} floor index of parent floor in floors[]
      * @property {integer} x1 int x coord of first end of door line in SVG
      * @property {integer} y1 int y coord of first end of door line in SVG
@@ -162,6 +171,7 @@
      * @typedef paths
      * @memberOf plugin
      * @type {object}
+     * @description object that holds data for path lines
      * @property {integer} floor index of parent floor in floors[]
      * @property {integer} x1 int x coord of first end of path line in SVG
      * @property {integer} y1 int y coord of first end of path line in SVG
@@ -183,6 +193,7 @@
      * @typedef portals
      * @memberOf plugin
      * @type {object}
+     * @description object that holds data for portal lines
      * @property {integer} floor index of parent floor in floors[]
      * @property {integer} x1 int x coord of first end of portal line in SVG
      * @property {integer} y1 int y coord of first end of portal line in SVG
@@ -201,6 +212,74 @@
      * @property {integer} toFloor floor which the portal connects to (-1 if not valid)
      * @property {integer} match id of portal on floor #toFloor that this portal connects to (-1 if not found)length of portal calculated using end points
      * @property {boolean} accessible whether this portal is wheelchair accessible
+     */
+
+    /**
+     * @typedef datastore
+     * @memberOf plugin
+     * @type {object}
+     * @description datastructure that holds parse information of SVGs in order to do pathfinding. Contains an array of path lines broken down per floor and array of linked portals among all floors. Used with old backend
+     * @deprecated
+     * @property {floors[]} p holds an array of floors each of which has an array of paths
+     * @property {portals[]} q holds an array of portals
+     */
+
+    /**
+     * @typedef floors
+     * @memberOf plugin
+     * @type {paths[]}
+     * @description array with size equal to number of floors. Holds path objects. Used with old backend
+     * @deprecated
+     */
+
+    /**
+     * @typedef paths
+     * @memberOf plugin
+     * @type {object}
+     * @description object that holds data for path lines. Used with old backend
+     * @deprecated
+     * @property {string} floor floor identifier
+     * @property {float} x on the first end of the path the x coord
+     * @property {float} y on the first end of the path the y coord
+     * @property {float} m on the second end of the path the x coord
+     * @property {float} n on the second end of the path the y coord
+     * @property {string[]} d an array of doors that connect to the first end of the path
+     * @property {string[]} e an array of doors that connect to the second end of the path
+     * @property {string[]} c array of connections to other paths
+     * @property {string[]} q array of connections to portals
+     * @property {string} o prior path type "pa" or "po"
+     * @property {float} l length of this segment
+     * @property {float} r current shortest combined lengths to reach here
+     * @property {string} p prior path segment to follow back for shortest path
+     */
+
+    /**
+     * @todo change floor to f in floors
+     */
+
+    /**
+     * @typedef portals
+     * @memberOf plugin
+     * @type {object}
+     * @description object that holds data for linked portals. Used with old backend
+     * @deprecated
+     * @property {string} t portal type as string
+     * @property {boolean} a accessible boolean
+     * @property {string} f floor of first end as string
+     * @property {integer} g floor of first end as number
+     * @property {float} x x coord of first end
+     * @property {float} y y coord of first end
+     * @property {float} c connections to paths of first end
+     * @property {string} j floor of second end as string
+     * @property {integer} k floor of second end as number
+     * @property {float} m x coord of second end
+     * @property {float} n y coord of second end
+     * @property {string[]} d connections to paths of second end
+     * @property {float} l length of this segment
+     * @property {float} r current shortest combined lengths to reach here
+     * @property {string} p prior path segment to follow back for shortest path
+     * @property {integer} q prior map number
+     * @property {string} o prior path type "pa" or "po"
      */
 
     /**

@@ -53,7 +53,7 @@ module.exports = function (grunt) {
 			],
 			'open-docs': [
 				'open:docs',
-				'open:coverage'
+				//'open:coverage'
 			],
 			'benchmark': [ // separate from document as it adds a milestone each time
 				'plato',
@@ -237,9 +237,8 @@ module.exports = function (grunt) {
 			},
 			coverage: { // grab the latest Chrome coverage report, currently bug that only covers last browser to finish
 				path: function () {
-					//var reports = grunt.file.expand('coverage/Chrome*/index.html');
-					// return reports[reports.length - 1].toString();
-					return 'Broken';
+					var reports = grunt.file.expand('coverage/Chrome*/index.html');
+					return reports[reports.length - 1].toString();
 				}
 			},
 			docs: {
