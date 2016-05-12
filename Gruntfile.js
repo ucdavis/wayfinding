@@ -81,7 +81,7 @@ module.exports = function (grunt) {
 				jshintrc: '.jshintrc',
 				reporter: require('jshint-stylish'),
                 ignores: [
-                    'src/**/datastore.js',
+                    'src/**/pathfinding.js',
                     'src/**/priority-queue.min.js'
                 ]
 			},
@@ -98,7 +98,11 @@ module.exports = function (grunt) {
 		eslint: {
 			options: {
 				config: 'eslint.json',
-				format: 'stylish'
+				format: 'stylish',
+                /*ignorePattern: [
+                    'src/pathfinding.js',
+                    'src/priority-queue.min.js'
+                ]*/
 			},
 			target: [
 				'<%= config.app %>/src/{,*/}*.js',
