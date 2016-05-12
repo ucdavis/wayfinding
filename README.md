@@ -26,31 +26,35 @@ to **node\_modules/grunt-jsdoc** and run `npm install ink-docstrap`
 * **grunt** did not exist after doing `npm install`, so we added it to
   *package.json* using `npm install grunt --save-dev`
 * **grunt jsdoc** was not working after doing `npm install` because ink-docstrap
-was missing inside **node\_modules/grunt-jsdoc**, so we had to manually run `npm
-install ink-docstrap` in that directory to get JSdoc working.
+  was missing inside **node\_modules/grunt-jsdoc**, so we had to manually run `npm
+  install ink-docstrap` in that directory to get JSdoc working.
 * Unit testing with Karma was not working after doing `npm install` with the
   error: 
   `
   Assertion failed: JS engine does not provide full typed array support' error
   again?
   `
+  
   After searching online, this was a bug fixed in PhantomJS v2. The exisiting
   version of **karma-phantomjs-loader** was not using PhantomJS v2. We need at
   least v1 of karma-phantomjs-loader, so we upated the package.json
   devDependency for that module. 
+  
   However, the dependencies of karma-phantomjs-loader are not automatically
   install by doing `npm install` in the root directory. We have to manually go
   to **node\_modules/karma-phantomjs-loader** and run `npm install` to get unit
   testing working.
-* **grunt open:coverage** is broken with the warning
+* **grunt open:coverage** is broken with the warning:
   `
   Warning: Cannot read property 'toString' of undefined Use --force to continue.
   `
+  
   We have commented it out on *line 56* so that `grunt benchmark` still works.
-* **grunt datastore** does not work. When we try to run it, we get the error
+* **grunt datastore** does not work. When we try to run it, we get the error:
   `
   phantomjs-node: You don't have 'phantomjs' installed
   `
+  
   Trying `npm install phantomjs --save-dev` does not fix the error.
 
 ___
