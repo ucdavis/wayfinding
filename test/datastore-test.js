@@ -32,8 +32,7 @@ describe('Datastore', function () {
             'startpoint': function () {
                 return 'lcd.1';
             },
-            'defaultMap': 'floor1',
-            'dataStoreCache': 'test/fixtures/datastores/'
+            'defaultMap': 'floor1'
         }, function() {
             done();
         });
