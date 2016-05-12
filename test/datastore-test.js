@@ -32,14 +32,10 @@ describe('Wayfinding', function () {
 			'startpoint': function () {
 				return 'lcd.1';
 			},
-			'defaultMap': 'floor1',
-			'dataStoreCache': 'test/fixtures/datastores/'
-		});
-
-		setTimeout(function() {
-			done();
-		}, 1000);
-		// waits(5000); // could implement a callback to speed this up rather than just waiting...
+			'defaultMap': 'floor1'
+		}, function() {
+            done();
+        });
 	});
 
 	afterEach(function () {
@@ -214,5 +210,4 @@ describe('Wayfinding', function () {
         expect(connectionCountFloor1).toEqual(2);
         expect(connectionCountFloor2).toEqual(2);
     });
-
 });
