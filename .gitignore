@@ -8,5 +8,6 @@ docs
 plato
 test/report
 test/fixtures/datastores
+src/rapidjson
 *~
 \#*#

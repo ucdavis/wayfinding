@@ -302,6 +302,14 @@ module.exports = function (grunt) {
 					}
 				}
 			}
+			downloadRapidJSON: {
+				command: 'make --always-make src/rapidjson',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			}
 		}
 	});
 
@@ -314,4 +322,5 @@ module.exports = function (grunt) {
 	grunt.registerTask('default', ['package']);
 	grunt.registerTask('server', ['connect:livereload', 'watch']);
 	grunt.registerTask('datastore', ['connect:datastore', 'shell:datastore']);
+	grunt.registerTask('rapidjson', ['shell:downloadRapidJSON']);
 };
