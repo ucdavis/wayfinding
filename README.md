@@ -47,6 +47,11 @@ install ink-docstrap` in that directory to get JSdoc working.
   Warning: Cannot read property 'toString' of undefined Use --force to continue.
   `
   We have commented it out on *line 56* so that `grunt benchmark` still works.
+* **grunt datastore** does not work. When we try to run it, we get the error
+  `
+  phantomjs-node: You don't have 'phantomjs' installed
+  `
+  Trying `npm install phantomjs --save-dev` does not fix the error.
 
 ___
 ![SVG File](http://i.imgur.com/Em7Lb5Z.jpg)
