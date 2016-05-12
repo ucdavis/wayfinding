@@ -10,7 +10,7 @@ var fixtures = jasmine.getFixtures();
 // given relative path test/fixtures/ to karma
 fixtures.fixturesPath = 'base/test/fixtures/';
 
-describe('Wayfinding', function () {
+describe('Wayfinding plugin', function () {
 
 	var $example;
 
@@ -32,12 +32,11 @@ describe('Wayfinding', function () {
 			'startpoint': function () {
 				return 'lcd.1';
 			},
-			'defaultMap': 'floor1'
-		});
-		setTimeout(function() {
-			done();
-		}, 1000);
-		// waits(5000); // could implement a callback to speed this up rather than just waiting...
+			'defaultMap': 'floor1',
+            'dataStoreCache': 'test/fixtures/datastores/'
+		}, function() {
+            done();
+        });
 	});
 
 	afterEach(function () {
@@ -77,6 +76,4 @@ describe('Wayfinding', function () {
 		$example.wayfinding('destroy');
 		expect($example).not.toBeInDOM();
 	});
-
-
 });
