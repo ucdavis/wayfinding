@@ -1591,8 +1591,15 @@
                         }
                         else if (pathString[0] === 'portal')
                         {
-                            i--; // only need second portal per pair
-                            // TODO: Breaks if sees more than two portals in a row, need to just get last portal in sequence
+                            var pathName = pathString[0];
+
+                            // Skip past all portals
+                            while (pathName === 'portal') {
+                                i--;
+                                pathName = pathResult.get(i).split('-')[0];
+                            }
+                            i++; // Go back to the last portal
+
                             pathString = pathResult.get(i).split('-');
                             solution.push({
                                 type: 'portals',
@@ -1606,6 +1613,7 @@
                             console.log(pathResult.get(i));
                         }
                     }
+
 
                     portalsEntered = 0;
                     // Count number of portal trips

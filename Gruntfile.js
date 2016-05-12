@@ -117,7 +117,11 @@ module.exports = function (grunt) {
 				banner: '<%= banner %>'
 			},
 			dist: {
-				src: ['src/**/*.js'],
+				src: [
+                    'src/**/*.js',
+                    '!src/**/pathfinding.js',
+                    '!src/**/priority-queue.js'
+                ],
 				dest: 'dist/jquery.<%= pkg.name %>.min.js'
 			}
 		},
