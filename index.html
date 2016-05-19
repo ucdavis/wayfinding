@@ -79,7 +79,9 @@
 
 
 		<script src="bower_components/jquery/dist/jquery.js"></script>
-		<script src="src/jquery.wayfinding.js"></script>
+		<script src="dist/priority-queue.min.js"></script>
+		<script src="dist/jquery.wayfinding.min.js"></script>
+		<script src="dist/emscripten.pathfinding.js"></script>
 
 		<script>
 			$(document).ready(function () {
@@ -134,7 +136,6 @@
 				$('#myMaps').on('wayfinding:roomClicked', function(e, r) {
 					$('#endSelect option[value="' + r.roomId + '"]').attr('selected', true);
 				});
-
 			});
 		</script>
 	</body>
