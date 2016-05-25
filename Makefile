@@ -2,7 +2,7 @@
 EMCC = em++
 CPPFILE = src/emscripten.pathfinding.cpp
 EMPPFLAGS = -Oz --bind --memory-init-file 0
-CPPFLAGS = -Wall -std='c++11'
+CPPFLAGS = -std='c++11'
 EMJS = src/emscripten.pathfinding.js
 
 $(EMJS): $(CPPFILE)

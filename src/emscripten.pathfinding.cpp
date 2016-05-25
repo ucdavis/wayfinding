@@ -1,47 +1,57 @@
-#include <iostream>
 #include <string>
-#include <cstdlib>
 #include <set>
 #include <vector>
 #include <map>
-#include <cassert>
 #include <climits>
-#include <time.h>
 
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
 #include "rapidjson/document.h"
 
 using namespace rapidjson;
 using namespace std;
 
+enum nodeType {path, door, portal, stop};
+string stringTypes[] = {"path", "door", "portal", "stop"};
+
+// generic graph node
 class Node
 {
   public:
-    Node () {}
-
     int id;
 
+    // Adjacent paths, portals, and doors
+    // Stored by ID
     vector<int> paths;
     vector<int> portals;
     vector<int> doors;
 
     int floor;
 
-    string type;
+    nodeType type;
 
     float weight;
-    
-    // These are portal specific but need them here for dijkstras
+
+    // Path stuff
+    int pathID;
+
+    // Door stuff
+    // The door's name
+    string doorID;
+    bool start;
+    bool end;
+
+    // Portal stuff
+    string portalID;
     int toFloor;
     int matchID;
     bool accessible;
 
+    // Orders nodes by ID, floor, and type, in that order.
     bool operator<(const Node other) const
     {
       if (id == other.id) {
         if (floor == other.floor) {
-          return type.compare(other.type) < 0;
+          return type < other.type;
         }
         else {
           return floor < other.floor;
@@ -54,165 +64,140 @@ class Node
 
 };
 
-class Door : public Node
+class Graph
 {
   public:
-    Door () {}
-    
-    string doorID;
-    bool start;
-    bool end;
-};
 
-class Path : public Node
-{
-  public:
-    Path () {}
-    
-    int pathID;
-};
-
-class Portal : public Node
-{
-  public:
-    Portal () {}
-
-    string portalID;
-};
-
-class Graph 
-{
-  public:
-    Graph () {}
-
+    // number of floors in the graph
     int floors;
-    
-    bool found_path;
-    
-    vector< vector<Path> > paths;
-    vector< vector<Door> > doors;
-    vector< vector<Portal> > portals;
+
+    bool foundPath = false;
+
+    vector< vector<Node> > paths;
+    vector< vector<Node> > doors;
+    vector< vector<Node> > portals;
+
+    // Finds the shortest path from (startFloor, startID) to (endFloor, endID)
+    // Returns a map containing the route in reverse.
+    map<Node, Node> dijkstra(int startID, int startFloor, int endID,
+        int endFloor, bool accessible)
+    {
+      Node start = doors[startFloor][startID];
+      Node end = doors[endFloor][endID];
+
+      map<Node, Node> path;
+      map<Node, int> minDist;
+
+      for (int floor = 0; floor < floors; floor++)
+      {
+        for (auto node : doors[floor])
+        {
+          minDist[node] = INT_MAX;
+        }
+
+        for(auto node : paths[floor])
+        {
+          minDist[node] = INT_MAX;
+        }
+
+        for(auto node : portals[floor])
+        {
+          minDist[node] = INT_MAX;
+        }
+      }
+
+      minDist[start] = 0;
+      path[start] = Node();
+      path[start].type = stop;
+
+      set< pair<int, Node> > activeNodes;
+      activeNodes.insert({0, start});
+
+      while(!activeNodes.empty())
+      {
+        // extract the next node to be processed
+        Node currentNode = activeNodes.begin()->second;
+        if (currentNode.type == door) {
+          if (currentNode.id == end.id && currentNode.floor == end.floor)
+          {
+            foundPath = true;
+            return path;
+          }
+        }
+
+        activeNodes.erase(activeNodes.begin());
+        for (auto neighborID : currentNode.paths)
+        {
+          Node neighbor = paths[currentNode.floor][neighborID];
+          if (minDist[neighbor] > minDist[currentNode] + neighbor.weight)
+          {
+            updateNeighborDistance(currentNode, neighbor, activeNodes, minDist);
+            path[neighbor] = currentNode;
+          }
+        }
+        for (auto neighborID : currentNode.doors)
+        {
+          Node neighbor = doors[currentNode.floor][neighborID];
+          if (minDist[neighbor] > minDist[currentNode] + neighbor.weight)
+          {
+            updateNeighborDistance(currentNode, neighbor, activeNodes, minDist);
+            path[neighbor] = currentNode;
+          }
+        }
+        for (auto neighborID : currentNode.portals)
+        {
+          Node neighbor = portals[currentNode.floor][neighborID];
+          if (accessible && !neighbor.accessible)
+          {
+            continue;
+          }
+
+          if (minDist[neighbor] > minDist[currentNode] + neighbor.weight)
+          {
+            updateNeighborDistance(currentNode, neighbor, activeNodes, minDist);
+            path[neighbor] = currentNode;
+          }
+        }
+        // Look at match
+        if (currentNode.type == portal && currentNode.matchID != -1 && currentNode.toFloor != -1)
+        {
+          Node neighbor = portals[currentNode.toFloor][currentNode.matchID];
+          if (minDist[neighbor] > minDist[currentNode] + neighbor.weight)
+          {
+            updateNeighborDistance(currentNode, neighbor, activeNodes, minDist);
+            path[neighbor] = currentNode;
+          }
+        }
+      }
+
+      map<Node, Node> error{{Node(), Node()}};
+      return error;
+    }
+
+    void updateNeighborDistance(Node currentNode, Node neighbor,
+      set< pair<int, Node> >& activeNodes, map<Node, int>& minDist)
+    {
+      activeNodes.erase({minDist[neighbor], neighbor});
+      minDist[neighbor] = minDist[currentNode] + neighbor.weight;
+      activeNodes.insert({minDist[neighbor], neighbor});
+    }
 };
 
-map<Node, Node> dijkstra(Graph& graph, int start_id, int start_floor, int end_id,
-    int end_floor, bool accessible)
-{
-  Door start = graph.doors[start_floor][start_id];
-  Door end = graph.doors[end_floor][end_id];
-
-  map<Node, Node> path;
-  map<Node, int> min_dist;
-
-  for (int floor = 0; floor < graph.floors; floor++)
-  {
-    for (auto node : graph.doors[floor])
-    {
-      min_dist[node] = INT_MAX;
-    }
-
-    for(auto node : graph.paths[floor])
-    {
-      min_dist[node] = INT_MAX;
-    }
-
-    for(auto node : graph.portals[floor])
-    {
-      min_dist[node] = INT_MAX;
-    }
-  }
-
-  min_dist[start] = 0;
-  path[start] = Node();
-  path[start].type = "END";
-  
-  set< pair<int, Node> > active_nodes;
-  active_nodes.insert({0, start});
-
-  while(!active_nodes.empty())
-  {
-    Node where = active_nodes.begin()->second;
-    if (where.type == "door") {
-      if (where.id == end.id && where.floor == end.floor) 
-      {
-        graph.found_path = true;  
-        return path;
-      }
-    }
-    
-    active_nodes.erase(active_nodes.begin());
-    for (auto i : where.paths)
-    { 
-      Node neighbor = graph.paths[where.floor][i];
-      if (min_dist[neighbor] > min_dist[where] + neighbor.weight)
-      {
-        active_nodes.erase({min_dist[neighbor], neighbor});
-        min_dist[neighbor] = min_dist[where] + neighbor.weight;
-        active_nodes.insert({min_dist[neighbor], neighbor});
-        path[neighbor] = where;
-      }
-    }
-    for (auto i : where.doors)
-    {
-      Node neighbor = graph.doors[where.floor][i];
-      if (min_dist[neighbor] > min_dist[where] + neighbor.weight)
-      {
-        active_nodes.erase({min_dist[neighbor], neighbor});
-        min_dist[neighbor] = min_dist[where] + neighbor.weight;
-        active_nodes.insert({min_dist[neighbor], neighbor});
-        path[neighbor] = where;
-      }
-    }
-    for (auto i : where.portals)
-    {
-      Node neighbor = graph.portals[where.floor][i];
-      if (accessible && !neighbor.accessible)
-      {
-        continue;
-      }
-
-      if (min_dist[neighbor] > min_dist[where] + neighbor.weight)
-      {
-        active_nodes.erase({min_dist[neighbor], neighbor});
-        min_dist[neighbor] = min_dist[where] + neighbor.weight;
-        active_nodes.insert({min_dist[neighbor], neighbor});
-        path[neighbor] = where;
-      }
-    }
-    // Look at match
-    if (where.type == "portal" && where.matchID != -1 && where.toFloor != -1)
-    {
-      Node neighbor = graph.portals[where.toFloor][where.matchID];
-      if (min_dist[neighbor] > min_dist[where] + neighbor.weight)
-      {
-        active_nodes.erase({min_dist[neighbor], neighbor});
-        min_dist[neighbor] = min_dist[where] + neighbor.weight;
-        active_nodes.insert({min_dist[neighbor], neighbor});
-        path[neighbor] = where;
-      }
-    }
-  }
-  return path;
-}
-
-vector<string> pathfinding(string dataStore, string start_string, 
-    string end_string, bool accessible)
+// change name
+vector<string> pathfinding(string dataStore, string startString,
+    string endString, bool accessible)
 {
   Graph graph;
-  
-  int start_id = -1, end_id = -1, start_floor = -1, end_floor = -1;
 
-  // Time vars for benchmarking
-  // clock_t t1, t2;
-  // float diff = 0;
+  int startID = -1, endID = -1, startFloor = -1, endFloor = -1;
 
   // Read in JSON object
   const char* json = dataStore.c_str();
 
   // Parse JSON object
-  // t1 = clock();
   Document document;
   document.Parse(json);
-  
+
   // Get the number of floors
   graph.floors = document["doors"].Size();
 
@@ -224,199 +209,177 @@ vector<string> pathfinding(string dataStore, string start_string,
   for (int floor = 0; floor < graph.floors; floor++)
   {
     // Get doors
-    Value& door_elements = document["doors"][floor];
+    Value& doorElements = document["doors"][floor];
 
-    for (int index = 0; index < door_elements.Size(); index++)
+    for (int index = 0; index < doorElements.Size(); index++)
     {
-      Door door_node;
-      door_node.floor = floor;
-      door_node.type = "door";
-      door_node.id = door_elements[index]["id"].GetInt();
-      door_node.doorID = door_elements[index]["doorId"].GetString();
-      door_node.weight = 0;
+      Node doorNode;
+      doorNode.floor = floor;
+      doorNode.type = door;
+      doorNode.id = doorElements[index]["id"].GetInt();
+      doorNode.doorID = doorElements[index]["doorId"].GetString();
+      doorNode.weight = 0;
 
-      if (door_node.doorID == start_string)
+      if (doorNode.doorID == startString)
       {
-        door_node.start = true;
-        start_id = door_node.id;
-        start_floor = door_node.floor;
+        doorNode.start = true;
+        startID = doorNode.id;
+        startFloor = doorNode.floor;
       }
       else {
-        door_node.start = false;
+        doorNode.start = false;
       }
 
-      if (door_node.doorID == end_string)
+      if (doorNode.doorID == endString)
       {
-        door_node.end = true;
-        end_id = door_node.id;
-        end_floor = door_node.floor;
+        doorNode.end = true;
+        endID = doorNode.id;
+        endFloor = doorNode.floor;
       }
       else {
-        door_node.end = false;
+        doorNode.end = false;
       }
 
-      for (int j = 0; j < door_elements[index]["doors"].Size(); j++)
+      for (int j = 0; j < doorElements[index]["doors"].Size(); j++)
       {
-        door_node.doors.push_back(door_elements[index]["doors"][j].GetInt());
+        doorNode.doors.push_back(doorElements[index]["doors"][j].GetInt());
       }
 
-      for (int j = 0; j < door_elements[index]["paths"].Size(); j++)
+      for (int j = 0; j < doorElements[index]["paths"].Size(); j++)
       {
-        door_node.paths.push_back(door_elements[index]["paths"][j].GetInt());
+        doorNode.paths.push_back(doorElements[index]["paths"][j].GetInt());
       }
 
-      for (int j = 0; j < door_elements[index]["portals"].Size(); j++)
+      for (int j = 0; j < doorElements[index]["portals"].Size(); j++)
       {
-        door_node.portals.push_back(
-            door_elements[index]["portals"][j].GetInt());
+        doorNode.portals.push_back(
+            doorElements[index]["portals"][j].GetInt());
       }
 
-      graph.doors[floor].push_back(door_node);
+      graph.doors[floor].push_back(doorNode);
     } // end of doors
 
     // Get paths
-    Value& path_elements = document["paths"][floor];
+    Value& pathElements = document["paths"][floor];
 
-    for (int index = 0; index < path_elements.Size(); index++)
+    for (int index = 0; index < pathElements.Size(); index++)
     {
-      Path path_node;
-      path_node.floor = floor;
-      path_node.type = "path";
-      path_node.id = path_elements[index]["id"].GetInt();
-      path_node.pathID = path_elements[index]["pathId"].GetInt();
-      path_node.weight = path_elements[index]["length"].GetDouble();
+      Node pathNode;
+      pathNode.floor = floor;
+      pathNode.type = path;
+      pathNode.id = pathElements[index]["id"].GetInt();
+      pathNode.pathID = pathElements[index]["pathId"].GetInt();
+      pathNode.weight = pathElements[index]["length"].GetDouble();
 
-      for (int j = 0; j < path_elements[index]["doors"].Size(); j++)
+      for (int j = 0; j < pathElements[index]["doors"].Size(); j++)
       {
-        path_node.doors.push_back(path_elements[index]["doors"][j].GetInt());
+        pathNode.doors.push_back(pathElements[index]["doors"][j].GetInt());
       }
 
-      for (int j = 0; j < path_elements[index]["paths"].Size(); j++)
+      for (int j = 0; j < pathElements[index]["paths"].Size(); j++)
       {
-        path_node.paths.push_back(path_elements[index]["paths"][j].GetInt());
+        pathNode.paths.push_back(pathElements[index]["paths"][j].GetInt());
       }
 
-      for (int j = 0; j < path_elements[index]["portals"].Size(); j++)
+      for (int j = 0; j < pathElements[index]["portals"].Size(); j++)
       {
-        path_node.portals.push_back(
-            path_elements[index]["portals"][j].GetInt());
+        pathNode.portals.push_back(
+            pathElements[index]["portals"][j].GetInt());
       }
 
-      graph.paths[floor].push_back(path_node);
+      graph.paths[floor].push_back(pathNode);
     } // end of paths
 
     // Get portals
-    Value& portal_elements = document["portals"][floor];
+    Value& portalElements = document["portals"][floor];
 
-    for (int index = 0; index < portal_elements.Size(); index++)
+    for (int index = 0; index < portalElements.Size(); index++)
     {
-      Portal portal_node;
-      portal_node.floor = floor;
-      portal_node.type = "portal";
-      portal_node.id = portal_elements[index]["id"].GetInt();
-      portal_node.portalID = portal_elements[index]["portalId"].GetString();
-      portal_node.weight = portal_elements[index]["length"].GetDouble();
-      portal_node.accessible = portal_elements[index]["accessible"].GetBool();
-      portal_node.toFloor = portal_elements[index]["toFloor"].GetInt();
-      portal_node.matchID = portal_elements[index]["match"].GetInt();
+      Node portalNode;
+      portalNode.floor = floor;
+      portalNode.type = portal;
+      portalNode.id = portalElements[index]["id"].GetInt();
+      portalNode.portalID = portalElements[index]["portalId"].GetString();
+      portalNode.weight = portalElements[index]["length"].GetDouble();
+      portalNode.accessible = portalElements[index]["accessible"].GetBool();
+      portalNode.toFloor = portalElements[index]["toFloor"].GetInt();
+      portalNode.matchID = portalElements[index]["match"].GetInt();
 
-      for (int j = 0; j < portal_elements[index]["doors"].Size(); j++)
+      for (int j = 0; j < portalElements[index]["doors"].Size(); j++)
       {
-        portal_node.doors.push_back(
-            portal_elements[index]["doors"][j].GetInt());
+        portalNode.doors.push_back(
+            portalElements[index]["doors"][j].GetInt());
       }
 
-      for (int j = 0; j < portal_elements[index]["paths"].Size(); j++)
+      for (int j = 0; j < portalElements[index]["paths"].Size(); j++)
       {
-        portal_node.paths.push_back(
-            portal_elements[index]["paths"][j].GetInt());
+        portalNode.paths.push_back(
+            portalElements[index]["paths"][j].GetInt());
       }
 
-      for (int j = 0; j < portal_elements[index]["portals"].Size(); j++)
+      for (int j = 0; j < portalElements[index]["portals"].Size(); j++)
       {
-        portal_node.portals.push_back(
-            portal_elements[index]["portals"][j].GetInt());
+        portalNode.portals.push_back(
+            portalElements[index]["portals"][j].GetInt());
       }
 
-      graph.portals[floor].push_back(portal_node);
+      graph.portals[floor].push_back(portalNode);
     } // end of portals
   } // end of floors
 
-  // t2 = clock();
-  // diff = ((float)t2 - (float)t1)/CLOCKS_PER_SEC;
-
-  // cout << "Run time of datastore parsing using RapidJSON (in secs): " << diff;
-  // cout <<  endl;
-
   // Run dijkstra's
   vector<string> elements;
-  
-  if (start_id == -1 && start_floor == -1 && end_id == -1 && end_floor == -1)
+
+  if (startID == -1 && startFloor == -1 && endID == -1 && endFloor == -1)
   {
     string error;
-    error = "Invalid rooms, start: " + start_string + ", end: " + end_string;
-    // cout << "ERROR: " << error << endl;
+    error = "Invalid rooms, start: " + startString + ", end: " + endString;
     elements.push_back(error);
   }
-  else if (start_id == -1 && start_floor == -1)
+  else if (startID == -1 && startFloor == -1)
   {
     string error;
-    error = "Invalid room, start: " + start_string;
-    // cout << "ERROR: " << error << endl;
+    error = "Invalid room, start: " + startString;
     elements.push_back(error);
   }
-  else if (end_id == -1 && end_floor == -1)
+  else if (endID == -1 && endFloor == -1)
   {
     string error;
-    error = "Invalid room, end: " + end_string;
-    // cout << "ERROR: " << error << endl;
+    error = "Invalid room, end: " + endString;
     elements.push_back(error);
   }
-  else 
+  else
   {
-    graph.found_path = false;
+    graph.foundPath = false;
 
-    // t1 = clock();
-    map<Node, Node> route = dijkstra(graph, start_id, start_floor, end_id, 
-        end_floor, accessible);
-    // t2 = clock();
-    // diff = ((float)t2 - (float)t1)/CLOCKS_PER_SEC;
+    map<Node, Node> route = graph.dijkstra(startID, startFloor, endID,
+        endFloor, accessible);
 
-    // cout << "Run time of Dijkstra's on datastore adj list (in secs): " << diff;
-    // cout << endl;
-
-    if (graph.found_path)
+    if (graph.foundPath)
     {
       string el;
 
-      // Path count terminates for broken paths
-      int path_count = 0;
-      Node target = graph.doors[end_floor][end_id];
+      int pathCount = 0;
+      Node target = graph.doors[endFloor][endID];
 
-      while (route[target].type != "END")
+      while (route[target].type != stop)
       {
-        el = target.type + "-" + to_string(target.floor) + "-" + 
+        el = stringTypes[target.type] + "-" + to_string(target.floor) + "-" +
           to_string(target.id);
-        // cout << target.type << " #" << target.id << " on floor #";
-        // cout << target.floor << " <-- ";
         elements.push_back(el);
         target = route[target];
-        path_count++;
+        pathCount++;
       }
 
-      el = target.type + "-" + to_string(target.floor) + "-" +
+      el = stringTypes[target.type] + "-" + to_string(target.floor) + "-" +
         to_string(target.id);
-      // cout << target.type << " #" << target.id << " on floor #" << target.floor;
-      // cout << endl;
       elements.push_back(el);
-      // cout << " SHOWING " << path_count << " PATHS" << endl;
     }
-    else 
+    else
     {
       string error;
-      error = "Path not found between start: " + start_string + " & end: ";
-      error += end_string;
-      // cout << "ERROR: " << error << endl;
+      error = "Path not found between start: " + startString + " & end: ";
+      error += endString;
       elements.push_back(error);
     }
   }
