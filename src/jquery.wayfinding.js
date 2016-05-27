@@ -143,7 +143,7 @@
      * @typedef floors
      * @memberOf plugin
      * @type {(doors[]|paths[]|portals[])}
-     * @description array with size equal to number of floors. One for each line object (door, portal, path). Works with the Emscripten backend. 
+     * @description array with size equal to number of floors. One for each line object (door, portal, path). Works with the Emscripten backend.
      */
 
     /**
