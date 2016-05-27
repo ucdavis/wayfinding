@@ -133,7 +133,7 @@
      * @typedef datastore
      * @memberOf plugin
      * @type {object}
-     * @description datastructure that holds parse information of SVGs in order to do pathfinding. Contains an array of each line type (path, portal, door) broken down per floor
+     * @description datastructure that holds parse information of SVGs in order to do pathfinding. Contains an array of each line type (path, portal, door) broken down per floor. Works with the Emscripten backend.
      * @property {floors[]} doors holds an array of floors each of which has an array of doors
      * @property {floors[]} paths holds an array of floors each of which has an array of paths
      * @property {floors[]} portals holds an array of floors each of which has an array of portals
@@ -143,14 +143,14 @@
      * @typedef floors
      * @memberOf plugin
      * @type {(doors[]|paths[]|portals[])}
-     * @description array with size equal to number of floors. One for each line object (door, portal, path)
+     * @description array with size equal to number of floors. One for each line object (door, portal, path). Works with the Emscripten backend. 
      */
 
     /**
      * @typedef doors
      * @memberOf plugin
      * @type {object}
-     * @description object that holds data for door lines
+     * @description object that holds data for door lines. Works with the Emscripten backend.
      * @property {integer} floor index of parent floor in floors[]
      * @property {integer} x1 int x coord of first end of door line in SVG
      * @property {integer} y1 int y coord of first end of door line in SVG
@@ -171,7 +171,7 @@
      * @typedef paths
      * @memberOf plugin
      * @type {object}
-     * @description object that holds data for path lines
+     * @description object that holds data for path lines. Works with the Emscripten backend.
      * @property {integer} floor index of parent floor in floors[]
      * @property {integer} x1 int x coord of first end of path line in SVG
      * @property {integer} y1 int y coord of first end of path line in SVG
@@ -193,7 +193,7 @@
      * @typedef portals
      * @memberOf plugin
      * @type {object}
-     * @description object that holds data for portal lines
+     * @description object that holds data for portal lines. Works with the Emscripten backend.
      * @property {integer} floor index of parent floor in floors[]
      * @property {integer} x1 int x coord of first end of portal line in SVG
      * @property {integer} y1 int y coord of first end of portal line in SVG
@@ -218,7 +218,7 @@
      * @typedef datastore
      * @memberOf plugin
      * @type {object}
-     * @description datastructure that holds parse information of SVGs in order to do pathfinding. Contains an array of path lines broken down per floor and array of linked portals among all floors. Used with old backend
+     * @description datastructure that holds parse information of SVGs in order to do pathfinding. Contains an array of path lines broken down per floor and array of linked portals among all floors. Works with the recursive backend.
      * @deprecated
      * @property {floors[]} p holds an array of floors each of which has an array of paths
      * @property {portals[]} q holds an array of portals
@@ -228,7 +228,7 @@
      * @typedef floors
      * @memberOf plugin
      * @type {paths[]}
-     * @description array with size equal to number of floors. Holds path objects. Used with old backend
+     * @description array with size equal to number of floors. Holds path objects. Works with the recursive backend.
      * @deprecated
      */
 
@@ -236,8 +236,7 @@
      * @typedef paths
      * @memberOf plugin
      * @type {object}
-     * @description object that holds data for path lines. Used with old backend
-     * @deprecated
+     * @description object that holds data for path lines. Works with the recursive backend.
      * @property {string} floor floor identifier
      * @property {float} x on the first end of the path the x coord
      * @property {float} y on the first end of the path the y coord
@@ -261,7 +260,7 @@
      * @typedef portals
      * @memberOf plugin
      * @type {object}
-     * @description object that holds data for linked portals. Used with old backend
+     * @description object that holds data for linked portals. Works with the recursive backend.
      * @deprecated
      * @property {string} t portal type as string
      * @property {boolean} a accessible boolean
@@ -807,7 +806,7 @@
             return solution;
         }
 
-        function buildOld() {
+        function buildDatastoreForRecursive() {
 
             dataStore = {
                 'p': [], // paths
@@ -826,7 +825,7 @@
             generateRoutes();
 
             return dataStore;
-        } // function buildOld
+        } // function buildDatastoreForRecursive
 
         // Orders points based on x, y, and ID in that order.
         function comparePoints(pointA, pointB) {
@@ -1048,7 +1047,7 @@
             });
         }
 
-        function buildNew() {
+        function buildDatastoreForEmscripten() {
             dataStore = {
                 'doors': [],
                 'paths': [],
@@ -1067,14 +1066,14 @@
             matchPortals();
 
             return dataStore;
-        } // function buildNew
+        } // function buildDatastoreForEmscripten
 
         function build() {
             if (options.emscriptenBackend) {
-                return buildNew();
+                return buildDatastoreForEmscripten();
             }
             else {
-                return buildOld();
+                return buildDatastoreForRecursive();
             }
         }
 
@@ -1560,8 +1559,7 @@
         } //function animatePath
 
 
-        function checkIfConnectionAtx1y1(previousLine, currentLine)
-        {
+        function checkIfConnectionAtx1y1(previousLine, currentLine) {
             var previousFromDatastore = dataStore[previousLine.type]
                                                    [previousLine.floor]
                                                    [previousLine.segment];
@@ -1584,7 +1582,7 @@
 
         // The combined routing function
         // revise to only interate if startpoint has changed since last time?
-        function routeToOld(destination, el) {
+        function routeToForRecursive(destination, el) {
             var i,
                 draw,
                 stepNum,
@@ -1873,9 +1871,9 @@
                     //notify animation loop?
                 }
             }
-        } //RouteToOld
+        } //routeToForRecursive
 
-        function routeToNew(destination, el) {
+        function routeToForEmscripten(destination, el) {
             var i,
                 draw,
                 stepNum,
@@ -2231,14 +2229,14 @@
                     //notify animation loop?
                 }
             }
-        } //RouteToNew
+        } //routeToForEmscripten
 
         function routeTo(destination, el) {
             if (options.emscriptenBackend) {
-                routeToNew(destination, el);
+                routeToForEmscripten(destination, el);
             }
             else {
-                routeToOld(destination, el);
+                routeToForRecursive(destination, el);
             }
         }
 
@@ -2317,7 +2315,6 @@
                     }
                 );
             });
-
         } // function initialize
 
         if (action && typeof (action) === 'object') {
