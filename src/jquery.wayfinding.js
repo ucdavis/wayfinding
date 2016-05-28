@@ -532,10 +532,10 @@
 
                 portalSegments.push(portal);
             });
-        } // function buildDataStoreOld
+        } // function buildDataStore
 
         // after data extracted from all svg maps then build portals between them
-        function buildPortalsOld() {
+        function buildPortalsForRecursive() {
 
             var segmentOuterNum,
                 segmentInnerNum,
@@ -639,7 +639,7 @@
             }
 
             portalSegments = [];
-        } // end function buildPortalsOld
+        } // end function buildPortalsForRecursive
 
         //get the set of paths adjacent to a door or endpoint.
         function getDoorPaths(door) {
@@ -821,7 +821,7 @@
                 buildDataStore(i, map, map.el);
             });
 
-            buildPortalsOld();
+            buildPortalsForRecursive();
             generateRoutes();
 
             return dataStore;
@@ -918,7 +918,7 @@
             });
         }
 
-        function buildPortals(floor, map) {
+        function buildPortalsForEmscripten(floor, map) {
             dataStore.portals[floor] = [];
 
             $('#Portals line', map).each(function () { // index, line
@@ -1001,14 +1001,6 @@
                     connected.push(point);
                 }
                 else {
-                    // matches 'closest' paths together, stores connection in 'dataStore'
-                    // $.each(connected, function(i, firstPath) {
-                    //     $.each(connected, function(j, secondPath) {
-                    //         if (i !== j) {
-                    //             dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
-                    //         }
-                    //     });
-                    // });
                     connectLines(connected, floor);
                     connected = [point];
                 }
@@ -1016,13 +1008,6 @@
             }
 
             connectLines(connected, floor);
-            // $.each(connected, function(i, firstPath) {
-            //     $.each(connected, function(j, secondPath) {
-            //         if (i !== j) {
-            //             dataStore[firstPath.type][floor][firstPath.id][secondPath.type].push(secondPath.id);
-            //         }
-            //     });
-            // });
         }
 
         function matchPortals() {
@@ -1059,7 +1044,7 @@
                 queue = new PriorityQueue({ comparator: comparePoints });
                 buildDoors(i, map.el);
                 buildPaths(i, map.el);
-                buildPortals(i, map.el);
+                buildPortalsForEmscripten(i, map.el);
                 buildConnections(i);
             });
 
@@ -1878,7 +1863,6 @@
                 draw,
                 stepNum,
                 level,
-                //reversePathStart,
                 portalsEntered,
                 lastStep,
                 ax,
@@ -1897,7 +1881,6 @@
                 nx,
                 ny,
                 thisPath;
-                //pick;
 
             options.endpoint = destination;
 
@@ -1985,8 +1968,8 @@
                         }
                         else
                         {
-                            console.log('Not a path or portal');
-                            console.log(pathResult.get(i));
+                            console.warn('Not a path or portal');
+                            console.warn(pathResult.get(i));
                         }
                     }
 
