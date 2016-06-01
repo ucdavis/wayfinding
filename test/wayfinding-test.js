@@ -10,7 +10,7 @@ var fixtures = jasmine.getFixtures();
 // given relative path test/fixtures/ to karma
 fixtures.fixturesPath = 'base/test/fixtures/';
 
-describe('Wayfinding', function () {
+describe('Wayfinding plugin', function () {
 
 	var $example;
 
@@ -33,6 +33,7 @@ describe('Wayfinding', function () {
 				return 'lcd.1';
 			},
 			'defaultMap': 'floor1',
+            'dataStoreCache': 'test/fixtures/datastores/',
             'newBackend': false
 		}, function() {
             done();
@@ -76,6 +77,4 @@ describe('Wayfinding', function () {
 		$example.wayfinding('destroy');
 		expect($example).not.toBeInDOM();
 	});
-
-
 });

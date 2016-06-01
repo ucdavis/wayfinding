@@ -12,8 +12,9 @@
 			<div id="myMaps"></div>
 		</div>
 
-		<script src="/bower_components/jquery/dist/jquery.js"></script>
-		<script src="/src/jquery.wayfinding.js"></script>
+		<script src="../../bower_components/jquery/dist/jquery.js"></script>
+		<script src="../../src/priority-queue.min.js"></script>
+		<script src="../../src/jquery.wayfinding.js"></script>
 		<script>
 			$().ready(function () {
 				var params = location.search.substring(1).split('&'),
@@ -29,12 +30,13 @@
 				}
 				$('#myMaps').wayfinding({
 					'maps': [
-						{'path': '/test/fixtures/demo_map_1.svg', 'id': 'floor1'},
-						{'path': '/test/fixtures/demo_map_2.svg', 'id': 'floor2'}
+						{'path': 'demo_map_1.svg', 'id': 'floor1'},
+						{'path': 'demo_map_2.svg', 'id': 'floor2'}
 					],
 					'startpoint': door,
 					'accessibleRoute': accessible,
-					'defaultMap': 'floor1'
+          'defaultMap': 'floor1',
+          'emscriptenBackend': false
 				}, function(){
 					console.log('ready');
 				});
