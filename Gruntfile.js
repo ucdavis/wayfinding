@@ -33,20 +33,27 @@ module.exports = function (grunt) {
 				'jshint',
 				'eslint'
 			],
+			// C++ compilation step
+			'build': [
+				'shell:makeClean',
+				'shell:compileEmscripten'
+			],
 			'test': [ // run all tests
 				'connect:test',
 				'karma:unit'
 			],
 			'package': [
 				'clean',
-				'uglify'
+				'uglify',
+				'shell:emscriptenPathfinding',
+				'shell:priorityQueue'
 			],
 			'document': [
 				'jsdoc'
 			],
 			'open-docs': [
 				'open:docs',
-				'open:coverage'
+				//'open:coverage'
 			],
 			'benchmark': [ // separate from document as it adds a milestone each time
 				'plato',
@@ -79,7 +86,11 @@ module.exports = function (grunt) {
 		jshint: {
 			options: {
 				jshintrc: '.jshintrc',
-				reporter: require('jshint-stylish')
+				reporter: require('jshint-stylish'),
+                ignores: [
+                    'src/**/emscripten.pathfinding.js',
+                    'src/**/priority-queue.min.js'
+                ]
 			},
 			gruntfile: {
 				src: 'Gruntfile.js'
@@ -94,7 +105,7 @@ module.exports = function (grunt) {
 		eslint: {
 			options: {
 				config: 'eslint.json',
-				format: 'stylish'
+				format: 'stylish',
 			},
 			target: [
 				'<%= config.app %>/src/{,*/}*.js',
@@ -109,7 +120,11 @@ module.exports = function (grunt) {
 				banner: '<%= banner %>'
 			},
 			dist: {
-				src: ['src/**/*.js'],
+				src: [
+                    'src/**/*.js',
+                    '!src/**/emscripten.pathfinding.js',
+                    '!src/**/priority-queue.js'
+                ],
 				dest: 'dist/jquery.<%= pkg.name %>.min.js'
 			}
 		},
@@ -177,7 +192,9 @@ module.exports = function (grunt) {
 				// The rest of your configuration.
 				src: [
 					'<%= config.app %>/src/**/*.js',
-					'README.md'
+					'README.md',
+                    '!src/**/emscripten.pathfinding.js',
+                    '!src/**/priority-queue.min.js'
 				],
 				options: {
 					destination: 'docs/',
@@ -200,7 +217,9 @@ module.exports = function (grunt) {
 				},
 				files: {
 					'plato': [
-						'<%= config.dev %>/{,*/}*.js'
+						'<%= config.dev %>/{,*/}*.js',
+						'!<%= config.dev %>/{,*/}emscripten.pathfinding.js',
+						'!<%= config.dev %>/{,*/}priority-queue.min.js'
 					]
 				}
 			}
@@ -240,6 +259,38 @@ module.exports = function (grunt) {
 		shell: {
 			datastore: {
 				command: 'node tasks/datastores.js',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			emscriptenPathfinding: {
+				command: 'cp src/emscripten.pathfinding.js dist/',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			priorityQueue: {
+				command: 'cp src/priority-queue.min.js dist/',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			makeClean: {
+				command: 'make clean',
+				options: {
+					execOptions: {
+						cwd: '.'
+					}
+				}
+			},
+			compileEmscripten: {
+				command: 'make',
 				options: {
 					execOptions: {
 						cwd: '.'
