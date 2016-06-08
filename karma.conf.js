@@ -22,7 +22,9 @@ module.exports = function (config) {
 			'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
 
 			// include our JavaScript files
+            'src/priority-queue.min.js',
 			'src/jquery.wayfinding.js',
+            'src/emscripten.pathfinding.js',
 
 			// simple patterns to load the needed testfiles
 			// equals to {pattern: 'test/*-test.js', watched: true, served: true, included: true}

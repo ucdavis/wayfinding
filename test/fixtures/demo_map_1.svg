@@ -4,13 +4,13 @@
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="600px"
 	 height="480px" viewBox="0 0 600 480" enable-background="new 0 0 600 480" xml:space="preserve">
 <g id="Base">
-	<polygon id="Circulation" fill="#F2F2F2" stroke="#000000" stroke-width="2" points="72,75 531,75 531,408 324,408 324,426 
+	<polygon id="Circulation" fill="#F2F2F2" stroke="#000000" stroke-width="2" points="72,75 531,75 531,408 324,408 324,426
 		279,426 279,408 72,408 	"/>
 	<rect id="Elevator" x="279" y="228" fill="#B3B3B3" stroke="#000000" width="45" height="36"/>
-	<polygon id="Reception" fill="#C69C6D" stroke="#000000" points="288,345 291.857,345 291.857,349.5 311.143,349.5 311.143,345 
+	<polygon id="Reception" fill="#C69C6D" stroke="#000000" points="288,345 291.857,345 291.857,349.5 311.143,349.5 311.143,345
 		315,345 315,354 288,354 	"/>
 	<g id="Stairs_1_">
-		<polygon id="Stairs" fill="#B3B3B3" stroke="#000000" points="324,318 306,318 306,282 297,282 297,318 279,318 279,264 324,264 
+		<polygon id="Stairs" fill="#B3B3B3" stroke="#000000" points="324,318 306,318 306,282 297,282 297,318 279,318 279,264 324,264
 					"/>
 		<line fill="none" stroke="#000000" x1="306" y1="309" x2="324" y2="309"/>
 		<line fill="none" stroke="#000000" x1="306" y1="300" x2="324" y2="300"/>
@@ -20,7 +20,7 @@
 	</g>
 </g>
 <g id="Rooms">
-	<a id="lobby_1_" xlink:href="#" >
+	<a id="lobby" xlink:href="#" >
 		<g>
 			<rect x="279.5" y="399.5" fill="#E6E6E6" width="44" height="26"/>
 			<path d="M323,400v25h-43v-25H323 M324,399h-45v27h45V399L324,399z"/>
