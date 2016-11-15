@@ -298,6 +298,7 @@
 				pin,
 				circle,
 				height = options.locationIndicator.height, // add error checking?
+				fill = options.locationIndicator.fill,
 				symbolPath;
 
 			indicator = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -315,7 +316,7 @@
 			symbolPath += 'C9.954,-26.789,3.083,-15.486,0.075,0z';
 
 			pin.setAttribute('d', symbolPath);
-			pin.setAttribute('fill', '#E81E25');
+			pin.setAttribute('fill', fill);
 			pin.setAttribute('stroke', '#000000');
 			pin.setAttribute('stroke-width', '3.7');
 			pin.setAttribute('stroke-miterlimit', '10');
